@@ -7,4 +7,11 @@
 
 #endif //MAIN_H
 
+#include <iostream>
+#include <winsock2.h>
+#include <string>
+#include <algorithm>
 #include "server.h"
+
+#pragma once
+#pragma comment(lib, "ws2_32.lib")
