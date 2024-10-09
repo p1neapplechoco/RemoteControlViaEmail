@@ -6,7 +6,11 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(lib/wxWidgets-3.2.6)
-add_executable(RemoteControlViaEmail src/main.cpp)
+add_executable(RemoteControlViaEmail src/main.cpp
+        src/server/main.cpp
+        src/server/main.h
+        src/server/server.cpp
+        src/server/server.h)
 
 target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base)
 #if(WIN32)
