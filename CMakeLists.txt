@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 set(BUILD_SHARED_LIBS OFF)
 
-add_subdirectory(wxWidgets-3.2.6)
-add_executable(RemoteControlViaEmail main.cpp)
+add_subdirectory(lib/wxWidgets-3.2.6)
+add_executable(RemoteControlViaEmail src/main.cpp)
 
 target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base)
 #if(WIN32)
