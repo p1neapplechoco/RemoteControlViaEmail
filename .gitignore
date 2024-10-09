@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+/build
+/wxWidgets-3.2.6
+/.idea
