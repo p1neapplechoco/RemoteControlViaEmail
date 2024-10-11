@@ -7,31 +7,6 @@
 
 using namespace std;
 
-void handleClient(SOCKET clientSocket) {
-    char buffer[1024];
-    while (true) {
-        memset(buffer, 0, sizeof(buffer));
-        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived <= 0) {
-            cout << "Client disconnected." << endl;
-            break;
-        }
-
-        cout << "Received: " << buffer << endl;
-
-        if (strcmp(buffer, "exit") == 0) {
-            cout << "Client requested to exit." << endl;
-            break;
-        }
-
-        string response = string(buffer);
-        transform(response.begin(), response.end(), response.begin(), ::toupper);
-        send(clientSocket, response.c_str(), response.length(), 0);
-    }
-    closesocket(clientSocket);
-}
-
-
 int main() {
     // Design structure
     /*
@@ -43,6 +18,6 @@ int main() {
     6. Don't quit
      */
     Server *server = new Server();
-    server->startListening();
+    server->StartListening();
     return 0;
 }

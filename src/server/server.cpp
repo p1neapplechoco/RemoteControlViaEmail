@@ -35,7 +35,7 @@ void Server::handleClient(SOCKET clientSocket) {
 
         // [Feature number 1] List all applications
         if (strcmp(buffer, "list app") == 0) {
-            std::vector<ProcessInfo> processes = listApplications();
+            std::vector<ProcessInfo> processes = ListApplications();
             std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
 
             for (const auto &process: processes) {
@@ -57,7 +57,7 @@ void Server::handleClient(SOCKET clientSocket) {
 
             std::wcout << L"Total processes: " << processes.size() << std::endl;
         } else if (strcmp(buffer, "list service") == 0) {
-            std::vector<ServiceInfo> services = listServices();
+            std::vector<ServiceInfo> services = ListServices();
 
             std::wcout << std::left << std::setw(40) << L"Service Name"
                     << std::setw(50) << L"Display Name"
@@ -72,15 +72,18 @@ void Server::handleClient(SOCKET clientSocket) {
 
             std::wcout << L"\nTotal services: " << services.size() << std::endl;
         } else if (strcmp(buffer, "screen capture") == 0) {
-            screenCapture();
+            ScreenCapture();
         } else if (strcmp(buffer, "shutdown") == 0) {
-            shutdown();
+            Shutdown();
         } else if (strcmp(buffer, "view file") == 0) {
-            viewFile();
+            ViewFile();
         } else if (strcmp(buffer, "get file") == 0) {
-            getFile();
+            GetFile();
+        } else if (strcmp(buffer, "start webcam") == 0) {
+            StartWebcam();
         } else {
         }
+
 
         if (strcmp(buffer, "exit") == 0) {
             cout << "Client requested to exit." << endl;
@@ -135,7 +138,7 @@ Server::~Server() {
     cout << "Server destroyed" << endl;
 }
 
-void Server::startListening() {
+void Server::StartListening() {
     if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR) {
         std::cerr << "Listen failed" << std::endl;
         closesocket(serverSocket);
@@ -156,7 +159,7 @@ void Server::startListening() {
     }
 }
 
-std::vector<ProcessInfo> Server::listApplications() {
+std::vector<ProcessInfo> Server::ListApplications() {
     std::vector<ProcessInfo> processes;
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) {
@@ -195,7 +198,7 @@ std::vector<ProcessInfo> Server::listApplications() {
 }
 
 
-std::vector<ServiceInfo> Server::listServices() {
+std::vector<ServiceInfo> Server::ListServices() {
     std::vector<ServiceInfo> services;
 
     SC_HANDLE hSCManager = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_ENUMERATE_SERVICE);
@@ -236,18 +239,117 @@ std::vector<ServiceInfo> Server::listServices() {
     return services;
 };
 
-void Server::screenCapture() {
-    return;
+void GetDesktopResolution(int& horizontal, int& vertical)
+{
+    RECT desktop;
+    // Get a handle to the desktop window
+    const HWND hDesktop = GetDesktopWindow();
+    // Get the size of screen to the variable desktop
+    GetWindowRect(hDesktop, &desktop);
+    // The top left corner will have coordinates (0,0)
+    // and the bottom right corner will have coordinates
+    // (horizontal, vertical)
+    horizontal = desktop.right;
+    vertical = desktop.bottom;
+}
+
+void Server::ScreenCapture() {
+    int x1, y1, x2, y2, w, h;
+
+    // get screen dimensions
+    x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    x2 = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    y2 = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    w = x2 - x1;
+    h = y2 - y1;
+    float ratio = 1.5;
+    // GetDesktopResolution(w, h);
+    w = int((float)w * ratio);
+    h = int((float)h * ratio);
+    // copy screen to bitmap
+    HDC hScreen = GetDC(NULL);
+    HDC hDC = CreateCompatibleDC(hScreen);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
+    HGDIOBJ old_obj = SelectObject(hDC, hBitmap);
+    BOOL bRet = BitBlt(hDC, 0, 0, w, h, hScreen, x1, y1, SRCCOPY);
+
+    // save bitmap to clipboard
+    OpenClipboard(NULL);
+    EmptyClipboard();
+    SetClipboardData(CF_BITMAP, hBitmap);
+    CloseClipboard();
+
+    // clean up
+    SelectObject(hDC, old_obj);
+    DeleteDC(hDC);
+    ReleaseDC(NULL, hScreen);
+    DeleteObject(hBitmap);
+    //    WebcamController controller;
+    //
+    //    HRESULT hr = controller.InitializeGraph();
+    //    if (SUCCEEDED(hr)) {
+    //        hr = controller.EnumerateDevices();
+    //        if (SUCCEEDED(hr)) {
+    //            std::cout << "Capturing image..." << std::endl;
+    //            hr = controller.CaptureImage();
+    //            if (SUCCEEDED(hr)) {
+    //                std::cout << "Image captured successfully. Check 'webcam_capture.wmv'." << std::endl;
+    //            } else {
+    //                std::cout << "Failed to capture image. Error code: 0x" << std::hex << hr << std::endl;
+    //            }
+    //        } else {
+    //            std::cout << "Failed to enumerate devices. Error code: 0x" << std::hex << hr << std::endl;
+    //        }
+    //    } else {
+    //        std::cout << "Failed to initialize graph. Error code: 0x" << std::hex << hr << std::endl;
+    //    }
+    //
+    //    controller.CleanUp();
 };
 
-void Server::shutdown() {
-    return;
+void Server::Shutdown() {
+    UINT nSDType = 0;
+    HANDLE hToken;
+    TOKEN_PRIVILEGES tkp;
+
+    ::OpenProcessToken(::GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
+    ::LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
+
+    tkp.PrivilegeCount = 1; // set 1 privilege
+    tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    // get the shutdown privilege for this process
+    ::AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES) NULL, 0);
+
+    switch (nSDType) {
+        case 0: ::ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
+            break;
+        case 1: ::ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, 0);
+            break;
+        case 2: ::ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+            break;
+    }
 };
 
-void Server::viewFile() {
+void Server::ViewFile() {
     return;
+}
+
+void Server::StartWebcam() {
+    WebcamController controller;
+    controller.StartWebcam();
+    //
+    // HRESULT hr = controller.CaptureImage();
+    // if (SUCCEEDED(hr)) {
+    //     std::cout << "Screenshot captured successfully!" << std::endl;
+    // } else {
+    //     std::cout << "Failed to capture screenshot. Error code: " << hr << std::endl;
+    // }
+    //
+    // controller.CleanUp();
 };
 
-void Server::getFile() {
+void Server::GetFile() {
     return;
 };

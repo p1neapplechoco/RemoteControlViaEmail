@@ -13,6 +13,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "WebcamController.h"
+
 
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
@@ -64,20 +66,21 @@ public:
 
     ~Server();
 
-    void startListening();
+    void StartListening();
 
 
     // Dynamically
-    std::vector<ProcessInfo> listApplications();
+    std::vector<ProcessInfo> ListApplications();
 
+    std::vector<ServiceInfo> ListServices();
 
-    std::vector<ServiceInfo> listServices();
+    void ScreenCapture();
 
-    void screenCapture();
+    void Shutdown();
 
-    void shutdown();
+    void ViewFile();
 
-    void viewFile();
+    void StartWebcam();
 
-    void getFile();
+    void GetFile();
 };
