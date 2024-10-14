@@ -34,3 +34,4 @@
 /lib
 /cmake-build-debug
 /.idea
+src/cert/ca-bundle.crt
