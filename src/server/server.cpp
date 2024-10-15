@@ -7,6 +7,35 @@
 
 using namespace std;
 
+// Helper function to get the encoder CLSID for a given image format
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
+    UINT num = 0;
+    UINT size = 0;
+
+    Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
+
+    Gdiplus::GetImageEncodersSize(&num, &size);
+    if (size == 0)
+        return -1;
+
+    pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+    if (pImageCodecInfo == NULL)
+        return -1;
+
+    Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
+
+    for (UINT j = 0; j < num; ++j) {
+        if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0) {
+            *pClsid = pImageCodecInfo[j].Clsid;
+            free(pImageCodecInfo);
+            return j;
+        }
+    }
+
+    free(pImageCodecInfo);
+    return -1;
+}
+
 // for display purpose
 std::wstring getStateString(DWORD state) {
     switch (state) {
@@ -87,11 +116,28 @@ void Server::handleClient(SOCKET clientSocket) {
             wss << L"\nTotal services: " << services.size() << L"\n";
 
         } else if (strcmp(buffer, "screen capture") == 0) {
-            ScreenCapture();
+            std::vector<char> imageData = ScreenCapture();
             wss << L"Screen capture completed.\n";
+            // TODO: Generalize this
+            // Convert wstring to string
+            std::wstring wstr = wss.str();
+            std::string str(wstr.begin(), wstr.end());
+
+            // Send the response back to the client
+            int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
+            if (bytesSent == SOCKET_ERROR) {
+                std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+
+            // Send the image data back to the client
+            send(clientSocket, imageData.data(), imageData.size(), 0);
+
+            return;
+
         } else if (strcmp(buffer, "shutdown") == 0) {
+            wss << L"Shutdown initiated. Shutting down after 15s\n";
             Shutdown();
-            wss << L"Shutdown initiated.\n";
         } else if (strcmp(buffer, "view file") == 0) {
             ViewFile();
             wss << L"File viewed.\n";
@@ -100,7 +146,7 @@ void Server::handleClient(SOCKET clientSocket) {
             wss << L"File retrieved.\n";
         } else if (strcmp(buffer, "start webcam") == 0) {
             StartWebcam();
-            wss << L"Webcam started.\n";
+            wss << L"Webcam started.\n"; // TODO: Multithread
         } else {
             wss << L"Unknown command.\n";
         }
@@ -279,60 +325,68 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     vertical = desktop.bottom;
 }
 
-void Server::ScreenCapture() {
-    int x1, y1, x2, y2, w, h;
+std::vector<char> Server::ScreenCapture() {
+    Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // get screen dimensions
+    int x1, y1, x2, y2, w, h;
     x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
     y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
     x2 = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     y2 = GetSystemMetrics(SM_CYVIRTUALSCREEN);
     w = x2 - x1;
     h = y2 - y1;
-    float ratio = 1.5;
-    // GetDesktopResolution(w, h);
-    w = int((float)w * ratio);
-    h = int((float)h * ratio);
-    // copy screen to bitmap
+    float ratio = 1.5; // TODO: Dynamic ratio
+    w = int((float)w / ratio);
+    h = int((float)h / ratio);
+
     HDC hScreen = GetDC(NULL);
     HDC hDC = CreateCompatibleDC(hScreen);
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
     HGDIOBJ old_obj = SelectObject(hDC, hBitmap);
-    BOOL bRet = BitBlt(hDC, 0, 0, w, h, hScreen, x1, y1, SRCCOPY);
+    SetStretchBltMode(hDC, HALFTONE);
+    StretchBlt(hDC, 0, 0, w, h, hScreen, x1, y1, x2 - x1, y2 - y1, SRCCOPY);
 
-    // save bitmap to clipboard
-    OpenClipboard(NULL);
-    EmptyClipboard();
-    SetClipboardData(CF_BITMAP, hBitmap);
-    CloseClipboard();
+    Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
 
-    // clean up
+    CLSID jpegClsid;
+    GetEncoderClsid(L"image/jpeg", &jpegClsid);
+
+    IStream* istream = NULL;
+    CreateStreamOnHGlobal(NULL, TRUE, &istream);
+
+    Gdiplus::EncoderParameters encoderParameters;
+    ULONG quality = 75;
+    encoderParameters.Count = 1;
+    encoderParameters.Parameter[0].Guid = Gdiplus::EncoderQuality;
+    encoderParameters.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
+    encoderParameters.Parameter[0].NumberOfValues = 1;
+    encoderParameters.Parameter[0].Value = &quality;
+
+    bitmap->Save(istream, &jpegClsid, &encoderParameters);
+
+    HGLOBAL hg = NULL;
+    GetHGlobalFromStream(istream, &hg);
+    int bufsize = GlobalSize(hg);
+    std::vector<char> buffer(bufsize);
+
+    LPVOID ptr = GlobalLock(hg);
+    memcpy(&buffer[0], ptr, bufsize);
+    GlobalUnlock(hg);
+
+    istream->Release();
+    delete bitmap;
+
     SelectObject(hDC, old_obj);
     DeleteDC(hDC);
     ReleaseDC(NULL, hScreen);
     DeleteObject(hBitmap);
-    //    WebcamController controller;
-    //
-    //    HRESULT hr = controller.InitializeGraph();
-    //    if (SUCCEEDED(hr)) {
-    //        hr = controller.EnumerateDevices();
-    //        if (SUCCEEDED(hr)) {
-    //            std::cout << "Capturing image..." << std::endl;
-    //            hr = controller.CaptureImage();
-    //            if (SUCCEEDED(hr)) {
-    //                std::cout << "Image captured successfully. Check 'webcam_capture.wmv'." << std::endl;
-    //            } else {
-    //                std::cout << "Failed to capture image. Error code: 0x" << std::hex << hr << std::endl;
-    //            }
-    //        } else {
-    //            std::cout << "Failed to enumerate devices. Error code: 0x" << std::hex << hr << std::endl;
-    //        }
-    //    } else {
-    //        std::cout << "Failed to initialize graph. Error code: 0x" << std::hex << hr << std::endl;
-    //    }
-    //
-    //    controller.CleanUp();
-};
+
+    Gdiplus::GdiplusShutdown(gdiplusToken);
+
+    return buffer;
+}
 
 void Server::Shutdown() {
     UINT nSDType = 0;

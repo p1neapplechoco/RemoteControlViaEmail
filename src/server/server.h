@@ -14,7 +14,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-
+#include <gdiplus.h>
 #include "WebcamController.h"
 
 
@@ -76,7 +76,7 @@ public:
 
     std::vector<ServiceInfo> ListServices();
 
-    void ScreenCapture();
+    std::vector<char> ScreenCapture();
 
     void Shutdown();
 

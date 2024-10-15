@@ -2,8 +2,23 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include <vector>
+#include <fstream>
 
 #pragma comment(lib, "ws2_32.lib")
+
+std::vector<char> receiveImageData(SOCKET clientSocket) {
+    std::vector<char> buffer;
+    char chunk[4096];
+    int bytesReceived;
+    do {
+        bytesReceived = recv(clientSocket, chunk, sizeof(chunk), 0);
+        if (bytesReceived > 0) {
+            buffer.insert(buffer.end(), chunk, chunk + bytesReceived);
+        }
+    } while (bytesReceived == sizeof(chunk));
+    return buffer;
+}
 
 int main() {
     WSADATA wsaData;
@@ -71,6 +86,13 @@ int main() {
 
         if (!receivedData.empty()) {
             std::cout << "Server response: " << std::endl << receivedData << std::endl;
+        }
+        if (strcmp(sendBuffer, "screen capture") == 0) {
+            std::vector<char> imageData = receiveImageData(clientSocket);
+            std::ofstream outFile("screenshot.jpg", std::ios::binary);
+            outFile.write(imageData.data(), imageData.size());
+            outFile.close();
+            std::cout << "Screenshot saved as screenshot.jpg" << std::endl;
         }
     }
 
