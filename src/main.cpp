@@ -1,12 +1,8 @@
 #include "EmailRetrieval.h"
-#include <vector>
+#include <io.h>
 #include <iostream>
 #include <winsock2.h>
 #include <stdio.h>
-#pragma comment(lib, "ws2_32.lib")
-
-using namespace std;
-// Place this file in root/src
 
 void removeCarriageReturns(char* str) {
     char* write = str;
@@ -41,13 +37,13 @@ int main() {
     std::cin >> serverPort;
     std::cin.ignore(); // Clear the newline from the input buffer
 
-    sockaddr_in serverAddr;
+    sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // parametrize this
+    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str()); // parametrize this
     serverAddr.sin_port = htons(serverPort); // parametrize this
 
     // Connect to the server
-    if (connect(clientSocket, (sockaddr *) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+    if (connect(clientSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Connection failed" << std::endl;
         closesocket(clientSocket);
         WSACleanup();
@@ -64,9 +60,10 @@ int main() {
     emailRetrieval.setupCurl();
 
     while (true) {
-        char buffer[1024] = {};
+        char sent_buffer[1024] = {};
         std::string prev_mail_id = " ";
-        bool fl = true;
+        bool fl = true; // Ignore the first email
+
         while (true) {
             emailRetrieval.retrieveEmail();
             if (fl) {
@@ -74,12 +71,12 @@ int main() {
                 fl = false;
             }
             if (prev_mail_id != emailRetrieval.getMailID()) {
-                string str = emailRetrieval.getMailContent();
-                strcpy(buffer, emailRetrieval.getMailContent().c_str());
-                removeCarriageReturns(buffer);
+                std::string str = emailRetrieval.getMailContent();
+                strcpy(sent_buffer, emailRetrieval.getMailContent().c_str());
+                removeCarriageReturns(sent_buffer);
                 // istringstream istream(str);
                 // istream.getline(buffer, sizeof(buffer), '\r');
-                std::cout << emailRetrieval.getMailContent().length() << std::endl;
+                // std::cout << emailRetrieval.getMailContent() << std::endl;
                 break;
             }
             Sleep(1000);
@@ -87,55 +84,33 @@ int main() {
 
         // std::cout << "Enter message (or 'exit' to quit): ";
         // std::cin.getline(buffer, sizeof(buffer));
-        cout << buffer << "CC" << endl;
-        send(clientSocket, buffer, sizeof(buffer), 0);
+        send(clientSocket, sent_buffer, sizeof(sent_buffer), 0);
 
-        if (strcmp(buffer, "exit") == 0) {
+        if (strcmp(sent_buffer, "exit") == 0) {
             break;
         }
 
-        // Receive response from server
-        memset(buffer, 0, sizeof(buffer));
-        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived > 0) {
-            // printf("Server response: %s\n", buffer);
-            std::cout << "Server response: ";
-            std::cout << string(buffer) << std::endl;
-        } else {
-            std::cerr << "Failed to receive response from server" << std::endl;
+        std::string response;
+        char received_buffer[4096];
+        int received_bytes;
+        do {
+            received_bytes = recv(clientSocket, received_buffer, sizeof(received_buffer), 0);
+            if (received_bytes > 0) {
+                response.append(received_buffer, received_bytes);
+            } else if (received_bytes == 0) {
+                std::cout << "Server closed the connection" << std::endl;
+                break;
+            } else {
+                std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+        } while (received_bytes == sizeof(received_buffer));
+
+        if (!response.empty()) {
+            std::cout << "Server response: " << std::endl << response << std::endl;
         }
     }
-    // Clean-up
     closesocket(clientSocket);
     WSACleanup();
     return 1;
 }
-
-//-------------------------------------------------------------------------------------------------------------------/
-//-------------------------------------------------------------------------------------------------------------------/
-//-------------------------------------------------------------------------------------------------------------------/
-
-
-//     UserCredentials user;
-//     user.loadCredentials();
-//     EmailRetrieval emailRetrieval(user);
-//
-//     emailRetrieval.setupCurl();
-//
-//     std::string prev_mail_id = " ";
-//     while (true)
-//     {
-//         emailRetrieval.retrieveEmail();
-//         if (prev_mail_id != emailRetrieval.getMailID())
-//         {
-//             std::cout << emailRetrieval.getMailContent() << std::endl;
-//             prev_mail_id = emailRetrieval.getMailID();
-//         }
-//         Sleep(1000);
-//     }
-// //    for (std::string mail : contents_of_mails)
-// //    {
-// //        std::cout << mail << std::endl;
-// //    }
-//     return 1;
-// }
