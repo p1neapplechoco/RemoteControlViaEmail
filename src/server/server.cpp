@@ -50,16 +50,7 @@ std::wstring getStateString(DWORD state) {
     }
 }
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
-#include <iomanip>
-#include <sstream>
-#include <algorithm>
+
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -133,7 +124,7 @@ void Server::handleClient(SOCKET clientSocket) {
             // Send the image data back to the client
             send(clientSocket, imageData.data(), imageData.size(), 0);
 
-            return;
+            continue;
 
         } else if (strcmp(buffer, "shutdown") == 0) {
             wss << L"Shutdown initiated. Shutting down after 15s\n";
@@ -338,9 +329,8 @@ std::vector<char> Server::ScreenCapture() {
     w = x2 - x1;
     h = y2 - y1;
     float ratio = 1.5; // TODO: Dynamic ratio
-    w = int((float)w / ratio);
-    h = int((float)h / ratio);
-
+    w = int((float)w * ratio);
+    h = int((float)h * ratio);
     HDC hScreen = GetDC(NULL);
     HDC hDC = CreateCompatibleDC(hScreen);
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);

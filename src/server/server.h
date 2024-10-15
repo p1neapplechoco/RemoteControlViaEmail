@@ -17,7 +17,6 @@
 #include <gdiplus.h>
 #include "WebcamController.h"
 
-
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
 
