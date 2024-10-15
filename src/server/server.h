@@ -6,12 +6,14 @@
 #include <winsvc.h>
 #include <psapi.h>
 #include <tlhelp32.h>
+#include <ws2tcpip.h>
 #include <vector>
 #include <string>
 #include <map>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #include "WebcamController.h"
 

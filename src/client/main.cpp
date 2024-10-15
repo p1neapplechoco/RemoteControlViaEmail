@@ -1,20 +1,11 @@
-//
-// Created by phida on 10/9/2024.
-//
-
 #include <iostream>
 #include <winsock2.h>
-#include <stdio.h>
+#include <ws2tcpip.h>
+#include <string>
+
 #pragma comment(lib, "ws2_32.lib")
 
 int main() {
-    /*
-    1. Creating the Client Socket
-    2. Connecting to the Server
-    3. Sending Data to the Server
-     */
-
-    // Đoạn này handle exception cho vui
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Failed to initialize Winsock" << std::endl;
@@ -39,10 +30,9 @@ int main() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // parametrize this
-    serverAddr.sin_port = htons(serverPort); // parametrize this
+    serverAddr.sin_port = htons(serverPort);
+    inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr);
 
-    // Connect to the server
     if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Connection failed" << std::endl;
         closesocket(clientSocket);
@@ -53,25 +43,37 @@ int main() {
     std::cout << "Connected to server at " << serverIP << ":" << serverPort << std::endl;
 
     while (true) {
-        char buffer[1024] = {};
+        char sendBuffer[1024] = {};
         std::cout << "Enter message (or 'exit' to quit): ";
-        std::cin.getline(buffer, sizeof(buffer));
-        send(clientSocket, buffer, sizeof(buffer), 0);
+        std::cin.getline(sendBuffer, sizeof(sendBuffer));
+        send(clientSocket, sendBuffer, strlen(sendBuffer), 0);
 
-        if (strcmp(buffer, "exit") == 0) {
+        if (strcmp(sendBuffer, "exit") == 0) {
             break;
         }
 
         // Receive response from server
-        memset(buffer, 0, sizeof(buffer));
-        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived > 0) {
-            std::cout << "Server response: " << buffer << std::endl;
-        } else {
-            std::cerr << "Failed to receive response from server" << std::endl;
+        std::string receivedData;
+        char recvBuffer[4096];
+        int bytesReceived;
+        do {
+            bytesReceived = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+            if (bytesReceived > 0) {
+                receivedData.append(recvBuffer, bytesReceived);
+            } else if (bytesReceived == 0) {
+                std::cout << "Server closed the connection" << std::endl;
+                break;
+            } else {
+                std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+        } while (bytesReceived == sizeof(recvBuffer));
+
+        if (!receivedData.empty()) {
+            std::cout << "Server response: " << std::endl << receivedData << std::endl;
         }
     }
-    // Clean-up
+
     closesocket(clientSocket);
     WSACleanup();
     return 0;

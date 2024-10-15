@@ -21,26 +21,39 @@ std::wstring getStateString(DWORD state) {
     }
 }
 
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <iomanip>
+#include <sstream>
+#include <algorithm>
+
+#pragma comment(lib, "ws2_32.lib")
+
 void Server::handleClient(SOCKET clientSocket) {
     char buffer[1024];
     while (true) {
         memset(buffer, 0, sizeof(buffer));
         int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
         if (bytesReceived <= 0) {
-            cout << "Client disconnected." << endl;
+            std::cout << "Client disconnected." << std::endl;
             break;
         }
 
-        cout << "Received: " << buffer << endl;
+        std::cout << "Received: " << buffer << std::endl;
 
-        // [Feature number 1] List all applications
+        std::wstringstream wss;
+        std::string response;
+
         if (strcmp(buffer, "list app") == 0) {
             std::vector<ProcessInfo> processes = ListApplications();
+            std::map<ProcessType, std::vector<ProcessInfo>> groupedProcesses;
 
-            // For displaying purpose only
-            std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
-
-            for (const auto &process: processes) {
+            for (const auto &process : processes) {
                 groupedProcesses[process.type].push_back(process);
             }
 
@@ -48,56 +61,65 @@ void Server::handleClient(SOCKET clientSocket) {
 
             for (int i = 0; i < 3; ++i) {
                 ProcessType type = static_cast<ProcessType>(i);
-                std::wcout << typeNames[i] << L" (" << groupedProcesses[type].size() << L")" << std::endl;
-                std::wcout << std::wstring(50, L'-') << std::endl;
+                wss << typeNames[i] << L" (" << groupedProcesses[type].size() << L")\n";
+                wss << std::wstring(50, L'-') << L"\n";
 
-                for (const auto &process: groupedProcesses[type]) {
-                    std::wcout << std::left << std::setw(10) << process.pid << process.name << std::endl;
+                for (const auto &process : groupedProcesses[type]) {
+                    wss << std::left << std::setw(10) << process.pid << process.name << L"\n";
                 }
-                std::wcout << std::endl;
+                wss << L"\n";
             }
-            std::wcout << L"Total processes: " << processes.size() << std::endl;
-            // For displaying purpose only
+            wss << L"Total processes: " << processes.size() << L"\n";
 
         } else if (strcmp(buffer, "list service") == 0) {
             std::vector<ServiceInfo> services = ListServices();
 
-            // For displaying purpose only
-            std::wcout << std::left << std::setw(40) << L"Service Name"
-                    << std::setw(50) << L"Display Name"
-                    << L"State" << std::endl;
-            std::wcout << std::wstring(100, L'-') << std::endl;
+            wss << std::left << std::setw(40) << L"Service Name"
+                << std::setw(50) << L"Display Name"
+                << L"State\n";
+            wss << std::wstring(100, L'-') << L"\n";
 
-            for (const auto &service: services) {
-                std::wcout << std::left << std::setw(40) << service.name
-                        << std::setw(50) << service.displayName
-                        << getStateString(service.currentState) << std::endl;
+            for (const auto &service : services) {
+                wss << std::left << std::setw(40) << service.name
+                    << std::setw(50) << service.displayName
+                    << getStateString(service.currentState) << L"\n";
             }
-            std::wcout << L"\nTotal services: " << services.size() << std::endl;
-            // For displaying purpose only
+            wss << L"\nTotal services: " << services.size() << L"\n";
 
         } else if (strcmp(buffer, "screen capture") == 0) {
             ScreenCapture();
+            wss << L"Screen capture completed.\n";
         } else if (strcmp(buffer, "shutdown") == 0) {
             Shutdown();
+            wss << L"Shutdown initiated.\n";
         } else if (strcmp(buffer, "view file") == 0) {
             ViewFile();
+            wss << L"File viewed.\n";
         } else if (strcmp(buffer, "get file") == 0) {
             GetFile();
+            wss << L"File retrieved.\n";
         } else if (strcmp(buffer, "start webcam") == 0) {
             StartWebcam();
+            wss << L"Webcam started.\n";
         } else {
+            wss << L"Unknown command.\n";
         }
 
-
         if (strcmp(buffer, "exit") == 0) {
-            cout << "Client requested to exit." << endl;
+            std::cout << "Client requested to exit." << std::endl;
             break;
         }
 
-        string response = string(buffer);
-        transform(response.begin(), response.end(), response.begin(), ::toupper);
-        send(clientSocket, response.c_str(), response.length(), 0);
+        // Convert wstring to string
+        std::wstring wstr = wss.str();
+        std::string str(wstr.begin(), wstr.end());
+
+        // Send the response back to the client
+        int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
+        if (bytesSent == SOCKET_ERROR) {
+            std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+            break;
+        }
     }
     closesocket(clientSocket);
 }
@@ -115,7 +137,6 @@ Server::Server() {
         WSACleanup();
         return;
     }
-
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
