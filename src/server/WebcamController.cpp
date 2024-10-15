@@ -184,19 +184,38 @@ void StartWebcam_1() {
 
     pWindow->put_Caption((BSTR) L"Device Capture");
 
+
+    bool webcamOn = true;
     MSG ms;
-    while (true) {
+    while (webcamOn) {
         if (PeekMessage(&ms, NULL, 0, 0, PM_REMOVE) > 0) {
             DefWindowProc(ms.hwnd, ms.message, ms.wParam, ms.lParam);
         } else {
-            if (kbhit()) {
-                pControl->Stop();
-                break;
+            if (_kbhit()) {
+                int ch = _getch();
+                if (ch == 'q' || ch == 'Q') {
+                    cout << "Stopping webcam..." << endl;
+                    pControl->Stop();
+                    webcamOn = false;
+                } else if (ch == 't' || ch == 'T') {
+                    cout << "Toggling webcam..." << endl;
+                    OAFilterState fs;
+                    HRESULT hr = pControl->GetState(0, &fs);
+                    if (SUCCEEDED(hr)) {
+                        if (fs == State_Running) {
+                            pControl->Pause();
+                        } else {
+                            pControl->Run();
+                        }
+                    } else {
+                        cout << "Failed to get webcam state." << endl;
+                    }
+                }
             }
             Sleep(10);
         }
-        // Truyen ve client, handle toi khi nao co dong lenh moi thi dung
     }
+
 
     pBuild->Release();
     pGraph->Release();

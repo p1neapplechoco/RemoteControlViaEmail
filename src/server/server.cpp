@@ -36,6 +36,8 @@ void Server::handleClient(SOCKET clientSocket) {
         // [Feature number 1] List all applications
         if (strcmp(buffer, "list app") == 0) {
             std::vector<ProcessInfo> processes = ListApplications();
+
+            // For displaying purpose only
             std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
 
             for (const auto &process: processes) {
@@ -54,11 +56,13 @@ void Server::handleClient(SOCKET clientSocket) {
                 }
                 std::wcout << std::endl;
             }
-
             std::wcout << L"Total processes: " << processes.size() << std::endl;
+            // For displaying purpose only
+
         } else if (strcmp(buffer, "list service") == 0) {
             std::vector<ServiceInfo> services = ListServices();
 
+            // For displaying purpose only
             std::wcout << std::left << std::setw(40) << L"Service Name"
                     << std::setw(50) << L"Display Name"
                     << L"State" << std::endl;
@@ -69,8 +73,9 @@ void Server::handleClient(SOCKET clientSocket) {
                         << std::setw(50) << service.displayName
                         << getStateString(service.currentState) << std::endl;
             }
-
             std::wcout << L"\nTotal services: " << services.size() << std::endl;
+            // For displaying purpose only
+
         } else if (strcmp(buffer, "screen capture") == 0) {
             ScreenCapture();
         } else if (strcmp(buffer, "shutdown") == 0) {
@@ -339,6 +344,7 @@ void Server::ViewFile() {
 void Server::StartWebcam() {
     WebcamController controller;
     controller.StartWebcam();
+
     //
     // HRESULT hr = controller.CaptureImage();
     // if (SUCCEEDED(hr)) {
