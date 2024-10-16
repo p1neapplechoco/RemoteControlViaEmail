@@ -16,6 +16,9 @@
 #include <sstream>
 #include <gdiplus.h>
 #include "WebcamController.h"
+#include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 
 #pragma once
 #pragma comment(lib, "ws2_32.lib")

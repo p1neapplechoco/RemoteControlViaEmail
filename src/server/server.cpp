@@ -324,18 +324,20 @@ std::vector<ServiceInfo> Server::ListServices() {
     return services;
 };
 
-void GetDesktopResolution(int& horizontal, int& vertical)
-{
-    RECT desktop;
-    // Get a handle to the desktop window
-    const HWND hDesktop = GetDesktopWindow();
-    // Get the size of screen to the variable desktop
-    GetWindowRect(hDesktop, &desktop);
-    // The top left corner will have coordinates (0,0)
-    // and the bottom right corner will have coordinates
-    // (horizontal, vertical)
-    horizontal = desktop.right;
-    vertical = desktop.bottom;
+
+pair<int, int> GetPhysicalDesktopDimensions() {
+    // HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    // CONSOLE_SCREEN_BUFFER_INFO csbi;
+    // GetConsoleScreenBufferInfo(handle, &csbi);
+    // int screenWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    // int screenHeight = 1080;
+    // cout << screenHeight << " cc " << screenWidth << endl;
+    DEVMODE devMode;
+    devMode.dmSize = sizeof(DEVMODE);
+    EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode);
+    int screenWidth  = devMode.dmPelsWidth;
+    int screenHeight = devMode.dmPelsHeight;
+    return { screenWidth, screenHeight };
 }
 
 std::vector<char> Server::ScreenCapture() {
@@ -348,9 +350,10 @@ std::vector<char> Server::ScreenCapture() {
     y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
     x2 = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     y2 = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-    w = x2 - x1;
-    h = y2 - y1;
-    float ratio = 1.5; // TODO: Dynamic ratio
+    pair<int, int> resolution = GetPhysicalDesktopDimensions();
+    w = resolution.first;
+    h = resolution.second;
+    float ratio = 1.0f; // TODO: Dynamic ratio
     w = int((float)w * ratio);
     h = int((float)h * ratio);
     HDC hScreen = GetDC(NULL);
@@ -358,7 +361,7 @@ std::vector<char> Server::ScreenCapture() {
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
     HGDIOBJ old_obj = SelectObject(hDC, hBitmap);
     SetStretchBltMode(hDC, HALFTONE);
-    StretchBlt(hDC, 0, 0, w, h, hScreen, x1, y1, x2 - x1, y2 - y1, SRCCOPY);
+    StretchBlt(hDC, 0, 0, w, h, hScreen, x1, y1, w, h, SRCCOPY);
 
     Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
 
