@@ -9,7 +9,6 @@
 
 std::vector<char> receiveImageData(SOCKET clientSocket) {
     std::vector<char> buffer;
-    char chunk[4096];
     int bytesReceived;
     int totalBytesReceived = 0;
     int expectedSize = 0;
@@ -20,10 +19,11 @@ std::vector<char> receiveImageData(SOCKET clientSocket) {
         std::cerr << "Failed to receive image size" << std::endl;
         return buffer;
     }
-
+    std::cout << "Receiving image data (" << expectedSize << " bytes)" << std::endl;
+    char chunk[expectedSize];
     // Now receive the image data
     while (totalBytesReceived < expectedSize) {
-        bytesReceived = recv(clientSocket, chunk, sizeof(chunk), 0);
+        bytesReceived = recv(clientSocket, chunk, expectedSize, 0);
         if (bytesReceived > 0) {
             buffer.insert(buffer.end(), chunk, chunk + bytesReceived);
             totalBytesReceived += bytesReceived;
@@ -92,7 +92,7 @@ int main() {
 
         // Receive response from server
         std::vector<char> receivedData;
-        char recvBuffer[4096];
+
         int bytesReceived;
         int expectedSize = 0;
 
@@ -102,10 +102,11 @@ int main() {
             std::cerr << "Failed to receive response size" << std::endl;
             continue;
         }
-
+        char recvBuffer[expectedSize];
         // Now receive the actual response
         while (receivedData.size() < expectedSize) {
-            bytesReceived = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+
+            bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
             if (bytesReceived > 0) {
                 receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
             } else if (bytesReceived == 0) {
