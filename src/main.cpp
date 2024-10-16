@@ -1,98 +1,141 @@
-// Start of wxWidgets "Hello World" Program
-#include <wx/wx.h>
+#include "EmailRetrieval.h"
+#include <vector>
+#include <iostream>
+#include <winsock2.h>
+#include <stdio.h>
+#pragma comment(lib, "ws2_32.lib")
 
-class MyApp : public wxApp
-{
-public:
-    bool OnInit() override;
-};
+using namespace std;
+// Place this file in root/src
 
-wxIMPLEMENT_APP(MyApp);
-
-class MyFrame : public wxFrame
-{
-public:
-    MyFrame();
-
-private:
-    void OnHello(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
-};
-
-enum
-{
-    ID_Hello = 1
-};
-
-bool MyApp::OnInit()
-{
-    MyFrame *frame = new MyFrame();
-    frame->Show(true);
-    return true;
-}
-
-MyFrame::MyFrame()
-    : wxFrame(nullptr, wxID_ANY, "Hello World")
-{
-    wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-                     "Help string shown in status bar for this menu item");
-    menuFile->AppendSeparator();
-    menuFile->Append(wxID_EXIT);
-
-    wxMenu *menuHelp = new wxMenu;
-    menuHelp->Append(wxID_ABOUT);
-
-    wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append(menuFile, "&File");
-    menuBar->Append(menuHelp, "&Help");
-
-    SetMenuBar( menuBar );
-
-    CreateStatusBar();
-    SetStatusText("Welcome to wxWidgets!");
-
-    Bind(wxEVT_MENU, &MyFrame::OnHello, this, ID_Hello);
-    Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
-    Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
-}
-
-void MyFrame::OnExit(wxCommandEvent& event)
-{
-    Close(true);
-}
-
-void MyFrame::OnAbout(wxCommandEvent& event)
-{
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
-}
-
-void MyFrame::OnHello(wxCommandEvent& event)
-{
-    wxLogMessage("Hello world from wxWidgets!");
+void removeCarriageReturns(char* str) {
+    char* write = str;
+    for (char* read = str; *read; read++) {
+        if (*read != '\r') {
+            *write++ = *read;
+        }
+    }
+    *write = '\0';
 }
 
 int main() {
-    // Them while :))
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "Failed to initialize Winsock" << std::endl;
+        return 1;
+    }
 
-    // Get Gmail Content
-    // content = Gmail().get_content()
+    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket == INVALID_SOCKET) {
+        std::cerr << "Failed to create socket" << std::endl;
+        WSACleanup();
+        return 1;
+    }
 
-    // Open Port toi socket server
-    // socket = SocketServer().open_port()
-    // chosen_ip = SocketServer().get_ip(command)
+    std::string serverIP;
+    int serverPort;
 
-    // Truyen thong tin
-    // SocketServer(chosen_ip).send(content)
+    std::cout << "Enter server IP address: ";
+    std::cin >> serverIP;
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;
+    std::cin.ignore(); // Clear the newline from the input buffer
 
-    /* Da qua may khach */
+    sockaddr_in serverAddr;
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // parametrize this
+    serverAddr.sin_port = htons(serverPort); // parametrize this
 
-    // Process content
-    // Process().process(content)
-    // action = Parse().parse(content)
-    // Windows.do(action);
+    // Connect to the server
+    if (connect(clientSocket, (sockaddr *) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "Connection failed" << std::endl;
+        closesocket(clientSocket);
+        WSACleanup();
+        return 1;
+    }
 
-    return 0;
+    std::cout << "Connected to server at " << serverIP << ":" << serverPort << std::endl;
+
+    // Setup user
+    UserCredentials user;
+    user.loadCredentials();
+    EmailRetrieval emailRetrieval(user);
+
+    emailRetrieval.setupCurl();
+
+    while (true) {
+        char buffer[1024] = {};
+        std::string prev_mail_id = " ";
+        bool fl = true;
+        while (true) {
+            emailRetrieval.retrieveEmail();
+            if (fl) {
+                prev_mail_id = emailRetrieval.getMailID();
+                fl = false;
+            }
+            if (prev_mail_id != emailRetrieval.getMailID()) {
+                string str = emailRetrieval.getMailContent();
+                strcpy(buffer, emailRetrieval.getMailContent().c_str());
+                removeCarriageReturns(buffer);
+                // istringstream istream(str);
+                // istream.getline(buffer, sizeof(buffer), '\r');
+                std::cout << emailRetrieval.getMailContent().length() << std::endl;
+                break;
+            }
+            Sleep(1000);
+        }
+
+        // std::cout << "Enter message (or 'exit' to quit): ";
+        // std::cin.getline(buffer, sizeof(buffer));
+        cout << buffer << "CC" << endl;
+        send(clientSocket, buffer, sizeof(buffer), 0);
+
+        if (strcmp(buffer, "exit") == 0) {
+            break;
+        }
+
+        // Receive response from server
+        memset(buffer, 0, sizeof(buffer));
+        int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+        if (bytesReceived > 0) {
+            // printf("Server response: %s\n", buffer);
+            std::cout << "Server response: ";
+            std::cout << string(buffer) << std::endl;
+        } else {
+            std::cerr << "Failed to receive response from server" << std::endl;
+        }
+    }
+    // Clean-up
+    closesocket(clientSocket);
+    WSACleanup();
+    return 1;
 }
+
+//-------------------------------------------------------------------------------------------------------------------/
+//-------------------------------------------------------------------------------------------------------------------/
+//-------------------------------------------------------------------------------------------------------------------/
+
+
+//     UserCredentials user;
+//     user.loadCredentials();
+//     EmailRetrieval emailRetrieval(user);
+//
+//     emailRetrieval.setupCurl();
+//
+//     std::string prev_mail_id = " ";
+//     while (true)
+//     {
+//         emailRetrieval.retrieveEmail();
+//         if (prev_mail_id != emailRetrieval.getMailID())
+//         {
+//             std::cout << emailRetrieval.getMailContent() << std::endl;
+//             prev_mail_id = emailRetrieval.getMailID();
+//         }
+//         Sleep(1000);
+//     }
+// //    for (std::string mail : contents_of_mails)
+// //    {
+// //        std::cout << mail << std::endl;
+// //    }
+//     return 1;
+// }

@@ -1,0 +1,7 @@
+1. List applications
+2. List IP addresses
+3. List Services
+4. Screen capture
+5. Shutdown
+6ab. Start/stop webcam
+7. get file/ view file
