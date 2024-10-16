@@ -107,24 +107,24 @@ void Server::handleClient(SOCKET clientSocket) {
             wss << L"\nTotal services: " << services.size() << L"\n";
 
         } else if (strcmp(buffer, "screen capture") == 0) {
-            std::vector<char> imageData = ScreenCapture();
+            imageData = ScreenCapture();
             wss << L"Screen capture completed.\n";
-            // TODO: Generalize this
-            // Convert wstring to string
-            std::wstring wstr = wss.str();
-            std::string str(wstr.begin(), wstr.end());
-
-            // Send the response back to the client
-            int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
-            if (bytesSent == SOCKET_ERROR) {
-                std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
-                break;
-            }
-
-            // Send the image data back to the client
-            send(clientSocket, imageData.data(), imageData.size(), 0);
-
-            continue;
+            // // TODO: Generalize this
+            // // Convert wstring to string
+            // std::wstring wstr = wss.str();
+            // std::string str(wstr.begin(), wstr.end());
+            //
+            // // Send the response back to the client
+            // int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
+            // if (bytesSent == SOCKET_ERROR) {
+            //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+            //     break;
+            // }
+            //
+            // // Send the image data back to the client
+            // send(clientSocket, imageData.data(), imageData.size(), 0);
+            //
+            // continue;
 
         } else if (strcmp(buffer, "shutdown") == 0) {
             wss << L"Shutdown initiated. Shutting down after 15s\n";
@@ -147,15 +147,37 @@ void Server::handleClient(SOCKET clientSocket) {
             break;
         }
 
+
         // Convert wstring to string
         std::wstring wstr = wss.str();
         std::string str(wstr.begin(), wstr.end());
 
         // Send the response back to the client
+        // Send the size of str first
+        int responseSize = str.length();
+        send(clientSocket, reinterpret_cast<char*>(&responseSize), sizeof(int), 0);
+            // if (strcmp(buffer, "screen capture") == 0) {
+            //     // Send the image data back to the client
+            //     int imageSize = imageData.size();
+            //     cout << "Ngu" << imageSize << endl;
+            //     send(clientSocket, reinterpret_cast<char*>(&imageSize), sizeof(int), 0);
+            //     cout << imageData.size() << endl;
+            // }
+
+        // Send the actual str
         int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
         if (bytesSent == SOCKET_ERROR) {
             std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
             break;
+        }
+        if (strcmp(buffer, "screen capture") == 0) {
+            // Send the image data back to the client
+            int imageSize = imageData.size();
+            cout << "Ngu" << imageSize << endl;
+            send(clientSocket, reinterpret_cast<char*>(&imageSize), sizeof(int), 0);
+            cout << imageData.size() << endl;
+            // Send the actual image data
+            send(clientSocket, imageData.data(), imageData.size(), 0);
         }
     }
     closesocket(clientSocket);

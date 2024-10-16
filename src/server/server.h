@@ -63,6 +63,7 @@ private:
     void handleClient(SOCKET);
 
 public:
+    std::vector<char> imageData;
     Server();
 
     ~Server();
