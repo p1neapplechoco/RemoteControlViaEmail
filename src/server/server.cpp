@@ -154,15 +154,10 @@ void Server::handleClient(SOCKET clientSocket) {
 
         // Send the response back to the client
         // Send the size of str first
+        // Send the response back to the client
+        // Send the size of str first
         int responseSize = str.length();
         send(clientSocket, reinterpret_cast<char*>(&responseSize), sizeof(int), 0);
-            // if (strcmp(buffer, "screen capture") == 0) {
-            //     // Send the image data back to the client
-            //     int imageSize = imageData.size();
-            //     cout << "Ngu" << imageSize << endl;
-            //     send(clientSocket, reinterpret_cast<char*>(&imageSize), sizeof(int), 0);
-            //     cout << imageData.size() << endl;
-            // }
 
         // Send the actual str
         int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
@@ -170,14 +165,19 @@ void Server::handleClient(SOCKET clientSocket) {
             std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
             break;
         }
+
         if (strcmp(buffer, "screen capture") == 0) {
-            // Send the image data back to the client
-            int imageSize = imageData.size();
-            cout << "Ngu" << imageSize << endl;
+            // Send the size of the image data first
+            int imageSize = static_cast<int>(imageData.size());
             send(clientSocket, reinterpret_cast<char*>(&imageSize), sizeof(int), 0);
-            cout << imageData.size() << endl;
+
             // Send the actual image data
-            send(clientSocket, imageData.data(), imageData.size(), 0);
+            bytesSent = send(clientSocket, imageData.data(), imageData.size(), 0);
+            if (bytesSent == SOCKET_ERROR) {
+                std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+            std::cout << "Sent image data of size: " << imageSize << " bytes" << std::endl;
         }
     }
     closesocket(clientSocket);
