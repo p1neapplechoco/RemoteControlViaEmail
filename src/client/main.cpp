@@ -2,8 +2,46 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <string>
+#include <vector>
+#include <fstream>
 
 #pragma comment(lib, "ws2_32.lib")
+
+std::vector<char> receiveImageData(SOCKET clientSocket) {
+    std::vector<char> buffer;
+    int bytesReceived;
+    int totalBytesReceived = 0;
+    int expectedSize = 0;
+
+    // First, receive the size of the image
+    bytesReceived = recv(clientSocket, (char*)&expectedSize, sizeof(int), 0);
+    if (bytesReceived != sizeof(int)) {
+        std::cerr << "Failed to receive image size" << std::endl;
+        return buffer;
+    }
+    std::cout << "Receiving image data (" << expectedSize << " bytes)" << std::endl;
+    char chunk[expectedSize];
+    // Now receive the image data
+    while (totalBytesReceived < expectedSize) {
+        bytesReceived = recv(clientSocket, chunk, expectedSize, 0);
+        if (bytesReceived > 0) {
+            buffer.insert(buffer.end(), chunk, chunk + bytesReceived);
+            totalBytesReceived += bytesReceived;
+        } else if (bytesReceived == 0) {
+            std::cout << "Connection closed by server" << std::endl;
+            break;
+        } else {
+            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+            break;
+        }
+    }
+
+    if (totalBytesReceived != expectedSize) {
+        std::cerr << "Received " << totalBytesReceived << " bytes, expected " << expectedSize << " bytes" << std::endl;
+    }
+
+    return buffer;
+}
 
 int main() {
     WSADATA wsaData;
@@ -53,13 +91,24 @@ int main() {
         }
 
         // Receive response from server
-        std::string receivedData;
-        char recvBuffer[4096];
+        std::vector<char> receivedData;
+
         int bytesReceived;
-        do {
-            bytesReceived = recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+        int expectedSize = 0;
+
+        // First, receive the size of the response
+        bytesReceived = recv(clientSocket, (char*)&expectedSize, sizeof(int), 0);
+        if (bytesReceived != sizeof(int)) {
+            std::cerr << "Failed to receive response size" << std::endl;
+            continue;
+        }
+        char recvBuffer[expectedSize];
+        // Now receive the actual response
+        while (receivedData.size() < expectedSize) {
+
+            bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
             if (bytesReceived > 0) {
-                receivedData.append(recvBuffer, bytesReceived);
+                receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
             } else if (bytesReceived == 0) {
                 std::cout << "Server closed the connection" << std::endl;
                 break;
@@ -67,10 +116,19 @@ int main() {
                 std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
                 break;
             }
-        } while (bytesReceived == sizeof(recvBuffer));
+        }
 
         if (!receivedData.empty()) {
-            std::cout << "Server response: " << std::endl << receivedData << std::endl;
+            std::string response(receivedData.begin(), receivedData.end());
+            std::cout << "Server response: " << std::endl << response << std::endl;
+        }
+
+        if (strcmp(sendBuffer, "screen capture") == 0) {
+            std::vector<char> imageData = receiveImageData(clientSocket);
+            std::ofstream outFile("screenshot.jpg", std::ios::binary);
+            outFile.write(imageData.data(), imageData.size());
+            outFile.close();
+            std::cout << "Screenshot saved as screenshot.jpg" << std::endl;
         }
     }
 

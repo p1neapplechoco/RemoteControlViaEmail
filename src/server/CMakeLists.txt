@@ -12,6 +12,6 @@ add_executable(server main.cpp main.h server.cpp server.h
 
 # Add this to link ws2_32.lib to static library
 if (MINGW)
-    target_link_libraries(server ws2_32 strmiids)
+    target_link_libraries(server ws2_32 strmiids gdiplus)
 endif ()
 #target_link_libraries(server)

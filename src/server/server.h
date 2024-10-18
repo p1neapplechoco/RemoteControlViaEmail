@@ -14,9 +14,11 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-
+#include <gdiplus.h>
 #include "WebcamController.h"
-
+#include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
@@ -64,6 +66,7 @@ private:
     void handleClient(SOCKET);
 
 public:
+    std::vector<char> imageData;
     Server();
 
     ~Server();
@@ -76,7 +79,7 @@ public:
 
     std::vector<ServiceInfo> ListServices();
 
-    void ScreenCapture();
+    std::vector<char> ScreenCapture();
 
     void Shutdown();
 
