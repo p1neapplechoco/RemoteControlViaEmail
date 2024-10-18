@@ -73,26 +73,3 @@ void MyFrame::OnHello(wxCommandEvent& event)
 {
     wxLogMessage("Hello world from wxWidgets!");
 }
-
-int main() {
-    // Them while :))
-
-    // Get Gmail Content
-    // content = Gmail().get_content()
-
-    // Open Port toi socket server
-    // socket = SocketServer().open_port()
-    // chosen_ip = SocketServer().get_ip(command)
-
-    // Truyen thong tin
-    // SocketServer(chosen_ip).send(content)
-
-    /* Da qua may khach */
-
-    // Process content
-    // Process().process(content)
-    // action = Parse().parse(content)
-    // Windows.do(action);
-
-    return 0;
-}
