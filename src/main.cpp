@@ -1,75 +1,116 @@
-// Start of wxWidgets "Hello World" Program
-#include <wx/wx.h>
+#include "EmailRetrieval.h"
+#include <io.h>
+#include <iostream>
+#include <winsock2.h>
+#include <stdio.h>
 
-class MyApp : public wxApp
-{
-public:
-    bool OnInit() override;
-};
-
-wxIMPLEMENT_APP(MyApp);
-
-class MyFrame : public wxFrame
-{
-public:
-    MyFrame();
-
-private:
-    void OnHello(wxCommandEvent& event);
-    void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
-};
-
-enum
-{
-    ID_Hello = 1
-};
-
-bool MyApp::OnInit()
-{
-    MyFrame *frame = new MyFrame();
-    frame->Show(true);
-    return true;
+void removeCarriageReturns(char* str) {
+    char* write = str;
+    for (char* read = str; *read; read++) {
+        if (*read != '\r') {
+            *write++ = *read;
+        }
+    }
+    *write = '\0';
 }
 
-MyFrame::MyFrame()
-    : wxFrame(nullptr, wxID_ANY, "Hello World")
-{
-    wxMenu *menuFile = new wxMenu;
-    menuFile->Append(ID_Hello, "&Hello...\tCtrl-H",
-                     "Help string shown in status bar for this menu item");
-    menuFile->AppendSeparator();
-    menuFile->Append(wxID_EXIT);
+int main() {
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        std::cerr << "Failed to initialize Winsock" << std::endl;
+        return 1;
+    }
 
-    wxMenu *menuHelp = new wxMenu;
-    menuHelp->Append(wxID_ABOUT);
+    SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (clientSocket == INVALID_SOCKET) {
+        std::cerr << "Failed to create socket" << std::endl;
+        WSACleanup();
+        return 1;
+    }
 
-    wxMenuBar *menuBar = new wxMenuBar;
-    menuBar->Append(menuFile, "&File");
-    menuBar->Append(menuHelp, "&Help");
+    std::string serverIP;
+    int serverPort;
 
-    SetMenuBar( menuBar );
+    std::cout << "Enter server IP address: ";
+    std::cin >> serverIP;
+    std::cout << "Enter server port: ";
+    std::cin >> serverPort;
+    std::cin.ignore(); // Clear the newline from the input buffer
 
-    CreateStatusBar();
-    SetStatusText("Welcome to wxWidgets!");
+    sockaddr_in serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = inet_addr(serverIP.c_str()); // parametrize this
+    serverAddr.sin_port = htons(serverPort); // parametrize this
 
-    Bind(wxEVT_MENU, &MyFrame::OnHello, this, ID_Hello);
-    Bind(wxEVT_MENU, &MyFrame::OnAbout, this, wxID_ABOUT);
-    Bind(wxEVT_MENU, &MyFrame::OnExit, this, wxID_EXIT);
-}
+    // Connect to the server
+    if (connect(clientSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "Connection failed" << std::endl;
+        closesocket(clientSocket);
+        WSACleanup();
+        return 1;
+    }
 
-void MyFrame::OnExit(wxCommandEvent& event)
-{
-    Close(true);
-}
+    std::cout << "Connected to server at " << serverIP << ":" << serverPort << std::endl;
 
-void MyFrame::OnAbout(wxCommandEvent& event)
-{
-    wxMessageBox("This is a wxWidgets Hello World example",
-                 "About Hello World", wxOK | wxICON_INFORMATION);
-}
+    // Setup user
+    UserCredentials user;
+    user.loadCredentials();
+    EmailRetrieval emailRetrieval(user);
 
-void MyFrame::OnHello(wxCommandEvent& event)
-{
-    wxLogMessage("Hello world from wxWidgets!");
+    emailRetrieval.setupCurl();
+
+    while (true) {
+        char sent_buffer[1024] = {};
+        std::string prev_mail_id = " ";
+        bool fl = true; // Ignore the first email
+
+        while (true) {
+            emailRetrieval.retrieveEmail();
+            if (fl) {
+                prev_mail_id = emailRetrieval.getMailID();
+                fl = false;
+            }
+            if (prev_mail_id != emailRetrieval.getMailID()) {
+                std::string str = emailRetrieval.getMailContent();
+                strcpy(sent_buffer, emailRetrieval.getMailContent().c_str());
+                removeCarriageReturns(sent_buffer);
+                // istringstream istream(str);
+                // istream.getline(buffer, sizeof(buffer), '\r');
+                // std::cout << emailRetrieval.getMailContent() << std::endl;
+                break;
+            }
+            Sleep(1000);
+        }
+
+        // std::cout << "Enter message (or 'exit' to quit): ";
+        // std::cin.getline(buffer, sizeof(buffer));
+        send(clientSocket, sent_buffer, sizeof(sent_buffer), 0);
+
+        if (strcmp(sent_buffer, "exit") == 0) {
+            break;
+        }
+
+        std::string response;
+        char received_buffer[4096];
+        int received_bytes;
+        do {
+            received_bytes = recv(clientSocket, received_buffer, sizeof(received_buffer), 0);
+            if (received_bytes > 0) {
+                response.append(received_buffer, received_bytes);
+            } else if (received_bytes == 0) {
+                std::cout << "Server closed the connection" << std::endl;
+                break;
+            } else {
+                std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+        } while (received_bytes == sizeof(received_buffer));
+
+        if (!response.empty()) {
+            std::cout << "Server response: " << std::endl << response << std::endl;
+        }
+    }
+    closesocket(clientSocket);
+    WSACleanup();
+    return 1;
 }
