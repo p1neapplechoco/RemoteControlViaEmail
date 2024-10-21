@@ -4,24 +4,15 @@ project(RemoteControlViaEmail)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_EXE_LINKER_FLAGS "-static")
+# set(CMAKE_EXE_LINKER_FLAGS "-static")
 set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(lib/wxWidgets-3.2.6)
-add_executable(RemoteControlViaEmail
-        src/App.cpp
-        src/App.h
-        src/MainFrame.cpp
-        src/MainFrame.h)
-
-target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base)
-
 include_directories(${CMAKE_SOURCE_DIR}/lib/curl/include ${CMAKE_SOURCE_DIR}/lib/openssl/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
 
-add_executable(RemoteControlViaEmail src/main.cpp
-        src/EmailRetrieval.cpp
-        src/IniParser.cpp)
+add_executable(RemoteControlViaEmail
+        src/LoginFrame.cpp)
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
