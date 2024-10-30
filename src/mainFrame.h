@@ -1,12 +1,98 @@
 #pragma once
 #include <wx/wx.h>
+#include <wx/bmpbuttn.h>
+using namespace std;
+
+class CustomBitmapButton : public wxBitmapButton
+{
+public:
+    CustomBitmapButton(wxWindow* parent,
+                      wxWindowID id,
+                      const wxString& nameImage,
+                      const wxPoint& pos = wxDefaultPosition,
+                      const wxSize& size = wxDefaultSize)
+        : wxBitmapButton(parent, id, wxBitmap("images/" + nameImage + "_normal.png", wxBITMAP_TYPE_PNG), pos, size, wxBORDER_NONE)
+    {
+        // Lưu bitmap gốc
+        m_normalBitmap = wxBitmap("images/" + nameImage + "_normal.png", wxBITMAP_TYPE_PNG);
+
+        // Tạo bitmap cho trạng thái hover (ví dụ: làm sáng hơn 20%)
+        m_hoverBitmap = wxBitmap("images/" + nameImage + "_hover.png", wxBITMAP_TYPE_PNG);
+
+        // Tạo bitmap cho trạng thái pressed (ví dụ: làm tối hơn 20%)
+        m_pressedBitmap = wxBitmap("images/" + nameImage + "_pressed.png", wxBITMAP_TYPE_PNG);
+
+        // Bind các sự kiện
+        Bind(wxEVT_ENTER_WINDOW, &CustomBitmapButton::OnMouseEnter, this);
+        Bind(wxEVT_LEAVE_WINDOW, &CustomBitmapButton::OnMouseLeave, this);
+        Bind(wxEVT_LEFT_DOWN, &CustomBitmapButton::OnMouseDown, this);
+        Bind(wxEVT_LEFT_UP, &CustomBitmapButton::OnMouseUp, this);
+    }
+
+private:
+    wxBitmap m_normalBitmap;
+    wxBitmap m_hoverBitmap;
+    wxBitmap m_pressedBitmap;
+
+    void OnMouseEnter(wxMouseEvent& event)
+    {
+        SetBitmap(m_hoverBitmap);
+        Refresh();
+    }
+
+    void OnMouseLeave(wxMouseEvent& event)
+    {
+        SetBitmap(m_normalBitmap);
+        Refresh();
+    }
+
+    void OnMouseDown(wxMouseEvent& event)
+    {
+        SetBitmap(m_pressedBitmap);
+        Refresh();
+        event.Skip();
+    }
+
+    void OnMouseUp(wxMouseEvent& event)
+    {
+        if(GetClientRect().Contains(event.GetPosition()))
+            SetBitmap(m_hoverBitmap);
+        else
+            SetBitmap(m_normalBitmap);
+        Refresh();
+        event.Skip();
+    }
+};
 
 class MainFrame : public wxFrame {
-    public:
-        MainFrame(const wxString& title);
-
-    private:
-        void OnButtonClicked(wxCommandEvent& evt);
-        void OnTextChanged(wxCommandEvent& evt);
-        wxDECLARE_EVENT_TABLE();
+public:
+    MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE);
+private:
+    void OnButtonClick(wxCommandEvent& event)
+    {
+        wxMessageBox("Button clicked!", "Info");
+    }
 };
+
+// class MessengerFrame : public wxFrame {
+// public:
+//     MessengerFrame(const wxString &title);
+//
+// private:
+//     wxListCtrl *messageList;
+//     wxTextCtrl *messageInput;
+//     std::vector<std::string> messages;
+//
+//     void OnSendClicked(wxCommandEvent &event);
+//     void UpdateMessageList();
+// };
+
+// class MainFrame : public wxFrame {
+//     public:
+//         MainFrame(const wxString& title);
+//
+//     private:
+//         void OnButtonClicked(wxCommandEvent& evt);
+//         void OnTextChanged(wxCommandEvent& evt);
+//         wxDECLARE_EVENT_TABLE();
+// };

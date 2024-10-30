@@ -2,6 +2,6 @@
 #include <wx/wx.h>
 
 class App : public wxApp {
-    public:
-        bool OnInit();
+public:
+    bool OnInit();
 };

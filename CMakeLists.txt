@@ -12,7 +12,13 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/curl/include ${CMAKE_SOURCE_DIR}/lib
 link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
 
 add_executable(RemoteControlViaEmail
-        src/LoginFrame.cpp)
+        #src/main.cpp
+        #src/LoginFrame.cpp
+        src/App.cpp
+        src/MainFrame.cpp
+)
+
+file(COPY ${CMAKE_SOURCE_DIR}/images DESTINATION ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

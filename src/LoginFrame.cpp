@@ -1,95 +1,72 @@
+#include "LoginFrame.h"
 #include <wx/wx.h>
 #include <wx/statline.h>
 
-class LoginFrame : public wxFrame
-{
-public:
-    LoginFrame() : wxFrame(nullptr, wxID_ANY, "Email Client", wxDefaultPosition, wxSize(400, 300))
-    {
-        SetBackgroundColour(wxColour(40, 40, 40));
+LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE)
+    : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
 
-        wxPanel* panel = new wxPanel(this);
-        panel->SetBackgroundColour(wxColour(40, 40, 40));
+    SetBackgroundColour(wxColour(40, 40, 40));
 
-        wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+    wxPanel* panel = new wxPanel(this);
+    panel->SetBackgroundColour(wxColour(40, 40, 40));
 
-        // Title
-        wxStaticText* title = new wxStaticText(panel, wxID_ANY, "Welcome to app remote desktop control");
-        title->SetForegroundColour(wxColour(200, 200, 200));
-        mainSizer->Add(title, 0, wxALIGN_CENTER | wxTOP, 20);
+    wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-        // Instruction
-        wxStaticText* instruction = new wxStaticText(panel, wxID_ANY, "Input the server's IP address and Port in the box below to connect");
-        instruction->SetForegroundColour(wxColour(200, 200, 200));
-        mainSizer->Add(instruction, 0, wxALIGN_CENTER | wxTOP, 10);
+    // Title
+    wxStaticText* title = new wxStaticText(panel, wxID_ANY, "Remote Control with Email Service");
+    title->SetForegroundColour(wxColour(200, 200, 200));
+    mainSizer->Add(title, 0, wxALIGN_CENTER | wxTOP, 20);
 
-        // Connection time note
-        wxStaticText* timeNote = new wxStaticText(panel, wxID_ANY, "It may takes up to 15 seconds to connect");
-        timeNote->SetForegroundColour(wxColour(200, 200, 200));
-        mainSizer->Add(timeNote, 0, wxALIGN_CENTER | wxTOP, 10);
+    // Instruction
+    wxStaticText* instruction = new wxStaticText(panel, wxID_ANY, "Input the server's IP address and Port in the box below to connect");
+    instruction->SetForegroundColour(wxColour(200, 200, 200));
+    mainSizer->Add(instruction, 0, wxALIGN_CENTER | wxTOP, 10);
 
-        // Horizontal line
-        wxStaticLine* line = new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(350, 1));
-        mainSizer->Add(line, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 20);
+    // Connection time note
+    wxStaticText* timeNote = new wxStaticText(panel, wxID_ANY, "It may takes up to 15 seconds to connect");
+    timeNote->SetForegroundColour(wxColour(200, 200, 200));
+    mainSizer->Add(timeNote, 0, wxALIGN_CENTER | wxTOP, 10);
 
-        // IP input and connect button
-        wxBoxSizer* inputSizerIP = new wxBoxSizer(wxHORIZONTAL);
-        wxStaticText* ipLabel = new wxStaticText(panel, wxID_ANY, "IP Address");
-        ipLabel->SetForegroundColour(wxColour(200, 200, 200));
-        inputSizerIP->Add(ipLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+    // Horizontal line
+    wxStaticLine* line = new wxStaticLine(panel, wxID_ANY, wxDefaultPosition, wxSize(350, 1));
+    mainSizer->Add(line, 0, wxALIGN_CENTER | wxTOP | wxBOTTOM, 20);
 
-        ipInput = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(280, -1));
-        inputSizerIP->Add(ipInput, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+    // IP input and connect button
+    wxBoxSizer* inputSizerIP = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* ipLabel = new wxStaticText(panel, wxID_ANY, "IP Address");
+    ipLabel->SetForegroundColour(wxColour(200, 200, 200));
+    inputSizerIP->Add(ipLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 
-        wxBoxSizer* inputSizerPort = new wxBoxSizer(wxHORIZONTAL);
-        wxStaticText* portLabel = new wxStaticText(panel, wxID_ANY, "Port        ");
-        portLabel->SetForegroundColour(wxColour(200, 200, 200));
-        inputSizerPort->Add(portLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+    ipInput = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(280, -1));
+    inputSizerIP->Add(ipInput, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 
-        portInput = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(200, -1));
-        inputSizerPort->Add(portInput, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+    wxBoxSizer* inputSizerPort = new wxBoxSizer(wxHORIZONTAL);
+    wxStaticText* portLabel = new wxStaticText(panel, wxID_ANY, "Port        ");
+    portLabel->SetForegroundColour(wxColour(200, 200, 200));
+    inputSizerPort->Add(portLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 
-        wxButton* connectButton = new wxButton(panel, wxID_ANY, "Connect", wxDefaultPosition, wxSize(70, -1));
-        inputSizerPort->Add(connectButton, 0, wxALIGN_CENTER_VERTICAL);
+    portInput = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(200, -1));
+    inputSizerPort->Add(portInput, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 
-        mainSizer->Add(inputSizerIP, 0, wxALIGN_CENTER);
-        mainSizer->AddSpacer(10);
-        mainSizer->Add(inputSizerPort, 0, wxALIGN_CENTER);
+    wxButton* connectButton = new wxButton(panel, wxID_ANY, "Connect", wxDefaultPosition, wxSize(70, -1));
+    inputSizerPort->Add(connectButton, 0, wxALIGN_CENTER_VERTICAL);
 
-        panel->SetSizer(mainSizer);
+    mainSizer->Add(inputSizerIP, 0, wxALIGN_CENTER);
+    mainSizer->AddSpacer(10);
+    mainSizer->Add(inputSizerPort, 0, wxALIGN_CENTER);
 
-        connectButton->Bind(wxEVT_BUTTON, &LoginFrame::OnConnect, this);
+    panel->SetSizer(mainSizer);
 
-        Centre();
-    }
+    connectButton->Bind(wxEVT_BUTTON, &LoginFrame::OnConnect, this);
 
-    wxString GetIP() const { return ipInput->GetValue(); }
-    wxString GetPort() const { return portInput->GetValue(); }
+    Centre();
+}
 
-private:
-    void OnConnect(wxCommandEvent& event)
-    {
-        wxString ip = GetIP();
-        wxString port = GetPort();
-        wxMessageBox("Connecting to " + ip + ":" + port, "Connection Info", wxOK | wxICON_INFORMATION);
+void LoginFrame::OnConnect(wxCommandEvent& event) {
+    wxString ip = GetIP();
+    wxString port = GetPort();
+    wxMessageBox("Connecting to " + ip + ":" + port, "Connection Info", wxOK | wxICON_INFORMATION);
 
-        // Call main function or start connection logic
-        Close(); // Close the login frame
-    }
-
-    wxTextCtrl* ipInput;
-    wxTextCtrl* portInput;
-};
-
-class MyApp : public wxApp
-{
-public:
-    virtual bool OnInit()
-    {
-        LoginFrame* frame = new LoginFrame();
-        frame->Show(true);
-        return true;
-    }
-};
-
-wxIMPLEMENT_APP(MyApp);
+    // Call main function or start connection logic
+    Close(); // Close the login frame
+}
