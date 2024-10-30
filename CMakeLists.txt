@@ -18,7 +18,10 @@ add_executable(RemoteControlViaEmail
         src/MainFrame.cpp
 )
 
-file(COPY ${CMAKE_SOURCE_DIR}/images DESTINATION ${CMAKE_BINARY_DIR})
+if(EXISTS ${CMAKE_BINARY_DIR}/assert)
+    file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/assert)
+endif()
+file(COPY ${CMAKE_SOURCE_DIR}/assert DESTINATION ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

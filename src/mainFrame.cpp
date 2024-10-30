@@ -34,9 +34,9 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     auto topRightSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "image");  // Help
+    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "send");  // Help
     helpButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "image");  // Image
+    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "send");  // Image
     exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
 
     topRightSizer->Add(helpButton, 0, wxRIGHT, margin);
@@ -70,7 +70,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     };
 
     for (const auto& label : buttons) {
-        auto btn = new CustomBitmapButton(leftPanel, wxID_ANY, "image");  // label
+        auto btn = new CustomBitmapButton(leftPanel, wxID_ANY, "send");  // label
         leftSizer->Add(btn, 0, wxEXPAND | wxBOTTOM, margin);
     }
 
@@ -121,9 +121,9 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     buttonSizer->AddStretchSpacer();  // Đẩy buttons sang phải
 
-    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "image");    // Cancel
+    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Cancel
     cancelButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "image");    // Send
+    auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Send
     sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
 
     buttonSizer->Add(cancelButton, 0, wxRIGHT, margin);

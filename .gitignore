@@ -35,3 +35,7 @@
 cmake-build-debug/
 build/
 /.idea
+/src/server/.idea
+/src/client/.idea
+/src/server/.idea
+src/server/.idea/editor.xml

@@ -3,6 +3,7 @@
 #include <wx/bmpbuttn.h>
 using namespace std;
 
+const string path_buttons = "assert/buttons/";
 class CustomBitmapButton : public wxBitmapButton
 {
 public:
@@ -11,16 +12,16 @@ public:
                       const wxString& nameImage,
                       const wxPoint& pos = wxDefaultPosition,
                       const wxSize& size = wxDefaultSize)
-        : wxBitmapButton(parent, id, wxBitmap("images/" + nameImage + "_normal.png", wxBITMAP_TYPE_PNG), pos, size, wxBORDER_NONE)
+        : wxBitmapButton(parent, id, wxBitmap(path_buttons + nameImage + "_normal.png", wxBITMAP_TYPE_PNG), pos, size, wxBORDER_NONE)
     {
         // Lưu bitmap gốc
-        m_normalBitmap = wxBitmap("images/" + nameImage + "_normal.png", wxBITMAP_TYPE_PNG);
+        m_normalBitmap = wxBitmap(path_buttons + nameImage + "_normal.png", wxBITMAP_TYPE_PNG);
 
         // Tạo bitmap cho trạng thái hover (ví dụ: làm sáng hơn 20%)
-        m_hoverBitmap = wxBitmap("images/" + nameImage + "_hover.png", wxBITMAP_TYPE_PNG);
+        m_hoverBitmap = wxBitmap(path_buttons + nameImage + "_hover.png", wxBITMAP_TYPE_PNG);
 
         // Tạo bitmap cho trạng thái pressed (ví dụ: làm tối hơn 20%)
-        m_pressedBitmap = wxBitmap("images/" + nameImage + "_pressed.png", wxBITMAP_TYPE_PNG);
+        m_pressedBitmap = wxBitmap(path_buttons + nameImage + "_pressed.png", wxBITMAP_TYPE_PNG);
 
         // Bind các sự kiện
         Bind(wxEVT_ENTER_WINDOW, &CustomBitmapButton::OnMouseEnter, this);
