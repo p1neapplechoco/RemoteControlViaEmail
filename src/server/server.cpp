@@ -1,8 +1,3 @@
-//
-// Created by phida on 10/9/2024.
-//
-
-
 #include "server.h"
 
 using namespace std;

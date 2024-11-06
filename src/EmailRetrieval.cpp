@@ -2,31 +2,37 @@
 #include "IniParser.h"
 
 // Don't touch this function
-static size_t WriteCallback(void* contents, const size_t size, const size_t nmemb, void* userp) {
+static size_t WriteCallback(void *contents, const size_t size, const size_t nmemb, void *userp)
+{
     static_cast<std::string *>(userp)->append(static_cast<char *>(contents), size * nmemb);
     return size * nmemb;
 }
 
-void UserCredentials::loadCredentials() {
+void UserCredentials::loadCredentials()
+{
     IniParser parser("../config.ini");
     username = parser.get("Credentials", "username");
     password = parser.get("Credentials", "password");
     ca_bundle_path = parser.get("MISCs", "ca_bundle_path");
 }
 
-std::string UserCredentials::getUsername() {
+std::string UserCredentials::getUsername()
+{
     return username;
 }
 
-std::string UserCredentials::getPassword() {
+std::string UserCredentials::getPassword()
+{
     return password;
 }
 
-std::string UserCredentials::getCaBundlePath() {
+std::string UserCredentials::getCaBundlePath()
+{
     return ca_bundle_path;
 }
 
-void EmailRetrieval::setupCurl() {
+void EmailRetrieval::setupCurl()
+{
     curl = curl_easy_init();
     const std::string username = user_credentials.getUsername();
     const std::string password = user_credentials.getPassword();
@@ -44,7 +50,8 @@ void EmailRetrieval::setupCurl() {
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); For debugging purpose
 }
 
-void EmailRetrieval::cleanUpCurl() const {
+void EmailRetrieval::cleanUpCurl() const
+{
     curl_easy_cleanup(curl);
 }
 
@@ -92,7 +99,8 @@ std::string EmailRetrieval::parseEmailContent(const std::string &raw_mail)
             continue;
         }
         if (line.find("--") == 0)
-        { // Stop at boundary lines
+        {
+            // Stop at boundary lines
             if (isTextPlain || isTextHtml)
             {
                 break;
@@ -106,7 +114,8 @@ std::string EmailRetrieval::parseEmailContent(const std::string &raw_mail)
     return content;
 }
 
-void EmailRetrieval::retrieveEmail() {
+void EmailRetrieval::retrieveEmail()
+{
     std::string raw_mail;
 
     const std::string url = "imaps://imap.gmail.com:993/INBOX;UID=*";
@@ -117,7 +126,8 @@ void EmailRetrieval::retrieveEmail() {
 
     const CURLcode res = curl_easy_perform(curl);
 
-    if (res != CURLE_OK) {
+    if (res != CURLE_OK)
+    {
         std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res);
         cleanUpCurl();
         return;
@@ -127,10 +137,12 @@ void EmailRetrieval::retrieveEmail() {
     mail_content = parseEmailContent(raw_mail);
 }
 
-std::string EmailRetrieval::getMailContent() {
+std::string EmailRetrieval::getMailContent()
+{
     return mail_content;
 }
 
-std::string EmailRetrieval::getMailID() {
+std::string EmailRetrieval::getMailID()
+{
     return mail_id;
 }

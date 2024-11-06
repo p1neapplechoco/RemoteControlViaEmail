@@ -1,8 +1,8 @@
-#include "EmailRetrieval.h"
+#include <cstdio>
 #include <io.h>
 #include <iostream>
 #include <winsock2.h>
-#include <cstdio>
+#include "EmailRetrieval.h"
 
 void removeCarriageReturns(char *str)
 {

@@ -15,8 +15,8 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openss
 add_executable(RemoteControlViaEmail src/main.cpp
         src/EmailRetrieval.cpp
         src/IniParser.cpp
-        src/Client.cpp
-        src/Client.h
+        src/client.cpp
+        src/client.h
         src/GetWinDirectory.cpp)
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
