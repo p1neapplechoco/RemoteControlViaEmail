@@ -2,27 +2,33 @@
 #include <io.h>
 #include <iostream>
 #include <winsock2.h>
-#include <stdio.h>
+#include <cstdio>
 
-void removeCarriageReturns(char* str) {
-    char* write = str;
-    for (char* read = str; *read; read++) {
-        if (*read != '\r') {
+void removeCarriageReturns(char *str)
+{
+    char *write = str;
+    for (char *read = str; *read; read++)
+    {
+        if (*read != '\r')
+        {
             *write++ = *read;
         }
     }
     *write = '\0';
 }
 
-int main() {
+int main()
+{
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
         std::cerr << "Failed to initialize Winsock" << std::endl;
         return 1;
     }
 
     SOCKET clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (clientSocket == INVALID_SOCKET) {
+    if (clientSocket == INVALID_SOCKET)
+    {
         std::cerr << "Failed to create socket" << std::endl;
         WSACleanup();
         return 1;
@@ -43,7 +49,8 @@ int main() {
     serverAddr.sin_port = htons(serverPort); // parametrize this
 
     // Connect to the server
-    if (connect(clientSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+    if (connect(clientSocket, reinterpret_cast<sockaddr *>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR)
+    {
         std::cerr << "Connection failed" << std::endl;
         closesocket(clientSocket);
         WSACleanup();
@@ -59,18 +66,22 @@ int main() {
 
     emailRetrieval.setupCurl();
 
-    while (true) {
+    while (true)
+    {
         char sent_buffer[1024] = {};
         std::string prev_mail_id = " ";
         bool fl = true; // Ignore the first email
 
-        while (true) {
+        while (true)
+        {
             emailRetrieval.retrieveEmail();
-            if (fl) {
+            if (fl)
+            {
                 prev_mail_id = emailRetrieval.getMailID();
                 fl = false;
             }
-            if (prev_mail_id != emailRetrieval.getMailID()) {
+            if (prev_mail_id != emailRetrieval.getMailID())
+            {
                 std::string str = emailRetrieval.getMailContent();
                 strcpy(sent_buffer, emailRetrieval.getMailContent().c_str());
                 removeCarriageReturns(sent_buffer);
@@ -82,31 +93,35 @@ int main() {
             Sleep(1000);
         }
 
-        // std::cout << "Enter message (or 'exit' to quit): ";
-        // std::cin.getline(buffer, sizeof(buffer));
         send(clientSocket, sent_buffer, sizeof(sent_buffer), 0);
 
-        if (strcmp(sent_buffer, "exit") == 0) {
+        if (strcmp(sent_buffer, "exit") == 0)
+        {
             break;
         }
 
         std::string response;
         char received_buffer[4096];
         int received_bytes;
-        do {
+        do
+        {
             received_bytes = recv(clientSocket, received_buffer, sizeof(received_buffer), 0);
-            if (received_bytes > 0) {
+            if (received_bytes > 0)
+            {
                 response.append(received_buffer, received_bytes);
-            } else if (received_bytes == 0) {
+            } else if (received_bytes == 0)
+            {
                 std::cout << "Server closed the connection" << std::endl;
                 break;
-            } else {
+            } else
+            {
                 std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
                 break;
             }
         } while (received_bytes == sizeof(received_buffer));
 
-        if (!response.empty()) {
+        if (!response.empty())
+        {
             std::cout << "Server response: " << std::endl << response << std::endl;
         }
     }

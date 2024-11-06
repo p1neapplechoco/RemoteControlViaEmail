@@ -7,6 +7,65 @@
 
 using namespace std;
 
+bool endProcess(int appId) {
+    // Get a handle to the process
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, appId);
+
+    if (hProcess == NULL) {
+        std::cerr << "Failed to open process with ID " << appId << ". Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    // Terminate the process
+    if (TerminateProcess(hProcess, 0)) {
+        std::cout << "Process with ID " << appId << " terminated successfully." << std::endl;
+    } else {
+        std::cerr << "Failed to terminate process with ID " << appId << ". Error: " << GetLastError() << std::endl;
+    }
+    // Close the process handle
+    CloseHandle(hProcess);
+    return true;
+}
+
+bool stopService(const char* serviceName) {
+    // Open the service control manager
+    SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
+    if (hSCManager == NULL) {
+        std::cerr << "Failed to open service control manager. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    // Open the service
+    SC_HANDLE hService = OpenService(hSCManager, serviceName, SERVICE_STOP | SERVICE_QUERY_STATUS);
+    if (hService == NULL) {
+        std::cerr << "Failed to open service: " << serviceName << ". Error: " << GetLastError() << std::endl;
+        CloseServiceHandle(hSCManager);
+        return false;
+    }
+
+    // Attempt to stop the service
+    SERVICE_STATUS status;
+    if (ControlService(hService, SERVICE_CONTROL_STOP, &status)) {
+        std::cout << "Service " << serviceName << " stopping...\n";
+
+        // Wait until the service is stopped
+        while (QueryServiceStatus(hService, &status)) {
+            if (status.dwCurrentState == SERVICE_STOPPED) {
+                std::cout << "Service " << serviceName << " stopped successfully." << std::endl;
+                break;
+            }
+            Sleep(1000);
+        }
+    } else {
+        std::cerr << "ControlService failed. Error: " << GetLastError() << std::endl;
+    }
+
+    // Close the service and service control manager handles
+    CloseServiceHandle(hService);
+    CloseServiceHandle(hSCManager);
+    return true;
+}
+
 // Helper function to get the encoder CLSID for a given image format
 int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
     UINT num = 0;
@@ -49,8 +108,6 @@ std::wstring getStateString(DWORD state) {
         default: return L"Unknown";
     }
 }
-
-
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -138,6 +195,35 @@ void Server::handleClient(SOCKET clientSocket) {
         } else if (strcmp(buffer, "start webcam") == 0) {
             StartWebcam();
             wss << L"Webcam started.\n"; // TODO: Multithread
+        } else if (strstr(buffer, "enda ") != NULL) {
+            char* endPtr;
+            int app_id = strtol(buffer + 4, &endPtr, 10);
+            if (*endPtr == '\0' || *endPtr == ' ') {
+                std::cout << app_id << std::endl;
+                wss << "Trying to close " << app_id << std::endl;
+                if (!endProcess(app_id)) {
+                    wss << "No such app with such ID" << std::endl;
+                }
+            }
+            else
+                wss << "Invalid ID" << std::endl;
+        } else if (strstr(buffer, "ends ") == buffer) {
+            char serviceName[256] = {0};  // Ensure the array is zero-initialized
+            char* start = buffer + 5; // Start after "ends "
+
+            // Copy the service name into serviceName and remove trailing newlines and spaces
+            size_t len = 0;
+            while (start[len] != '\0' && start[len] != '\n' && start[len] != ' ' && start[len] != '\r' && len < sizeof(serviceName) - 1) {
+                serviceName[len] = start[len];
+                len++;
+            }
+            serviceName[len] = '\0';  // Null-terminate the string
+
+            wss << L"Trying to stop service: " << serviceName << std::endl;
+            if (!stopService(serviceName)) {
+                wss << L"Failed to stop the service." << std::endl;
+            }
+
         } else {
             wss << L"Unknown command.\n";
         }

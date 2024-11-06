@@ -35,3 +35,14 @@
 cmake-build-debug/
 build/
 /.idea
+*.idea
+
+.idea
+cmake-build-debug
+
+/src/server/cmake-build-debug
+/src/server/.idea
+
+/src/client/cmake-build-debug
+/src/client/.idea
+/src/client/.idea
