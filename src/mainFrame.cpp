@@ -18,7 +18,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     // Top panel
     wxPanel* topPanel = new wxPanel(this, wxID_ANY);
-    topPanel->SetBackgroundColour(wxColour(230, 230, 230));
+    topPanel->SetBackgroundColour(wxColor(255, 255, 255));
     auto topSizer = new wxBoxSizer(wxHORIZONTAL);
 
     auto topLeftSizer = new wxBoxSizer(wxVERTICAL);
@@ -29,14 +29,14 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     auto emailText = new wxStaticText(topPanel, wxID_ANY, "example@email.com");
 
-    topLeftSizer->Add(titleText, 0, wxBOTTOM, 5);
+    topLeftSizer->Add(titleText, 0, wxALIGN_CENTER_HORIZONTAL, 5);
     topLeftSizer->Add(emailText, 0);
 
     auto topRightSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "send");  // Help
+    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "instruction");  // Help
     helpButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "send");  // Image
+    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "exit");  // Image
     exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
 
     topRightSizer->Add(helpButton, 0, wxRIGHT, margin);
@@ -81,6 +81,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     // Right panel với form
     wxPanel* rightPanel = new wxPanel(this, wxID_ANY);
+    rightPanel->SetBackgroundColour(wxColor(255, 255, 255));
     auto rightSizer = new wxBoxSizer(wxVERTICAL);
 
     // Form panel
@@ -121,7 +122,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     buttonSizer->AddStretchSpacer();  // Đẩy buttons sang phải
 
-    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Cancel
+    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "cancel");    // Cancel
     cancelButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
     auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Send
     sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
