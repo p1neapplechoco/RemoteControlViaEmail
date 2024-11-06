@@ -12,7 +12,11 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <vector>
+#include <gdiplus.h>
+#include <qedit.h>
 
+extern "C" { extern GUID CLSID_SampleGrabber; }
 // #include <atlbase.h>
 
 using namespace std;
@@ -34,6 +38,11 @@ private:
 
     void WebcamThread();
 
+    std::vector<char> currentFrame;
+    std::mutex frameMutex;
+    HRESULT GrabFrame(IMediaControl* pControl, IBaseFilter* pCap);
+    static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
+
 public:
     bool IsWebcamRunning() const { return isRunning; }
 
@@ -46,6 +55,8 @@ public:
     void StopWebcam();
 
     void CleanUp();
+
+    std::vector<char> GetCurrentFrame();
 };
 
 #endif //WEBCAMCONTROLLER_H
