@@ -8,7 +8,7 @@ set(BUILD_SHARED_LIBS OFF)
 
 #include_directories(lib/asio/include/)
 
-add_executable(server main.cpp main.h server.cpp server.h
+add_executable(server main.cpp main.h server.cpp server.h discoveryResponder.cpp discoveryResponder.h
         WebcamController.cpp
         WebcamController.h)
 

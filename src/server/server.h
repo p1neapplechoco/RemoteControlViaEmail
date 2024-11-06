@@ -66,6 +66,7 @@ struct ProcessInfo {
 
 class Server {
 private:
+    int defaultPort = 45678;
     int assignedPort;
     SOCKET serverSocket;
     WebcamController controller;

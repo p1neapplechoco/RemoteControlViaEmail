@@ -4,7 +4,7 @@
 
 
 #include "server.h"
-
+#include "discoveryResponder.h"
 using namespace std;
 // asio::io_context io_context;
 // udp::socket multicast_socket(io_context);
@@ -214,6 +214,8 @@ Server::Server() {
 }
 
 Server::~Server() {
+    closesocket(serverSocket);
+    WSACleanup();
     cout << "Server destroyed" << endl;
 }
 
@@ -224,17 +226,25 @@ void Server::StartListening() {
         WSACleanup();
         return;
     }
-    cout << "Server listening on port " << assignedPort << std::endl;
+    cout << "Server listening for discovery on port " << assignedPort << std::endl;
 
-    // Receive and send messages
+    // Wait for a connection, Default when enter
+
     while (true) {
-        SOCKET clientSocket = accept(serverSocket, NULL, NULL);
-        if (clientSocket == INVALID_SOCKET) {
-            cerr << "Accept failed" << endl;
-            continue;
+        DiscoveryResponder responder;
+        responder.listen();
+
+        // Receive and send messages
+        while (true) {
+            SOCKET clientSocket = accept(serverSocket, NULL, NULL);
+            if (clientSocket == INVALID_SOCKET) {
+                cerr << "Accept failed" << endl;
+                continue;
+            }
+            cout << "New client connected." << endl;
+            handleClient(clientSocket);
+            break;
         }
-        cout << "New client connected." << endl;
-        handleClient(clientSocket);
     }
 }
 
@@ -419,65 +429,6 @@ void Server::ViewFile() {
 void Server::GetFile() {
     return;
 };
-//
-// //---------------------------------------------------------------
-//
-// MulticastClient::MulticastClient() {
-// }
-//
-// std::vector<std::string> MulticastClient::ipFromBytes(const char *raw_data, int size) {
-//     std::vector<std::string> ips;
-//
-//     if (size > sizeof(data) / sizeof(char)) return ips;
-//
-//     int offset = 0;
-//     while (offset < size) {
-//         bool null_left = 0;
-//         for (int i = offset; i < size; i++) {
-//             if (raw_data[i] == '\0') {
-//                 null_left = 1;
-//                 break;
-//             }
-//         }
-//         if (!null_left) break;
-//
-//         const char *currentString = raw_data + offset;
-//         ips.emplace_back(std::string(currentString));
-//         offset += ips.back().size() + 1;
-//     }
-//
-//     return ips;
-// }
-//
-// void MulticastClient::connect() {
-//     udp::endpoint listen_endpoint(asio::ip::make_address("0.0.0.0"), MULTICAST_PORT);
-//     multicast_socket.open(listen_endpoint.protocol());
-//     multicast_socket.set_option(udp::socket::reuse_address(true));
-//     multicast_socket.bind(listen_endpoint);
-//
-//     // Join the multicast group.
-//     multicast_socket.set_option(asio::ip::multicast::join_group(asio::ip::make_address(MULTICAST_ADDRESS)));
-// }
-//
-// void MulticastClient::doReceive() {
-//     udp::endpoint sender_endpoint_;
-//     multicast_socket.async_receive_from(asio::buffer(data, sizeof(data) / sizeof(char)), sender_endpoint_,
-//                                         [this](std::error_code ec, std::size_t length) {
-//                                             if (!ec) {
-//                                                 size = length;
-//                                                 doReceive();
-//                                             }
-//                                         });
-// }
-//
-// std::vector<std::string> MulticastClient::getAddresses() {
-//     return ipFromBytes(data, size);
-// }
-//
-// MulticastClient::~MulticastClient() {
-// }
-//
-// //---------------------------------------------------------------
 
 // Function to start an application and return its PID
 DWORD StartApplication(const std::wstring &applicationPath) {

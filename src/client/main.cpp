@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdexcept>
+#include "networkDiscovery.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -57,6 +59,12 @@ int main() {
         return 1;
     }
 
+    // Scan IP first
+    NetworkDiscovery initialDiscovery;
+    initialDiscovery.sendBroadcast();
+    initialDiscovery.listenForResponses(5);
+    // Scan IP first
+
     std::string serverIP;
     int serverPort;
 
@@ -84,6 +92,16 @@ int main() {
         char sendBuffer[1024] = {};
         std::cout << "Enter message (or 'exit' to quit): ";
         std::cin.getline(sendBuffer, sizeof(sendBuffer));
+
+        // List RadminVPN devices
+        if (std::string(sendBuffer) == "list network") {
+            NetworkDiscovery networkDiscovery;
+            networkDiscovery.sendBroadcast();
+            networkDiscovery.listenForResponses(5);
+            continue;
+        }
+        // List RadminVPN devices
+
         send(clientSocket, sendBuffer, strlen(sendBuffer), 0);
 
         if (strcmp(sendBuffer, "exit") == 0) {
