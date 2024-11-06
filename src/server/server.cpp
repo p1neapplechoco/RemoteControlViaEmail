@@ -6,21 +6,19 @@
 #include "server.h"
 
 using namespace std;
-// asio::io_context io_context;
-// udp::socket multicast_socket(io_context);
 
 // Helper function to get the encoder CLSID for a given image format
-int GetEncoderClsid(const WCHAR *format, CLSID *pClsid) {
+int GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
     UINT num = 0;
     UINT size = 0;
 
-    Gdiplus::ImageCodecInfo *pImageCodecInfo = NULL;
+    Gdiplus::ImageCodecInfo* pImageCodecInfo = NULL;
 
     Gdiplus::GetImageEncodersSize(&num, &size);
     if (size == 0)
         return -1;
 
-    pImageCodecInfo = (Gdiplus::ImageCodecInfo *) (malloc(size));
+    pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
     if (pImageCodecInfo == NULL)
         return -1;
 
@@ -52,14 +50,7 @@ std::wstring getStateString(DWORD state) {
     }
 }
 
-pair<int, int> GetPhysicalDesktopDimensions() {
-    DEVMODE devMode;
-    devMode.dmSize = sizeof(DEVMODE);
-    EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode);
-    int screenWidth = devMode.dmPelsWidth;
-    int screenHeight = devMode.dmPelsHeight;
-    return {screenWidth, screenHeight};
-}
+
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -80,9 +71,9 @@ void Server::handleClient(SOCKET clientSocket) {
 
         if (strcmp(buffer, "list app") == 0) {
             std::vector<ProcessInfo> processes = ListApplications();
-            std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
+            std::map<ProcessType, std::vector<ProcessInfo>> groupedProcesses;
 
-            for (const auto &process: processes) {
+            for (const auto &process : processes) {
                 groupedProcesses[process.type].push_back(process);
             }
 
@@ -93,30 +84,48 @@ void Server::handleClient(SOCKET clientSocket) {
                 wss << typeNames[i] << L" (" << groupedProcesses[type].size() << L")\n";
                 wss << std::wstring(50, L'-') << L"\n";
 
-                for (const auto &process: groupedProcesses[type]) {
+                for (const auto &process : groupedProcesses[type]) {
                     wss << std::left << std::setw(10) << process.pid << process.name << L"\n";
                 }
                 wss << L"\n";
             }
             wss << L"Total processes: " << processes.size() << L"\n";
+
         } else if (strcmp(buffer, "list service") == 0) {
             std::vector<ServiceInfo> services = ListServices();
 
             wss << std::left << std::setw(40) << L"Service Name"
-                    << std::setw(50) << L"Display Name"
-                    << L"State\n";
+                << std::setw(50) << L"Display Name"
+                << L"State\n";
             wss << std::wstring(100, L'-') << L"\n";
 
-            for (const auto &service: services) {
+            for (const auto &service : services) {
                 wss << std::left << std::setw(40) << service.name
-                        << std::setw(50) << service.displayName
-                        << getStateString(service.currentState) << L"\n";
+                    << std::setw(50) << service.displayName
+                    << getStateString(service.currentState) << L"\n";
             }
             wss << L"\nTotal services: " << services.size() << L"\n";
+
         } else if (strcmp(buffer, "screen capture") == 0) {
             imageData = ScreenCapture();
             wss << L"Screen capture completed.\n";
-            // TODO: Generalize this
+            // // TODO: Generalize this
+            // // Convert wstring to string
+            // std::wstring wstr = wss.str();
+            // std::string str(wstr.begin(), wstr.end());
+            //
+            // // Send the response back to the client
+            // int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
+            // if (bytesSent == SOCKET_ERROR) {
+            //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+            //     break;
+            // }
+            //
+            // // Send the image data back to the client
+            // send(clientSocket, imageData.data(), imageData.size(), 0);
+            //
+            // continue;
+
         } else if (strcmp(buffer, "shutdown") == 0) {
             wss << L"Shutdown initiated. Shutting down after 15s\n";
             Shutdown();
@@ -129,9 +138,6 @@ void Server::handleClient(SOCKET clientSocket) {
         } else if (strcmp(buffer, "start webcam") == 0) {
             StartWebcam();
             wss << L"Webcam started.\n"; // TODO: Multithread
-        } else if (strcmp(buffer, "stop webcam") == 0) {
-            StopWebcam();
-            wss << L"Webcam stopped.\n"; // TODO: Multithread
         } else {
             wss << L"Unknown command.\n";
         }
@@ -151,7 +157,7 @@ void Server::handleClient(SOCKET clientSocket) {
         // Send the response back to the client
         // Send the size of str first
         int responseSize = str.length();
-        send(clientSocket, reinterpret_cast<char *>(&responseSize), sizeof(int), 0);
+        send(clientSocket, reinterpret_cast<char*>(&responseSize), sizeof(int), 0);
 
         // Send the actual str
         int bytesSent = send(clientSocket, str.c_str(), str.length(), 0);
@@ -163,7 +169,7 @@ void Server::handleClient(SOCKET clientSocket) {
         if (strcmp(buffer, "screen capture") == 0) {
             // Send the size of the image data first
             int imageSize = static_cast<int>(imageData.size());
-            send(clientSocket, reinterpret_cast<char *>(&imageSize), sizeof(int), 0);
+            send(clientSocket, reinterpret_cast<char*>(&imageSize), sizeof(int), 0);
 
             // Send the actual image data
             bytesSent = send(clientSocket, imageData.data(), imageData.size(), 0);
@@ -276,6 +282,7 @@ std::vector<ProcessInfo> Server::ListApplications() {
     return processes;
 }
 
+
 std::vector<ServiceInfo> Server::ListServices() {
     std::vector<ServiceInfo> services;
 
@@ -317,6 +324,22 @@ std::vector<ServiceInfo> Server::ListServices() {
     return services;
 };
 
+
+pair<int, int> GetPhysicalDesktopDimensions() {
+    // HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    // CONSOLE_SCREEN_BUFFER_INFO csbi;
+    // GetConsoleScreenBufferInfo(handle, &csbi);
+    // int screenWidth = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    // int screenHeight = 1080;
+    // cout << screenHeight << " cc " << screenWidth << endl;
+    DEVMODE devMode;
+    devMode.dmSize = sizeof(DEVMODE);
+    EnumDisplaySettings(nullptr, ENUM_CURRENT_SETTINGS, &devMode);
+    int screenWidth  = devMode.dmPelsWidth;
+    int screenHeight = devMode.dmPelsHeight;
+    return { screenWidth, screenHeight };
+}
+
 std::vector<char> Server::ScreenCapture() {
     Gdiplus::GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
@@ -331,8 +354,8 @@ std::vector<char> Server::ScreenCapture() {
     w = resolution.first;
     h = resolution.second;
     float ratio = 1.0f; // TODO: Dynamic ratio
-    w = int((float) w * ratio);
-    h = int((float) h * ratio);
+    w = int((float)w * ratio);
+    h = int((float)h * ratio);
     HDC hScreen = GetDC(NULL);
     HDC hDC = CreateCompatibleDC(hScreen);
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
@@ -340,12 +363,12 @@ std::vector<char> Server::ScreenCapture() {
     SetStretchBltMode(hDC, HALFTONE);
     StretchBlt(hDC, 0, 0, w, h, hScreen, x1, y1, w, h, SRCCOPY);
 
-    Gdiplus::Bitmap *bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
+    Gdiplus::Bitmap* bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
 
     CLSID jpegClsid;
     GetEncoderClsid(L"image/jpeg", &jpegClsid);
 
-    IStream *istream = NULL;
+    IStream* istream = NULL;
     CreateStreamOnHGlobal(NULL, TRUE, &istream);
 
     Gdiplus::EncoderParameters encoderParameters;
@@ -404,104 +427,25 @@ void Server::Shutdown() {
     }
 };
 
-void Server::StartWebcam() {
-    controller.StartWebcam();
-};
-
-void Server::StopWebcam() {
-    controller.StopWebcam();
-};
-
 void Server::ViewFile() {
     return;
 }
 
+void Server::StartWebcam() {
+    WebcamController controller;
+    controller.StartWebcam();
+
+    //
+    // HRESULT hr = controller.CaptureImage();
+    // if (SUCCEEDED(hr)) {
+    //     std::cout << "Screenshot captured successfully!" << std::endl;
+    // } else {
+    //     std::cout << "Failed to capture screenshot. Error code: " << hr << std::endl;
+    // }
+    //
+    // controller.CleanUp();
+};
+
 void Server::GetFile() {
     return;
 };
-//
-// //---------------------------------------------------------------
-//
-// MulticastClient::MulticastClient() {
-// }
-//
-// std::vector<std::string> MulticastClient::ipFromBytes(const char *raw_data, int size) {
-//     std::vector<std::string> ips;
-//
-//     if (size > sizeof(data) / sizeof(char)) return ips;
-//
-//     int offset = 0;
-//     while (offset < size) {
-//         bool null_left = 0;
-//         for (int i = offset; i < size; i++) {
-//             if (raw_data[i] == '\0') {
-//                 null_left = 1;
-//                 break;
-//             }
-//         }
-//         if (!null_left) break;
-//
-//         const char *currentString = raw_data + offset;
-//         ips.emplace_back(std::string(currentString));
-//         offset += ips.back().size() + 1;
-//     }
-//
-//     return ips;
-// }
-//
-// void MulticastClient::connect() {
-//     udp::endpoint listen_endpoint(asio::ip::make_address("0.0.0.0"), MULTICAST_PORT);
-//     multicast_socket.open(listen_endpoint.protocol());
-//     multicast_socket.set_option(udp::socket::reuse_address(true));
-//     multicast_socket.bind(listen_endpoint);
-//
-//     // Join the multicast group.
-//     multicast_socket.set_option(asio::ip::multicast::join_group(asio::ip::make_address(MULTICAST_ADDRESS)));
-// }
-//
-// void MulticastClient::doReceive() {
-//     udp::endpoint sender_endpoint_;
-//     multicast_socket.async_receive_from(asio::buffer(data, sizeof(data) / sizeof(char)), sender_endpoint_,
-//                                         [this](std::error_code ec, std::size_t length) {
-//                                             if (!ec) {
-//                                                 size = length;
-//                                                 doReceive();
-//                                             }
-//                                         });
-// }
-//
-// std::vector<std::string> MulticastClient::getAddresses() {
-//     return ipFromBytes(data, size);
-// }
-//
-// MulticastClient::~MulticastClient() {
-// }
-//
-// //---------------------------------------------------------------
-
-// Function to start an application and return its PID
-DWORD StartApplication(const std::wstring &applicationPath) {
-    STARTUPINFO si = {sizeof(si)};
-    PROCESS_INFORMATION pi;
-
-    if (CreateProcess(reinterpret_cast<LPCSTR>(applicationPath.c_str()), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si,
-                      &pi)) {
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
-        return pi.dwProcessId;
-    }
-
-    return 0; // Return 0 if process creation failed
-}
-
-// Function to stop an application given its PID
-bool StopApplication(DWORD pid) {
-    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-    if (hProcess == NULL) {
-        return false;
-    }
-
-    bool result = TerminateProcess(hProcess, 0);
-    CloseHandle(hProcess);
-    return result;
-}

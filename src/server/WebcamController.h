@@ -8,11 +8,6 @@
 #include <dshow.h>
 #include <iostream>
 #include <conio.h>
-#include <thread>
-#include <atomic>
-#include <mutex>
-#include <condition_variable>
-
 // #include <atlbase.h>
 
 using namespace std;
@@ -27,23 +22,17 @@ private:
     ICaptureGraphBuilder2 *pBuild = NULL;
     IMediaControl *pControl = NULL;
     IBaseFilter *pCap = NULL;
-    std::atomic<bool> isRunning{false};
-    std::atomic<bool> stopRequested{false};
-    std::mutex mtx;
-    std::condition_variable cv;
-
-    void WebcamThread();
 
 public:
-    bool IsWebcamRunning() const { return isRunning; }
-
     HRESULT InitializeGraph();
 
     HRESULT EnumerateDevices();
 
+    HRESULT CaptureImage();
+
     void StartWebcam();
 
-    void StopWebcam();
+    HRESULT StopWebcam();
 
     void CleanUp();
 };
