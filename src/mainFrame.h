@@ -4,30 +4,40 @@
 using namespace std;
 
 const string path_buttons = "assert/buttons/";
-class CustomBitmapButton : public wxBitmapButton
-{
+
+class CustomBitmapButton : public wxBitmapButton {
 public:
     CustomBitmapButton(wxWindow* parent,
-                      wxWindowID id,
-                      const wxString& nameImage,
-                      const wxPoint& pos = wxDefaultPosition,
-                      const wxSize& size = wxDefaultSize)
-        : wxBitmapButton(parent, id, wxBitmap(path_buttons + nameImage + "_normal.png", wxBITMAP_TYPE_PNG), pos, size, wxBORDER_NONE)
+        wxWindowID id,
+        const wxString& nameImage,
+        const wxPoint& pos = wxDefaultPosition,
+        const wxSize& size = wxDefaultSize)
+        : wxBitmapButton(parent, id, wxBitmap(), pos, size, wxBORDER_NONE)
     {
-        // Lưu bitmap gốc
+        // Load images with transparency
         m_normalBitmap = wxBitmap(path_buttons + nameImage + "_normal.png", wxBITMAP_TYPE_PNG);
 
-        // Tạo bitmap cho trạng thái hover (ví dụ: làm sáng hơn 20%)
+
         m_hoverBitmap = wxBitmap(path_buttons + nameImage + "_hover.png", wxBITMAP_TYPE_PNG);
 
-        // Tạo bitmap cho trạng thái pressed (ví dụ: làm tối hơn 20%)
+
         m_pressedBitmap = wxBitmap(path_buttons + nameImage + "_pressed.png", wxBITMAP_TYPE_PNG);
 
-        // Bind các sự kiện
+
+        SetBitmap(m_normalBitmap); // Set initial bitmap
+
+        // Bind events
         Bind(wxEVT_ENTER_WINDOW, &CustomBitmapButton::OnMouseEnter, this);
         Bind(wxEVT_LEAVE_WINDOW, &CustomBitmapButton::OnMouseLeave, this);
         Bind(wxEVT_LEFT_DOWN, &CustomBitmapButton::OnMouseDown, this);
         Bind(wxEVT_LEFT_UP, &CustomBitmapButton::OnMouseUp, this);
+    }
+
+    ~CustomBitmapButton() {
+        //Delete the masks to prevent memory leaks
+        delete m_normalBitmap.GetMask();
+        delete m_hoverBitmap.GetMask();
+        delete m_pressedBitmap.GetMask();
     }
 
 private:
@@ -35,28 +45,24 @@ private:
     wxBitmap m_hoverBitmap;
     wxBitmap m_pressedBitmap;
 
-    void OnMouseEnter(wxMouseEvent& event)
-    {
+    void OnMouseEnter(wxMouseEvent& event) {
         SetBitmap(m_hoverBitmap);
         Refresh();
     }
 
-    void OnMouseLeave(wxMouseEvent& event)
-    {
+    void OnMouseLeave(wxMouseEvent& event) {
         SetBitmap(m_normalBitmap);
         Refresh();
     }
 
-    void OnMouseDown(wxMouseEvent& event)
-    {
+    void OnMouseDown(wxMouseEvent& event) {
         SetBitmap(m_pressedBitmap);
         Refresh();
         event.Skip();
     }
 
-    void OnMouseUp(wxMouseEvent& event)
-    {
-        if(GetClientRect().Contains(event.GetPosition()))
+    void OnMouseUp(wxMouseEvent& event) {
+        if (GetClientRect().Contains(event.GetPosition()))
             SetBitmap(m_hoverBitmap);
         else
             SetBitmap(m_normalBitmap);
