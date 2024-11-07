@@ -8,6 +8,11 @@ bool App::OnInit() {
     MainFrame* mainFrame = new MainFrame("C++ GUI", wxDefaultPosition, wxDefaultSize);
     mainFrame->Center();
     mainFrame->Show();
+
+    LoginFrame* loginFrame = new LoginFrame("C++ GUI", wxDefaultPosition, wxDefaultSize);
+    loginFrame->Center();
+    loginFrame->Show();
+
     return true;
 }
 

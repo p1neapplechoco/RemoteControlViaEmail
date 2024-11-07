@@ -12,17 +12,34 @@ public:
         const wxString& nameImage,
         const wxPoint& pos = wxDefaultPosition,
         const wxSize& size = wxDefaultSize)
-        : wxBitmapButton(parent, id, wxBitmap(), pos, size, wxBORDER_NONE)
+        : wxBitmapButton(parent, id, wxBitmap(), pos, size, wxBORDER_NONE | wxBU_AUTODRAW)
     {
-        // Load images with transparency
-        m_normalBitmap = wxBitmap(path_buttons + nameImage + "_normal.png", wxBITMAP_TYPE_PNG);
+        auto LoadBitmapWithTransparency = [&](const wxString& filename, wxBitmap& bitmap) {
+            if (!wxFileExists(filename)) {
+                wxLogError("Image file not found: %s", filename);
+                return false;
+            }
 
+            bitmap = wxBitmap(filename, wxBITMAP_TYPE_PNG);
 
-        m_hoverBitmap = wxBitmap(path_buttons + nameImage + "_hover.png", wxBITMAP_TYPE_PNG);
+            if (!bitmap.IsOk()) {
+                wxLogError("Failed to load image: %s", filename);
+                return false;
+            }
 
+            // Check for alpha channel and create mask if not present
+            if (!bitmap.HasAlpha()) {
+                // Use a color for the mask if the image has a solid background color for transparency.
+                bitmap.SetMask(new wxMask(bitmap, wxColor(255, 0, 255))); // Magenta mask or find the correct background color
+            }
+            return true;
+        };
 
-        m_pressedBitmap = wxBitmap(path_buttons + nameImage + "_pressed.png", wxBITMAP_TYPE_PNG);
-
+        if (!LoadBitmapWithTransparency(path_buttons + "normal/" + nameImage + ".png", m_normalBitmap) ||
+            !LoadBitmapWithTransparency(path_buttons + "hover/" + nameImage + ".png", m_hoverBitmap) ||
+            !LoadBitmapWithTransparency(path_buttons + "pressed/" + nameImage + ".png", m_pressedBitmap)) {
+            return; // Or handle the error in another way
+        }
 
         SetBitmap(m_normalBitmap); // Set initial bitmap
 
@@ -31,6 +48,8 @@ public:
         Bind(wxEVT_LEAVE_WINDOW, &CustomBitmapButton::OnMouseLeave, this);
         Bind(wxEVT_LEFT_DOWN, &CustomBitmapButton::OnMouseDown, this);
         Bind(wxEVT_LEFT_UP, &CustomBitmapButton::OnMouseUp, this);
+
+        this->SetBackgroundStyle(wxBG_STYLE_PAINT);
     }
 
     ~CustomBitmapButton() {
@@ -75,31 +94,10 @@ class MainFrame : public wxFrame {
 public:
     MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE);
 private:
-    void OnButtonClick(wxCommandEvent& event)
-    {
+    void OnButtonClick(wxCommandEvent& event) {
         wxMessageBox("Button clicked!", "Info");
     }
+    void HighlightButton(wxPanel* selectedPanel);
+    vector<wxPanel*> buttonPanels;
+    wxPanel* currentSelectedPanel = nullptr;
 };
-
-// class MessengerFrame : public wxFrame {
-// public:
-//     MessengerFrame(const wxString &title);
-//
-// private:
-//     wxListCtrl *messageList;
-//     wxTextCtrl *messageInput;
-//     std::vector<std::string> messages;
-//
-//     void OnSendClicked(wxCommandEvent &event);
-//     void UpdateMessageList();
-// };
-
-// class MainFrame : public wxFrame {
-//     public:
-//         MainFrame(const wxString& title);
-//
-//     private:
-//         void OnButtonClicked(wxCommandEvent& evt);
-//         void OnTextChanged(wxCommandEvent& evt);
-//         wxDECLARE_EVENT_TABLE();
-// };

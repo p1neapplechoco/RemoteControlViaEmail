@@ -9,7 +9,6 @@ enum class InputType {
   Multiline
 };
 
-
 MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE)
     : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
 
@@ -18,7 +17,6 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     // Top panel
     wxPanel* topPanel = new wxPanel(this, wxID_ANY);
-    topPanel->SetBackgroundColour(wxColor(255, 255, 255));
     auto topSizer = new wxBoxSizer(wxHORIZONTAL);
 
     auto topLeftSizer = new wxBoxSizer(wxVERTICAL);
@@ -34,11 +32,14 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     auto topRightSizer = new wxBoxSizer(wxHORIZONTAL);
 
+    auto teamButton = new CustomBitmapButton(topPanel, wxID_ANY, "team");  // Team
+    teamButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
     auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "instruction");  // Help
     helpButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "exit");  // Image
+    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "exit");  // Exit
     exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
 
+    topRightSizer->Add(teamButton, 0, wxRIGHT, margin);
     topRightSizer->Add(helpButton, 0, wxRIGHT, margin);
     topRightSizer->Add(exitButton, 0);
 
@@ -59,19 +60,33 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     leftSizer->AddStretchSpacer();
 
     vector<wxString> buttons = {
-        "Key Logger",
-        "Capture Screen",
-        "Capture Webcam",
-        "MAC Address",
-        "Directory Tree",
-        "Application/Process",
+        "KeyLogger",
+        "CaptureScreen",
+        "CaptureWebcam",
+        "MACAddress",
+        "DirectoryTree",
+        "Process",
         "Registry",
-        "Shutdown/Logout"
+        "Logout"
     };
 
     for (const auto& label : buttons) {
-        auto btn = new CustomBitmapButton(leftPanel, wxID_ANY, "send");  // label
-        leftSizer->Add(btn, 0, wxEXPAND | wxBOTTOM, margin);
+        auto btnPanel = new wxPanel(leftPanel);
+        btnPanel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định
+
+        auto btn = new CustomBitmapButton(btnPanel, wxID_ANY, label);
+        btn->Bind(wxEVT_BUTTON, [this, btnPanel](wxCommandEvent& event) {
+            HighlightButton(btnPanel);
+            OnButtonClick(event);
+        });
+
+        auto btnSizer = new wxBoxSizer(wxHORIZONTAL);
+        btnSizer->Add(btn, 1, wxALL, margin / 2);
+
+        btnPanel->SetSizer(btnSizer);
+        leftSizer->Add(btnPanel, 0, wxEXPAND | wxALL | wxALIGN_LEFT, margin / 2);
+
+        buttonPanels.push_back(btnPanel); // Thêm vào vector
     }
 
     leftSizer->AddStretchSpacer();
@@ -90,7 +105,6 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     vector<pair<wxString, InputType>> form = {
         {"To:", InputType::SingleLine},
-        {"Subject:", InputType::SingleLine},
         {"Content:", InputType::Multiline}};
 
     for(const auto &value : form) {
@@ -140,4 +154,20 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     this->SetSizer(mainSizer);
 
     this->SetMinSize(wxSize(FromDIP(800), FromDIP(600)));
+}
+
+void MainFrame::HighlightButton(wxPanel* selectedPanel) {
+    // Reset màu của tất cả các panels về mặc định
+    for (auto panel : buttonPanels) {
+        panel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định
+        panel->Refresh();
+    }
+
+    // Set màu cho panel được chọn
+    if (selectedPanel != nullptr) {
+        selectedPanel->SetBackgroundColour(wxColor(200, 200, 200)); // Màu xám mờ
+        selectedPanel->Refresh();
+    }
+
+    currentSelectedPanel = selectedPanel;
 }
