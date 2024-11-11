@@ -1,8 +1,15 @@
 #include "GetWinDirectory.h"
+#include <dirent.h>
+#include <iostream>
+#include <stack>
+#include <unistd.h>
+#include <windows.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 void FOLDER::printFolderStructure(const std::string &indent)
 {
-    std::cout << indent << path << "\\" << std::endl;
+    std::cout << indent << path << std::endl;
     for (const auto &file: files)
         std::cout << indent << "    " << file.path << std::endl;
 
@@ -71,7 +78,7 @@ void GetWinDirectory::scanOneLevel(const std::string &pathToScan)
     if (dir == nullptr)
         return;
 
-    struct dirent *entry;
+    dirent *entry;
     while ((entry = readdir(dir)) != nullptr)
     {
         std::string name = entry->d_name;
@@ -83,7 +90,9 @@ void GetWinDirectory::scanOneLevel(const std::string &pathToScan)
         if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_HIDDEN))
             continue;
 
-        struct stat info{};
+        struct stat info
+        {
+        };
         if (stat(fullPath.c_str(), &info) != 0)
             continue;
 
@@ -114,7 +123,9 @@ void GetWinDirectory::fullScan(const std::string &pathToScan, std::ofstream &out
         if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_HIDDEN))
             continue;
 
-        struct stat info{};
+        struct stat info
+        {
+        };
         if (stat(fullPath.c_str(), &info) != 0)
             continue;
 

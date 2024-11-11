@@ -1,10 +1,8 @@
 #pragma once
 #ifndef EMAILRETRIEVAL_H
 
-#include <iostream>
 #include <string>
 #include <curl/curl.h>
-#include <sstream>
 
 #define EMAILRETRIEVAL_H
 
@@ -34,10 +32,10 @@ private:
     std::string mail_id;
 
 public:
-    explicit EmailRetrieval(const UserCredentials &user)
-    {
-        user_credentials = user;
-    };
+    EmailRetrieval();
+
+    explicit EmailRetrieval(const UserCredentials &user);
+
 
     void setupCurl();
 

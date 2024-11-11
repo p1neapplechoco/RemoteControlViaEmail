@@ -1,4 +1,6 @@
 #include "EmailRetrieval.h"
+#include <iostream>
+#include <sstream>
 #include "IniParser.h"
 
 // Don't touch this function
@@ -31,6 +33,15 @@ std::string UserCredentials::getCaBundlePath()
     return ca_bundle_path;
 }
 
+EmailRetrieval::EmailRetrieval()
+= default;
+
+EmailRetrieval::EmailRetrieval(const UserCredentials &user)
+{
+    user_credentials = user;
+};
+
+
 void EmailRetrieval::setupCurl()
 {
     curl = curl_easy_init();
@@ -47,7 +58,7 @@ void EmailRetrieval::setupCurl()
     curl_easy_setopt(curl, CURLOPT_CAINFO, ca_bundle_path.c_str());
     curl_easy_setopt(curl, CURLOPT_CERTINFO, 1L);
 
-    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); For debugging purpose
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // For debugging purpose
 }
 
 void EmailRetrieval::cleanUpCurl() const

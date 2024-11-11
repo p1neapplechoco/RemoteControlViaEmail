@@ -1,8 +1,7 @@
 #ifndef INIPARSER_H
 
-#include <fstream>
-#include <string>
 #include <map>
+#include <string>
 
 #define INIPARSER_H
 

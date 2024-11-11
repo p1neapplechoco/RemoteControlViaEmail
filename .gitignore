@@ -46,3 +46,6 @@ cmake-build-debug
 
 /src/client/cmake-build-debug
 /src/client/.idea
+src/examples/cache_C.txt
+src/examples/cache_D.txt
+/src/examples/.vscode

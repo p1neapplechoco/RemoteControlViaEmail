@@ -1,4 +1,5 @@
 #include "IniParser.h"
+#include <fstream>
 
 std::string IniParser::get(const std::string &section, const std::string &key)
 {
