@@ -7,8 +7,6 @@ using json = nlohmann::json;
 
 class GoogleAuth {
 private:
-    const std::string client_id = "870456316300-8hf4icl01sta3rvvadd4r5cg602qicfu.apps.googleusercontent.com";
-    const std::string client_secret = "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";
     const std::string redirect_uri = "http://localhost:8080";
     const std::string auth_scope = "https://www.googleapis.com/auth/userinfo.profile email";
     std::string access_token;
