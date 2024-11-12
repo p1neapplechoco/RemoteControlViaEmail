@@ -1,0 +1,9 @@
+D:\
+    Folder1\
+        file1.txt
+        file2.exe
+    Folder2\
+        SubFolder1\
+            subfile1.txt
+        SubFolder2\
+    Folder3\

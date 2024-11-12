@@ -13,7 +13,6 @@ std::vector<char> receiveImageData(SOCKET clientSocket) {
     int totalBytesReceived = 0;
     int expectedSize = 0;
 
-    // First, receive the size of the image
     bytesReceived = recv(clientSocket, (char*)&expectedSize, sizeof(int), 0);
     if (bytesReceived != sizeof(int)) {
         std::cerr << "Failed to receive image size" << std::endl;
@@ -21,7 +20,7 @@ std::vector<char> receiveImageData(SOCKET clientSocket) {
     }
     std::cout << "Receiving image data (" << expectedSize << " bytes)" << std::endl;
     char chunk[expectedSize];
-    // Now receive the image data
+
     while (totalBytesReceived < expectedSize) {
         bytesReceived = recv(clientSocket, chunk, expectedSize, 0);
         if (bytesReceived > 0) {
@@ -36,9 +35,8 @@ std::vector<char> receiveImageData(SOCKET clientSocket) {
         }
     }
 
-    if (totalBytesReceived != expectedSize) {
+    if (totalBytesReceived != expectedSize)
         std::cerr << "Received " << totalBytesReceived << " bytes, expected " << expectedSize << " bytes" << std::endl;
-    }
 
     return buffer;
 }
