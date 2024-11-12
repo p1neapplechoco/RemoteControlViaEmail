@@ -92,7 +92,7 @@ public:
 class DiscoveryResponder {
 private:
     SOCKET serverSocket;
-    const int PORT = 45678;
+    const int PORT = 12345;
     const std::string RESPONSE_MESSAGE = "DISCOVERY_RESPONSE";
     
 public:

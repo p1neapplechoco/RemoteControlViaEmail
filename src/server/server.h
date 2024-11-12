@@ -66,6 +66,7 @@ struct ProcessInfo {
 
 class Server {
 private:
+    int defaultPort = 45678;
     int assignedPort;
     SOCKET serverSocket;
     WebcamController controller;
@@ -95,28 +96,9 @@ public:
 
     void StopWebcam();
 
+    std::vector<char> GetWebcamFrame();
+
     void ViewFile();
 
     void GetFile();
 };
-//
-// class MulticastClient {
-// private:
-//     char data[16 * 50] = {0};
-//     static constexpr char MULTICAST_ADDRESS[] = "239.255.0.1";
-//     static constexpr int MULTICAST_PORT = 50000;
-//     int size = 0;
-//
-//     std::vector<std::string> ipFromBytes(const char *raw_data, int size);
-//
-// public:
-//     MulticastClient();
-//
-//     void connect();
-//
-//     void doReceive();
-//
-//     std::vector<std::string> getAddresses();
-//
-//     ~MulticastClient();
-// };

