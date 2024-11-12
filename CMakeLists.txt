@@ -13,11 +13,15 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openss
 
 add_executable(RemoteControlViaEmail
         #src/main.cpp
-        src/json.hpp
-        src/LoginFrame.cpp
         src/App.cpp
+        src/App.h
         src/MainFrame.cpp
-        #src/OAuth2_Google.cpp
+        src/MainFrame.h
+        src/LoginFrame.cpp
+        src/LoginFrame.h
+        src/EmailRetrieval.cpp
+        src/IniParser.cpp
+        #src/ipscanner.cpp
 )
 
 if(EXISTS ${CMAKE_BINARY_DIR}/assert)

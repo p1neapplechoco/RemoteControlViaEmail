@@ -1,7 +1,4 @@
 #include "MainFrame.h"
-#include <wx/wx.h>
-#include <wx/sizer.h>
-#include <vector>
 using namespace std;
 
 enum class InputType {
@@ -9,7 +6,7 @@ enum class InputType {
   Multiline
 };
 
-MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE)
+MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail, const wxString &serverAddress)
     : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
 
     const auto margin = FromDIP(10);
@@ -157,13 +154,11 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 }
 
 void MainFrame::HighlightButton(wxPanel* selectedPanel) {
-    // Reset màu của tất cả các panels về mặc định
     for (auto panel : buttonPanels) {
         panel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định
         panel->Refresh();
     }
 
-    // Set màu cho panel được chọn
     if (selectedPanel != nullptr) {
         selectedPanel->SetBackgroundColour(wxColor(200, 200, 200)); // Màu xám mờ
         selectedPanel->Refresh();

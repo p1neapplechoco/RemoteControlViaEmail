@@ -39,7 +39,11 @@ public:
         closesocket(broadcastSocket);
         WSACleanup();
     }
-    
+
+    SOCKET getSocket() const {
+        return broadcastSocket;
+    }
+
     void sendBroadcast() {
         sockaddr_in broadcastAddr;
         broadcastAddr.sin_family = AF_INET;
