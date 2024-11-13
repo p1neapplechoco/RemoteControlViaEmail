@@ -15,15 +15,13 @@ void removeCarriageReturns(char *str)
     *write = '\0';
 }
 
-Client::Client()
-= default;
+Client::Client() = default;
 
 Client::~Client()
 {
     WSACleanup();
     closesocket(client_socket);
 }
-
 
 bool Client::setupWSA()
 {
@@ -105,11 +103,13 @@ std::vector<char> Client::receiveImageData() const
         {
             buffer.insert(buffer.end(), chunk, chunk + received_bytes);
             total_bytes_received += received_bytes;
-        } else if (received_bytes == 0)
+        }
+        else if (received_bytes == 0)
         {
             std::cout << "Connection closed by server" << std::endl;
             break;
-        } else
+        }
+        else
         {
             std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
             break;
@@ -131,7 +131,6 @@ void Client::startClient()
         WSACleanup();
         return;
     }
-
 
     UserCredentials user;
     user.loadCredentials();
@@ -191,7 +190,8 @@ void Client::startClient()
             {
                 std::cout << "Server closed the connection" << std::endl;
                 break;
-            } else
+            }
+            else
             {
                 std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
                 break;
@@ -201,7 +201,8 @@ void Client::startClient()
         if (!received_data.empty())
         {
             std::string response(received_data.begin(), received_data.end());
-            std::cout << "Server response: " << std::endl << response << std::endl;
+            std::cout << "Server response: " << std::endl
+                      << response << std::endl;
         }
 
         if (strcmp(sent_buffer, "screen capture") == 0)
