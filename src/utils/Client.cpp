@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <ws2tcpip.h>
+#include "IpDiscovery.h"
 
 void removeCarriageReturns(char *str)
 {
@@ -16,6 +17,12 @@ void removeCarriageReturns(char *str)
 
 Client::Client()
 = default;
+
+Client::~Client()
+{
+    WSACleanup();
+    closesocket(client_socket);
+}
 
 
 bool Client::setupWSA()
@@ -58,13 +65,22 @@ bool Client::setupClient()
         WSACleanup();
         return false;
     }
+
+    scanIP();
+
     std::cout << "Enter server IP: ";
     std::cin >> server_ip;
     std::cout << "Enter server port: ";
     std::cin >> server_port;
 
-    return connectToServer()
-    l\;
+    return connectToServer();
+}
+
+void Client::scanIP()
+{
+    const NetworkDiscovery network_discovery;
+    network_discovery.sendBroadcast();
+    network_discovery.listenForResponses(5);
 }
 
 std::vector<char> Client::receiveImageData() const
@@ -116,6 +132,7 @@ void Client::startClient()
         return;
     }
 
+
     UserCredentials user;
     user.loadCredentials();
     email_retrieval = EmailRetrieval(user);
@@ -133,6 +150,7 @@ void Client::startClient()
             {
                 prev_mail_id = email_retrieval.getMailID();
                 fl = false;
+                std::cout << "Ready to retrieve mails." << std::endl;
             }
             if (prev_mail_id != email_retrieval.getMailID())
             {

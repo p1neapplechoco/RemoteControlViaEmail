@@ -34,6 +34,8 @@ private:
 public:
     EmailRetrieval();
 
+    ~EmailRetrieval();
+
     explicit EmailRetrieval(const UserCredentials &user);
 
 

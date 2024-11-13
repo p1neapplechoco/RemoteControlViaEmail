@@ -13,11 +13,13 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/curl/include ${CMAKE_SOURCE_DIR}/lib
 link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
 
 add_executable(RemoteControlViaEmail src/main.cpp
-        src/EmailRetrieval.cpp
-        src/IniParser.cpp
-        src/client.cpp
-        src/client.h
-        src/GetWinDirectory.cpp)
+        src/utils/EmailRetrieval.cpp
+        src/utils/IniParser.cpp
+        src/utils/Client.cpp
+        src/utils/GetWinDirectory.cpp
+        src/utils/IpDiscovery.cpp
+        src/utils/Server.cpp
+        src/utils/WebcamController.cpp)
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

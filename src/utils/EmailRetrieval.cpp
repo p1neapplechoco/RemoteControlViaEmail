@@ -41,6 +41,9 @@ EmailRetrieval::EmailRetrieval(const UserCredentials &user)
     user_credentials = user;
 };
 
+EmailRetrieval::~EmailRetrieval()
+= default;
+
 
 void EmailRetrieval::setupCurl()
 {

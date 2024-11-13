@@ -1,39 +1,10 @@
-#include "server.h"
-#include "discoveryResponder.h"
-#include "../utils/GetWinDirectory.h"
-#include <dirent.h>
-#include <iostream>
-#include <stack>
-#include <unistd.h>
-#include <windows.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include "Server.h"
+#include "GetWinDirectory.h"
+#include "IpDiscovery.h"
+
 using namespace std;
 // asio::io_context io_context;
 // udp::socket multicast_socket(io_context);
-
-void fullScan(const std::string &pathToScan, std::vector<std::string> &buffer, const std::string &indent)
-{
-    DIR *dir = opendir(pathToScan.c_str());
-    if (dir == nullptr) return;
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != nullptr)
-    {
-        std::string name = entry->d_name;
-        if (name == "." || name == "..") continue;
-        std::string fullPath = pathToScan + "\\" + name;
-        const DWORD attrs = GetFileAttributesA(fullPath.c_str());
-        if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_HIDDEN)) continue;
-        struct stat info;
-        if (stat(fullPath.c_str(), &info) != 0) continue;
-        if (S_ISDIR(info.st_mode))
-        {
-            buffer.push_back(indent + name + "\\");
-            fullScan(fullPath, buffer, indent + " ");
-        } else if (name.find(".txt") != std::string::npos || name.find(".exe") != std::string::npos) buffer.push_back(indent + name);
-    }
-    closedir(dir);
-}
 
 bool endProcess(int appId)
 {
@@ -50,8 +21,7 @@ bool endProcess(int appId)
     if (TerminateProcess(hProcess, 0))
     {
         std::cout << "Process with ID " << appId << " terminated successfully." << std::endl;
-    }
-    else
+    } else
     {
         std::cerr << "Failed to terminate process with ID " << appId << ". Error: " << GetLastError() << std::endl;
     }
@@ -95,8 +65,7 @@ bool stopService(const char *serviceName)
             }
             Sleep(1000);
         }
-    }
-    else
+    } else
     {
         std::cerr << "ControlService failed. Error: " << GetLastError() << std::endl;
     }
@@ -119,7 +88,7 @@ int GetEncoderClsid(const WCHAR *format, CLSID *pClsid)
     if (size == 0)
         return -1;
 
-    pImageCodecInfo = (Gdiplus::ImageCodecInfo *)(malloc(size));
+    pImageCodecInfo = (Gdiplus::ImageCodecInfo *) (malloc(size));
     if (pImageCodecInfo == NULL)
         return -1;
 
@@ -144,22 +113,22 @@ std::wstring getStateString(DWORD state)
 {
     switch (state)
     {
-    case SERVICE_STOPPED:
-        return L"Stopped";
-    case SERVICE_START_PENDING:
-        return L"Start Pending";
-    case SERVICE_STOP_PENDING:
-        return L"Stop Pending";
-    case SERVICE_RUNNING:
-        return L"Running";
-    case SERVICE_CONTINUE_PENDING:
-        return L"Continue Pending";
-    case SERVICE_PAUSE_PENDING:
-        return L"Pause Pending";
-    case SERVICE_PAUSED:
-        return L"Paused";
-    default:
-        return L"Unknown";
+        case SERVICE_STOPPED:
+            return L"Stopped";
+        case SERVICE_START_PENDING:
+            return L"Start Pending";
+        case SERVICE_STOP_PENDING:
+            return L"Stop Pending";
+        case SERVICE_RUNNING:
+            return L"Running";
+        case SERVICE_CONTINUE_PENDING:
+            return L"Continue Pending";
+        case SERVICE_PAUSE_PENDING:
+            return L"Pause Pending";
+        case SERVICE_PAUSED:
+            return L"Paused";
+        default:
+            return L"Unknown";
     }
 }
 
@@ -196,9 +165,9 @@ void Server::handleClient(SOCKET clientSocket)
         if (strcmp(buffer, "list app") == 0)
         {
             std::vector<ProcessInfo> processes = ListApplications();
-            std::map<ProcessType, std::vector<ProcessInfo>> groupedProcesses;
+            std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
 
-            for (const auto &process : processes)
+            for (const auto &process: processes)
             {
                 groupedProcesses[process.type].push_back(process);
             }
@@ -211,58 +180,51 @@ void Server::handleClient(SOCKET clientSocket)
                 wss << typeNames[i] << L" (" << groupedProcesses[type].size() << L")\n";
                 wss << std::wstring(50, L'-') << L"\n";
 
-                for (const auto &process : groupedProcesses[type])
+                for (const auto &process: groupedProcesses[type])
                 {
                     wss << std::left << std::setw(10) << process.pid << process.name << L"\n";
                 }
                 wss << L"\n";
             }
             wss << L"Total processes: " << processes.size() << L"\n";
-        }
-        else if (strcmp(buffer, "list service") == 0)
+        } else if (strcmp(buffer, "list service") == 0)
         {
             std::vector<ServiceInfo> services = ListServices();
 
             wss << std::left << std::setw(40) << L"Service Name"
-                << std::setw(50) << L"Display Name"
-                << L"State\n";
+                    << std::setw(50) << L"Display Name"
+                    << L"State\n";
             wss << std::wstring(100, L'-') << L"\n";
 
-            for (const auto &service : services)
+            for (const auto &service: services)
             {
                 wss << std::left << std::setw(40) << service.name
-                    << std::setw(50) << service.displayName
-                    << getStateString(service.currentState) << L"\n";
+                        << std::setw(50) << service.displayName
+                        << getStateString(service.currentState) << L"\n";
             }
             wss << L"\nTotal services: " << services.size() << L"\n";
-        }
-        else if (strcmp(buffer, "screen capture") == 0)
+        } else if (strcmp(buffer, "screen capture") == 0)
         {
             imageData = ScreenCapture();
             wss << L"Screen capture completed.\n";
             // TODO: Generalize this
-        }
-        else if (strcmp(buffer, "shutdown") == 0)
+        } else if (strcmp(buffer, "shutdown") == 0)
         {
             wss << L"Shutdown initiated. Shutting down after 15s\n";
             Shutdown();
-        }
-        else if (strcmp(buffer, "view file") == 0)
+        } else if (strcmp(buffer, "view file") == 0)
         {
             ViewFile();
             wss << L"File viewed.\n";
-        }
-        else if (strcmp(buffer, "get file") == 0)
+        } else if (strcmp(buffer, "get file") == 0)
         {
             GetFile();
             wss << L"File retrieved.\n";
-        }
-        else if (strcmp(buffer, "start webcam") == 0)
+        } else if (strcmp(buffer, "start webcam") == 0)
         {
             StartWebcam();
             wss << L"Webcam started.\n"; // TODO: Multithread
-        }
-        else if (strstr(buffer, "enda ") != NULL)
+        } else if (strstr(buffer, "enda ") != nullptr)
         {
             char *endPtr;
             int app_id = strtol(buffer + 4, &endPtr, 10);
@@ -274,14 +236,12 @@ void Server::handleClient(SOCKET clientSocket)
                 {
                     wss << "No such app with such ID" << std::endl;
                 }
-            }
-            else
+            } else
                 wss << "Invalid ID" << std::endl;
-        }
-        else if (strstr(buffer, "ends ") == buffer)
+        } else if (strstr(buffer, "ends ") == buffer)
         {
             char serviceName[256] = {0}; // Ensure the array is zero-initialized
-            char *start = buffer + 5;    // Start after "ends "
+            char *start = buffer + 5; // Start after "ends "
 
             // Copy the service name into serviceName and remove trailing newlines and spaces
             size_t len = 0;
@@ -297,17 +257,14 @@ void Server::handleClient(SOCKET clientSocket)
             {
                 wss << L"Failed to stop the service." << std::endl;
             }
-        }
-        else if (strcmp(buffer, "stop webcam") == 0)
+        } else if (strcmp(buffer, "stop webcam") == 0)
         {
             StopWebcam();
             wss << L"Webcam stopped.\n"; // TODO: Multithread
-        }
-        else if (strcmp(buffer, "get webcam frame") == 0)
+        } else if (strcmp(buffer, "get webcam frame") == 0)
         {
             wss << L"Webcam frame sent.\n";
-        }
-        else
+        } else
         {
             wss << L"Unknown command.\n";
         }
@@ -351,8 +308,7 @@ void Server::handleClient(SOCKET clientSocket)
                 break;
             }
             std::cout << "Sent image data of size: " << imageSize << " bytes" << std::endl;
-        }
-        else if (strcmp(buffer, "get webcam frame") == 0)
+        } else if (strcmp(buffer, "get webcam frame") == 0)
         {
             std::vector<char> frameData = GetWebcamFrame();
 
@@ -380,8 +336,8 @@ Server::Server()
         return;
     }
 
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == INVALID_SOCKET)
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == INVALID_SOCKET)
     {
         std::cerr << "Failed to create socket" << std::endl;
         WSACleanup();
@@ -392,43 +348,43 @@ Server::Server()
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = 0;
 
-    if (bind(serverSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+    if (bind(server_socket, (sockaddr *) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
     {
         std::cerr << "Bind failed" << std::endl;
-        closesocket(serverSocket);
+        closesocket(server_socket);
         WSACleanup();
         return;
     }
 
     // Get the assigned port
     int addrLen = sizeof(serverAddr);
-    if (getsockname(serverSocket, (sockaddr *)&serverAddr, &addrLen) == SOCKET_ERROR)
+    if (getsockname(server_socket, (sockaddr *) &serverAddr, &addrLen) == SOCKET_ERROR)
     {
         cerr << "Failed to get socket name" << endl;
-        closesocket(serverSocket);
+        closesocket(server_socket);
         WSACleanup();
         return;
     }
-    assignedPort = ntohs(serverAddr.sin_port);
+    server_port = ntohs(serverAddr.sin_port);
 }
 
 Server::~Server()
 {
-    closesocket(serverSocket);
+    closesocket(server_socket);
     WSACleanup();
     cout << "Server destroyed" << endl;
 }
 
 void Server::StartListening()
 {
-    if (listen(serverSocket, SOMAXCONN) == SOCKET_ERROR)
+    if (listen(server_socket, SOMAXCONN) == SOCKET_ERROR)
     {
         std::cerr << "Listen failed" << std::endl;
-        closesocket(serverSocket);
+        closesocket(server_socket);
         WSACleanup();
         return;
     }
-    cout << "Server listening for discovery on port " << assignedPort << std::endl;
+    cout << "Server listening for discovery on port " << server_port << std::endl;
 
     // Wait for a connection, Default when enter
 
@@ -440,7 +396,7 @@ void Server::StartListening()
         // Receive and send messages
         while (true)
         {
-            SOCKET clientSocket = accept(serverSocket, NULL, NULL);
+            SOCKET clientSocket = accept(server_socket, NULL, NULL);
             if (clientSocket == INVALID_SOCKET)
             {
                 cerr << "Accept failed" << endl;
@@ -483,12 +439,10 @@ std::vector<ProcessInfo> Server::ListApplications()
                 if (wcsstr(szProcessPath, L"\\Windows\\") != nullptr)
                 {
                     type = ProcessType::WindowsProcess;
-                }
-                else if (pe32.cntThreads > 1)
+                } else if (pe32.cntThreads > 1)
                 {
                     type = ProcessType::App;
-                }
-                else
+                } else
                 {
                     type = ProcessType::BackgroundProcess;
                 }
@@ -521,10 +475,10 @@ std::vector<ServiceInfo> Server::ListServices()
     EnumServicesStatusExW(hSCManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
                           nullptr, 0, &bytesNeeded, &servicesReturned, &resumeHandle, nullptr);
 
-    pServices = (ENUM_SERVICE_STATUS_PROCESSW *)new char[bytesNeeded];
+    pServices = reinterpret_cast<ENUM_SERVICE_STATUS_PROCESSW *>(new char[bytesNeeded]);
 
     if (!EnumServicesStatusExW(hSCManager, SC_ENUM_PROCESS_INFO, SERVICE_WIN32, SERVICE_STATE_ALL,
-                               (LPBYTE)pServices, bytesNeeded, &bytesNeeded, &servicesReturned,
+                               reinterpret_cast<LPBYTE>(pServices), bytesNeeded, &bytesNeeded, &servicesReturned,
                                &resumeHandle, nullptr))
     {
         delete[] pServices;
@@ -553,31 +507,30 @@ std::vector<char> Server::ScreenCapture()
     ULONG_PTR gdiplusToken;
     Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
-    int x1, y1, x2, y2, w, h;
-    x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
-    y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
-    x2 = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    y2 = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-    pair<int, int> resolution = GetPhysicalDesktopDimensions();
-    w = resolution.first;
-    h = resolution.second;
-    float ratio = 1.0f; // TODO: Dynamic ratio
-    w = int((float)w * ratio);
-    h = int((float)h * ratio);
-    HDC hScreen = GetDC(NULL);
-    HDC hDC = CreateCompatibleDC(hScreen);
+    const int x1 = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    const int y1 = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int x2 = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int y2 = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    const pair<int, int> resolution = GetPhysicalDesktopDimensions();
+    int w = resolution.first;
+    int h = resolution.second;
+    constexpr float ratio = 1.0f; // TODO: Dynamic ratio
+    w = static_cast<int>(static_cast<float>(w) * ratio);
+    h = static_cast<int>(static_cast<float>(h) * ratio);
+    const HDC hScreen = GetDC(nullptr);
+    const HDC hDC = CreateCompatibleDC(hScreen);
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreen, w, h);
     HGDIOBJ old_obj = SelectObject(hDC, hBitmap);
     SetStretchBltMode(hDC, HALFTONE);
     StretchBlt(hDC, 0, 0, w, h, hScreen, x1, y1, w, h, SRCCOPY);
 
-    Gdiplus::Bitmap *bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, NULL);
+    Gdiplus::Bitmap *bitmap = Gdiplus::Bitmap::FromHBITMAP(hBitmap, nullptr);
 
     CLSID jpegClsid;
     GetEncoderClsid(L"image/jpeg", &jpegClsid);
 
-    IStream *istream = NULL;
-    CreateStreamOnHGlobal(NULL, TRUE, &istream);
+    IStream *istream = nullptr;
+    CreateStreamOnHGlobal(nullptr, TRUE, &istream);
 
     Gdiplus::EncoderParameters encoderParameters;
     ULONG quality = 150;
@@ -624,19 +577,19 @@ void Server::Shutdown()
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     // get the shutdown privilege for this process
-    ::AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+    ::AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES) NULL, 0);
 
     switch (nSDType)
     {
-    case 0:
-        ::ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
-        break;
-    case 1:
-        ::ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, 0);
-        break;
-    case 2:
-        ::ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
-        break;
+        case 0:
+            ::ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
+            break;
+        case 1:
+            ::ExitWindowsEx(EWX_POWEROFF | EWX_FORCE, 0);
+            break;
+        case 2:
+            ::ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+            break;
     }
 };
 
@@ -682,7 +635,6 @@ DWORD StartApplication(const std::wstring &applicationPath)
     return 0; // Return 0 if process creation failed
 }
 
-// Function to stop an application given its PID
 bool StopApplication(DWORD pid)
 {
     HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);

@@ -22,6 +22,8 @@ public:
 
     Client();
 
+    ~Client();
+
     bool setupWSA();
 
     bool setupSocket();
@@ -29,6 +31,8 @@ public:
     bool connectToServer();
 
     bool setupClient();
+
+    static void scanIP();
 
     std::vector<char> receiveImageData() const;
 

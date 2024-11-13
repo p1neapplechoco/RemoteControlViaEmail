@@ -1,3 +1,4 @@
+#pragma once
 #ifndef INIPARSER_H
 
 #include <map>
@@ -12,6 +13,8 @@ public:
     {
         parseFile(filename);
     }
+
+    ~IniParser();
 
     std::string get(const std::string &section, const std::string &key);
 

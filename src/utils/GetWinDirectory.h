@@ -4,15 +4,28 @@
 
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
-
 #define GETWINDIRECTORY_H
+
+class FILE_;
+class FOLDER;
+
+bool openFile(const std::string &file_path);
+void printFolderStructure(const FOLDER &folder, const std::string &indent = "");
 
 class FILE_
 {
 public:
+    std::string name;
     std::string path;
+
+    FILE_()
+    {
+        this->path = "";
+        this->name = "";
+    }
 
     explicit FILE_(const std::string &path)
     {
@@ -23,6 +36,7 @@ public:
 class FOLDER
 {
 public:
+    std::string name;
     std::string path;
     std::vector<FILE_> files;
     std::vector<FOLDER> subfolders;
@@ -30,6 +44,7 @@ public:
     FOLDER()
     {
         this->path = "";
+        this->name = "";
         this->files = {};
         this->subfolders = {};
     }
@@ -40,8 +55,6 @@ public:
     }
 
     static FOLDER readCacheFile(const std::string &cacheFilePath);
-
-    void printFolderStructure(const std::string &indent = "");
 };
 
 class GetWinDirectory
@@ -55,6 +68,5 @@ public:
 
     static void fullScan(const std::string &pathToScan, std::ofstream &outputFile, const std::string &indent = "    ");
 };
-
 
 #endif // GETWINDIRECTORY_H

@@ -1,14 +1,15 @@
-#include "../GetWinDirectory.h"
+#include "../utils/GetWinDirectory.h"
+#include <iostream>
 
 void fullScanDemo();
 void readCacheFileDemo();
 
-// g++ GetWinDirectoryUsage.cpp ../GetWinDirectory.cpp -o GetWinDirectoryUsage; ./GetWinDirectoryUsage
+// g++ GetWinDirectoryUsage.cpp "../utils/GetWinDirectory.cpp" -o GetWinDirectoryUsage; ./GetWinDirectoryUsage
 
 int main()
 {
-    // fullScanDemo();
-    readCacheFileDemo();
+    fullScanDemo();
+    // readCacheFileDemo();
 }
 
 void fullScanDemo()
@@ -42,10 +43,12 @@ void fullScanDemo()
 
 void readCacheFileDemo()
 {
-    std::vector<std::string> diskCacheFiles = {"cache_C_demo.txt", "cache_D_demo.txt"};
+    std::vector<std::string> diskCacheFiles = {"cache_D_demo.txt"};
 
     std::vector<FOLDER> rootFolders;
+
     for (const auto &fileName : diskCacheFiles)
+    {
         try
         {
             FOLDER recreatedFolder = FOLDER::readCacheFile(fileName);
@@ -55,11 +58,11 @@ void readCacheFileDemo()
         {
             std::cerr << "Error: " << e.what() << std::endl;
         }
+    }
 
     for (auto &disk : rootFolders)
     {
         std::cout << "Path of " << disk.path << "'s subfolders: " << std::endl;
-        disk.printFolderStructure();
-        std::cout << std::endl;
+        printFolderStructure(disk);
     }
 }
