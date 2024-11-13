@@ -63,8 +63,7 @@ bool Client::setupClient()
     std::cout << "Enter server port: ";
     std::cin >> server_port;
 
-    return connectToServer()
-    l\;
+    return connectToServer();
 }
 
 std::vector<char> Client::receiveImageData() const
