@@ -89,7 +89,7 @@ public:
 
     std::vector<char> ScreenCapture();
 
-    void Shutdown();
+    void Shutdown(UINT);
 
     void StartWebcam();
 

@@ -564,9 +564,8 @@ std::vector<char> Server::ScreenCapture()
     return buffer;
 }
 
-void Server::Shutdown()
+void Server::Shutdown(UINT nSDType = 0)
 {
-    UINT nSDType = 0;
     HANDLE hToken;
     TOKEN_PRIVILEGES tkp;
 
