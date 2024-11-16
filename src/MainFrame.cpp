@@ -1,10 +1,84 @@
 #include "MainFrame.h"
 using namespace std;
 
-enum class InputType {
-  SingleLine,
-  Multiline
+enum {
+    ID_KEY_LOGGER = wxID_HIGHEST + 1
 };
+
+RightPanel::RightPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
+    SetBackgroundColour(wxColor(255, 255, 255));
+
+    const auto margin = FromDIP(10);
+    auto mainSizer = new wxBoxSizer(wxVERTICAL);
+
+    logTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString,
+        wxDefaultPosition, wxDefaultSize,
+        wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2);
+    mainSizer->Add(logTextCtrl, 1, wxEXPAND | wxALL, margin);
+
+    // Bottom buttons
+    auto buttonPanel = new wxPanel(this);
+    auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    buttonSizer->AddStretchSpacer();  // Đẩy buttons sang phải
+
+    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "cancel");    // Cancel
+    cancelButton->Bind(wxEVT_BUTTON, &RightPanel::OnCancelClick, this);
+    auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Send
+    sendButton->Bind(wxEVT_BUTTON, &RightPanel::OnSendClick, this);
+
+    buttonSizer->Add(cancelButton, 0, wxRIGHT, margin);
+    buttonSizer->Add(sendButton, 0);
+
+    buttonPanel->SetSizer(buttonSizer);
+    mainSizer->Add(buttonPanel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, margin);
+
+    // Create buttons
+    SetSizer(mainSizer);
+    CreateKeyLogger();
+}
+
+void RightPanel::CreateKeyLogger() {
+    keyLoggerPanel = new wxPanel(this, wxID_ANY);
+    auto keyLoggerSizer = new wxBoxSizer(wxVERTICAL);
+
+    timeInputSizer = new wxBoxSizer(wxVERTICAL);
+    const auto margin = FromDIP(10);
+
+    timeLabel = new wxStaticText(keyLoggerPanel, wxID_ANY, "Time to log in milliseconds");
+    timeInputCtrl = new wxTextCtrl(keyLoggerPanel, wxID_ANY, "1000",
+        wxDefaultPosition, wxSize(200, -1), wxTE_RIGHT);
+
+    timeInputCtrl->SetValidator(wxTextValidator(wxFILTER_DIGITS));
+
+    timeInputSizer->Add(timeLabel, 0, wxBOTTOM, 5);
+    timeInputSizer->Add(timeInputCtrl, 0);
+
+    keyLoggerSizer->Add(timeInputSizer, 0, wxALIGN_LEFT | wxALL, margin * 2);
+
+    keyLoggerPanel->SetSizer(keyLoggerSizer);
+    GetSizer()->Add(keyLoggerPanel, 1, wxEXPAND);
+    keyLoggerPanel->Hide();
+}
+
+void RightPanel::UpdatePanelVisibility(int selectedPanel) {
+    if (keyLoggerPanel) {
+        keyLoggerPanel->Show(selectedPanel == ID_KEY_LOGGER);
+    }
+    Layout();
+}
+
+void RightPanel::OnCancelClick(wxCommandEvent& event) {
+    AppendLog("Operation cancelled\n");
+}
+
+void RightPanel::OnSendClick(wxCommandEvent& event) {
+    AppendLog("Sending command...\n");
+}
+
+void RightPanel::AppendLog(const wxString& message) {
+    logTextCtrl->AppendText(wxDateTime::Now().FormatTime() + ": " + message);
+}
 
 MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail, const wxString &serverAddress)
     : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
@@ -19,10 +93,10 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     auto topLeftSizer = new wxBoxSizer(wxVERTICAL);
 
     wxFont titleFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
-    auto titleText = new wxStaticText(topPanel, wxID_ANY, "Email Remote Control");
+    auto titleText = new wxStaticText(topPanel, wxID_ANY, "Remote Control Via Email");
     titleText->SetFont(titleFont);
 
-    auto emailText = new wxStaticText(topPanel, wxID_ANY, "example@email.com");
+    auto emailText = new wxStaticText(topPanel, wxID_ANY, currentEmail);
 
     topLeftSizer->Add(titleText, 0, wxALIGN_CENTER_HORIZONTAL, 5);
     topLeftSizer->Add(emailText, 0);
@@ -71,7 +145,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
         auto btnPanel = new wxPanel(leftPanel);
         btnPanel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định
 
-        auto btn = new CustomBitmapButton(btnPanel, wxID_ANY, label);
+        auto btn = new CustomBitmapButton(btnPanel, ID_KEY_LOGGER, label);
         btn->Bind(wxEVT_BUTTON, [this, btnPanel](wxCommandEvent& event) {
             HighlightButton(btnPanel);
             OnButtonClick(event);
@@ -92,59 +166,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     contentSizer->Add(leftPanel, 0, wxEXPAND | wxALL, margin);
 
     // Right panel với form
-    wxPanel* rightPanel = new wxPanel(this, wxID_ANY);
-    rightPanel->SetBackgroundColour(wxColor(255, 255, 255));
-    auto rightSizer = new wxBoxSizer(wxVERTICAL);
-
-    // Form panel
-    wxPanel *formPanel = new wxPanel(rightPanel, wxID_ANY);
-    auto formSizer = new wxBoxSizer(wxVERTICAL);
-
-    vector<pair<wxString, InputType>> form = {
-        {"To:", InputType::SingleLine},
-        {"Content:", InputType::Multiline}};
-
-    for(const auto &value : form) {
-        auto label = value.first;
-        auto type = value.second;
-
-        auto labelCtrl = new wxStaticText(formPanel, wxID_ANY, label);
-        labelCtrl->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-        formSizer->Add(labelCtrl, 0, wxLEFT, margin);
-
-        auto style = type == InputType::SingleLine ? 0 : wxTE_MULTILINE;
-        auto inputCtrl = new wxTextCtrl(formPanel, wxID_ANY, wxEmptyString,
-            wxDefaultPosition,
-            type == InputType::SingleLine ?
-                wxSize(FromDIP(400), FromDIP(25)) :
-                wxSize(FromDIP(400), FromDIP(200)),
-            style);
-
-        formSizer->Add(inputCtrl, type == InputType::Multiline ? 1 : 0,
-            wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, margin);
-    }
-
-    formPanel->SetSizer(formSizer);
-    rightSizer->Add(formPanel, 1, wxEXPAND | wxALL, margin);
-
-    // Button panel ở dưới
-    auto buttonPanel = new wxPanel(rightPanel, wxID_ANY);
-    auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-
-    buttonSizer->AddStretchSpacer();  // Đẩy buttons sang phải
-
-    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "cancel");    // Cancel
-    cancelButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Send
-    sendButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-
-    buttonSizer->Add(cancelButton, 0, wxRIGHT, margin);
-    buttonSizer->Add(sendButton, 0);
-
-    buttonPanel->SetSizer(buttonSizer);
-    rightSizer->Add(buttonPanel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, margin);
-
-    rightPanel->SetSizer(rightSizer);
+    rightPanel = new RightPanel(this);
     contentSizer->Add(rightPanel, 1, wxEXPAND | wxALL, margin);
 
     mainSizer->Add(contentSizer, 1, wxEXPAND);
@@ -165,4 +187,11 @@ void MainFrame::HighlightButton(wxPanel* selectedPanel) {
     }
 
     currentSelectedPanel = selectedPanel;
+    wxMessageBox(selectedPanel);
+}
+
+void MainFrame::OnButtonClick(wxCommandEvent& evt) {
+    currentSelectedPanel = evt.GetId();
+    rightPanel->UpdatePanelVisibility(currentSelectedPanel);
+    evt.Skip();
 }
