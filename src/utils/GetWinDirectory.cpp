@@ -147,7 +147,7 @@ void GetWinDirectory::fullScan(const std::string &pathToScan, std::ofstream &out
     closedir(dir);
 }
 
-void fullScan(const std::string &pathToScan, std::vector<std::string> &buffer, const std::string &indent)
+void _fullScan(const std::string &pathToScan, std::vector<std::string> &buffer, const std::string &indent)
 {
     DIR *dir = opendir(pathToScan.c_str());
     if (dir == nullptr) return;
@@ -164,7 +164,7 @@ void fullScan(const std::string &pathToScan, std::vector<std::string> &buffer, c
         if (S_ISDIR(info.st_mode))
         {
             buffer.push_back(indent + name + "\\");
-            fullScan(fullPath, buffer, indent + " ");
+            _fullScan(fullPath, buffer, indent + " ");
         } else if (name.find(".txt") != std::string::npos || name.find(".exe") != std::string::npos) buffer.push_back(indent + name);
     }
     closedir(dir);

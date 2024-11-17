@@ -15,7 +15,7 @@ std::vector<char> receiveImageData(SOCKET clientSocket) {
     int totalBytesReceived = 0;
     int expectedSize = 0;
 
-    bytesReceived = recv(clientSocket, (char*)&expectedSize, sizeof(int), 0);
+    bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
     if (bytesReceived != sizeof(int)) {
         std::cerr << "Failed to receive image size" << std::endl;
         return buffer;
@@ -70,14 +70,14 @@ int main() {
     std::cin >> serverIP;
     std::cout << "Enter server port: ";
     std::cin >> serverPort;
-    std::cin.ignore();  // Clear the newline from the input buffer
+    std::cin.ignore(); // Clear the newline from the input buffer
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(serverPort);
     inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr);
 
-    if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+    if (connect(clientSocket, (sockaddr *) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         std::cerr << "Connection failed" << std::endl;
         closesocket(clientSocket);
         WSACleanup();
@@ -89,14 +89,14 @@ int main() {
     while (true) {
         char sendBuffer[1024] = {};
         std::cout << "Enter command:\n"
-                  << "1. list app - List applications\n"
-                  << "2. list service - List services\n"
-                  << "3. screen capture - Capture screen\n"
-                  << "4. start webcam - Start webcam\n"
-                  << "5. get webcam frame - Get current webcam frame\n"
-                  << "6. stop webcam - Stop webcam\n"
-                  << "7. exit - Quit\n"
-                  << "Command: ";
+                << "1. list app - List applications\n"
+                << "2. list service - List services\n"
+                << "3. screen capture - Capture screen\n"
+                << "4. start webcam - Start webcam\n"
+                << "5. get webcam frame - Get current webcam frame\n"
+                << "6. stop webcam - Stop webcam\n"
+                << "7. exit - Quit\n"
+                << "Command: ";
         std::cin.getline(sendBuffer, sizeof(sendBuffer));
 
         // List RadminVPN devices
@@ -119,7 +119,7 @@ int main() {
         int expectedSize = 0;
 
         // First, receive the size of the response
-        bytesReceived = recv(clientSocket, (char*)&expectedSize, sizeof(int), 0);
+        bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
         if (bytesReceived != sizeof(int)) {
             std::cerr << "Failed to receive response size" << std::endl;
             continue;
@@ -166,6 +166,41 @@ int main() {
                 outFile.close();
                 std::cout << "Image saved as " << filename << std::endl;
             }
+        }
+
+        if (strstr(sendBuffer, "get file") != NULL) {
+            // Receive file size
+            int fileSize;
+            if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0) {
+                std::cerr << "Failed to receive file size" << std::endl;
+                return false;
+            }
+
+            // Receive file data
+            std::vector<char> fileBuffer(fileSize);
+            int totalReceived = 0;
+            while (totalReceived < fileSize) {
+                int bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
+                                         fileSize - totalReceived, 0);
+                if (bytesReceived <= 0) {
+                    std::cerr << "Failed to receive file data" << std::endl;
+                    return false;
+                }
+                totalReceived += bytesReceived;
+            }
+
+            // Write to file
+            std::string outputPath = "demo.txt";
+            std::ofstream outFile(outputPath, std::ios::binary);
+            if (!outFile) {
+                std::cerr << "Failed to create output file" << std::endl;
+                return false;
+            }
+
+            outFile.write(fileBuffer.data(), fileSize);
+            outFile.close();
+
+            std::cout << "File received and saved to: " << outputPath << std::endl;
         }
 
         // If webcam is started, you can automatically request frames

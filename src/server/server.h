@@ -76,6 +76,8 @@ private:
 public:
     std::vector<char> imageData;
 
+    std::vector<char> fileData;
+
     Server();
 
     ~Server();
@@ -98,7 +100,9 @@ public:
 
     std::vector<char> GetWebcamFrame();
 
-    void ViewFile();
+    void IndexSystem();
 
-    void GetFile();
+    void OpenFile(string);
+
+    vector<char> GetFile(string);
 };

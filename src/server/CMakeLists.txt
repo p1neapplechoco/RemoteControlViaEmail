@@ -10,7 +10,9 @@ set(BUILD_SHARED_LIBS OFF)
 
 add_executable(server main.cpp main.h server.cpp server.h discoveryResponder.cpp discoveryResponder.h
         WebcamController.cpp
-        WebcamController.h)
+        WebcamController.h
+        ../utils/GetWinDirectory.h
+        ../utils/GetWinDirectory.cpp)
 
 # Add this to link ws2_32.lib to static library
 if (MINGW)
