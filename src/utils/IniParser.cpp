@@ -1,4 +1,8 @@
 #include "IniParser.h"
+#include <fstream>
+
+IniParser::~IniParser()
+= default;
 
 std::string IniParser::get(const std::string &section, const std::string &key)
 {

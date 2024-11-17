@@ -1,7 +1,7 @@
-#include "EmailRetrieval.h"
+#include "../EmailRetrieval.h"
 #include <vector>
 
-// Place this file in root/src
+// g++ EmailRetrievalUsage.cpp ../EmailRetrievalUsage.cpp -o EmailRetrievalUsage; ./EmailRetrievalUsage
 
 int main()
 {
