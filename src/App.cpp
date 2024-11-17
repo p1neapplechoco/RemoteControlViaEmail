@@ -77,7 +77,7 @@ void CustomBitmapButton::OnMouseUp(wxMouseEvent& event) {
 
 bool App::OnInit() {
     wxInitAllImageHandlers();
-    MainFrame* mainFrame = new MainFrame("C++ GUI", wxDefaultPosition, wxDefaultSize, "0", "0");
+    MainFrame* mainFrame = new MainFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize, "0", "0");
     mainFrame->Fit();
     mainFrame->Center();
     mainFrame->Show();

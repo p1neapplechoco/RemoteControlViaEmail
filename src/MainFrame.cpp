@@ -1,8 +1,20 @@
 #include "MainFrame.h"
 using namespace std;
 
-enum {
-    ID_KEY_LOGGER = wxID_HIGHEST + 1
+struct ButtonInfo {
+    wxString label;
+    int id;
+};
+
+vector<ButtonInfo> buttons = {
+    {"KeyLogger", ID_KEY_LOGGER},
+    {"CaptureScreen", ID_CAPTURE_SCREEN},
+    {"CaptureWebcam", ID_CAPTURE_WEBCAM},
+    {"MACAddress", ID_MAC_ADDRESS},
+    {"DirectoryTree", ID_DIRECTORY_TREE},
+    {"Process", ID_PROCESS},
+    {"Registry", ID_REGISTRY},
+    {"Logout", ID_LOGOUT}
 };
 
 RightPanel::RightPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
@@ -16,54 +28,91 @@ RightPanel::RightPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
         wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2);
     mainSizer->Add(logTextCtrl, 1, wxEXPAND | wxALL, margin);
 
-    // Bottom buttons
-    auto buttonPanel = new wxPanel(this);
+    // Bottom panel
+    auto bottomPanel = new wxPanel(this);
+    auto bottomSizer = new wxBoxSizer(wxHORIZONTAL);
+
+    // Phần keyLogger (sẽ được thêm vào từ CreateKeyLogger)
+    keyLoggerPanel = new wxPanel(bottomPanel, wxID_ANY);
+    keyLogoutPanel = new wxPanel(bottomPanel, wxID_ANY);
+    bottomSizer->Add(keyLoggerPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+    bottomSizer->Add(keyLogoutPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+    buttonSizer->AddStretchSpacer();
 
-    buttonSizer->AddStretchSpacer();  // Đẩy buttons sang phải
-
-    auto cancelButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "cancel");    // Cancel
+    auto cancelButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "cancel");
     cancelButton->Bind(wxEVT_BUTTON, &RightPanel::OnCancelClick, this);
-    auto sendButton = new CustomBitmapButton(buttonPanel, wxID_ANY, "send");    // Send
+    auto sendButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "send");
     sendButton->Bind(wxEVT_BUTTON, &RightPanel::OnSendClick, this);
 
     buttonSizer->Add(cancelButton, 0, wxRIGHT, margin);
     buttonSizer->Add(sendButton, 0);
 
-    buttonPanel->SetSizer(buttonSizer);
-    mainSizer->Add(buttonPanel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, margin);
+    bottomSizer->Add(buttonSizer, 1, wxEXPAND);
+    bottomPanel->SetSizer(bottomSizer);
 
-    // Create buttons
+    mainSizer->Add(bottomPanel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, margin);
     SetSizer(mainSizer);
+
     CreateKeyLogger();
+    CreateKeyLogout();
 }
 
 void RightPanel::CreateKeyLogger() {
-    keyLoggerPanel = new wxPanel(this, wxID_ANY);
     auto keyLoggerSizer = new wxBoxSizer(wxVERTICAL);
 
-    timeInputSizer = new wxBoxSizer(wxVERTICAL);
-    const auto margin = FromDIP(10);
-
-    timeLabel = new wxStaticText(keyLoggerPanel, wxID_ANY, "Time to log in milliseconds");
+    auto timeLabel = new wxStaticText(keyLoggerPanel, wxID_ANY, "Time to log (ms):");
     timeInputCtrl = new wxTextCtrl(keyLoggerPanel, wxID_ANY, "1000",
-        wxDefaultPosition, wxSize(200, -1), wxTE_RIGHT);
-
+        wxDefaultPosition, wxSize(200, -1), wxTE_LEFT | wxTE_RICH);
     timeInputCtrl->SetValidator(wxTextValidator(wxFILTER_DIGITS));
 
-    timeInputSizer->Add(timeLabel, 0, wxBOTTOM, 5);
-    timeInputSizer->Add(timeInputCtrl, 0);
-
-    keyLoggerSizer->Add(timeInputSizer, 0, wxALIGN_LEFT | wxALL, margin * 2);
+    keyLoggerSizer->Add(timeLabel, 0, wxBOTTOM, 5);
+    keyLoggerSizer->Add(timeInputCtrl, 0);
 
     keyLoggerPanel->SetSizer(keyLoggerSizer);
-    GetSizer()->Add(keyLoggerPanel, 1, wxEXPAND);
     keyLoggerPanel->Hide();
+}
+
+void RightPanel::CreateKeyLogout() {
+    auto keyLogoutSizer = new wxBoxSizer(wxVERTICAL);
+
+    wxArrayString choices;
+    choices.Add("Shutdown");
+    choices.Add("Logout");
+
+    auto Label = new wxStaticText(keyLogoutPanel, wxID_ANY, "Choose Shutdown/Logout:");
+    choice = new wxChoice(keyLogoutPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
+
+    keyLogoutSizer->Add(Label, 0, wxBOTTOM, 5);
+    keyLogoutSizer->Add(choice, 0, wxEXPAND | wxALL);
+
+    keyLogoutPanel->SetSizer(keyLogoutSizer);
+    keyLogoutPanel->Hide();
 }
 
 void RightPanel::UpdatePanelVisibility(int selectedPanel) {
     if (keyLoggerPanel) {
-        keyLoggerPanel->Show(selectedPanel == ID_KEY_LOGGER);
+        keyLoggerPanel->Show(false);
+    }
+
+    if(keyLogoutPanel) {
+        keyLogoutPanel->Show(false);
+    }
+
+    switch (selectedPanel) {
+        case ID_KEY_LOGGER:
+            keyLoggerPanel->Show(true);
+        break;
+        case ID_CAPTURE_SCREEN:
+            // Show capture screen panel
+                break;
+        case ID_CAPTURE_WEBCAM:
+            // Show webcam panel
+                break;
+        case ID_LOGOUT:
+            keyLogoutPanel->Show(true);
+        // Add cases for other panels
     }
     Layout();
 }
@@ -107,7 +156,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     teamButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
     auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "instruction");  // Help
     helpButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto exitButton = new CustomBitmapButton(topPanel, wxID_ANY, "exit");  // Exit
+    auto exitButton = new CustomBitmapButton(topPanel, ID_EXIT, "exit");  // Exit
     exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
 
     topRightSizer->Add(teamButton, 0, wxRIGHT, margin);
@@ -127,25 +176,13 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     // Left panel với các buttons
     wxPanel* leftPanel = new wxPanel(this, wxID_ANY);
     auto leftSizer = new wxBoxSizer(wxVERTICAL);
-
     leftSizer->AddStretchSpacer();
 
-    vector<wxString> buttons = {
-        "KeyLogger",
-        "CaptureScreen",
-        "CaptureWebcam",
-        "MACAddress",
-        "DirectoryTree",
-        "Process",
-        "Registry",
-        "Logout"
-    };
-
-    for (const auto& label : buttons) {
+    for (const auto& buttonInfo : buttons) {
         auto btnPanel = new wxPanel(leftPanel);
         btnPanel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định
 
-        auto btn = new CustomBitmapButton(btnPanel, ID_KEY_LOGGER, label);
+        auto btn = new CustomBitmapButton(btnPanel, buttonInfo.id, buttonInfo.label);
         btn->Bind(wxEVT_BUTTON, [this, btnPanel](wxCommandEvent& event) {
             HighlightButton(btnPanel);
             OnButtonClick(event);
@@ -187,11 +224,19 @@ void MainFrame::HighlightButton(wxPanel* selectedPanel) {
     }
 
     currentSelectedPanel = selectedPanel;
-    wxMessageBox(selectedPanel);
 }
 
 void MainFrame::OnButtonClick(wxCommandEvent& evt) {
-    currentSelectedPanel = evt.GetId();
-    rightPanel->UpdatePanelVisibility(currentSelectedPanel);
+    int id = evt.GetId();
+    rightPanel->UpdatePanelVisibility(id);
+
+    // Handle specific button actions
+    switch (id) {
+        case ID_EXIT:
+            Close();
+        break;
+        // Add other specific actions
+    }
+
     evt.Skip();
 }
