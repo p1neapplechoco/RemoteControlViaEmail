@@ -2,9 +2,27 @@
 #include "./utils/Server.h"
 
 #include "./utils/GetWinDirectory.h"
+#include ".app/App.h"
+
+bool App::OnInit() {
+    wxInitAllImageHandlers();
+    // MainFrame* mainFrame = new MainFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize, "0", "0");
+    // mainFrame->Fit();
+    // mainFrame->Center();
+    // mainFrame->Show();
+    //
+    // LoginFrame* loginFrame = new LoginFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize);
+    // loginFrame->Fit();
+    // loginFrame->Center();
+    // loginFrame->Show();
+
+    return true;
+}
 
 int main()
 {
+    wxIMPLEMENT_APP(App);
+
     Client client;
     client.startClient();
 
