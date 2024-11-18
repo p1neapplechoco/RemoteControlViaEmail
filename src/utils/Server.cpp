@@ -2,6 +2,7 @@
 #include "GetWinDirectory.h"
 #include "IpDiscovery.h"
 
+ULONG EncoderQuality = 100L;
 using namespace std;
 // asio::io_context io_context;
 // udp::socket multicast_socket(io_context);
@@ -32,16 +33,15 @@ bool endProcess(int appId)
 
 bool stopService(const char *serviceName)
 {
+    // Convert char* to wstring
+    int length = MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, NULL, 0);
+    std::wstring wServiceName(length, 0);
+    MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, &wServiceName[0], length);
+
     // Open the service control manager
     SC_HANDLE hSCManager = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT);
-    if (hSCManager == NULL)
-    {
-        std::cerr << "Failed to open service control manager. Error: " << GetLastError() << std::endl;
-        return false;
-    }
+    SC_HANDLE hService = OpenServiceW(hSCManager, wServiceName.c_str(), SERVICE_STOP | SERVICE_QUERY_STATUS);
 
-    // Open the service
-    SC_HANDLE hService = OpenService(hSCManager, serviceName, SERVICE_STOP | SERVICE_QUERY_STATUS);
     if (hService == NULL)
     {
         std::cerr << "Failed to open service: " << serviceName << ". Error: " << GetLastError() << std::endl;
@@ -211,7 +211,7 @@ void Server::handleClient(SOCKET clientSocket)
         } else if (strcmp(buffer, "shutdown") == 0)
         {
             wss << L"Shutdown initiated. Shutting down after 15s\n";
-            Shutdown();
+            Shutdown(0);
         } else if (strcmp(buffer, "view file") == 0)
         {
             ViewFile();
@@ -623,8 +623,7 @@ DWORD StartApplication(const std::wstring &applicationPath)
     STARTUPINFO si = {sizeof(si)};
     PROCESS_INFORMATION pi;
 
-    if (CreateProcess(reinterpret_cast<LPCSTR>(applicationPath.c_str()), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si,
-                      &pi))
+    if (CreateProcess(applicationPath.c_str(), NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);

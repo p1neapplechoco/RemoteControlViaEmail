@@ -3,8 +3,9 @@
 
 #ifndef SERVER_H
 
+#include <propidl.h>
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <chrono>
 #include <fcntl.h>
 #include <functional>
@@ -40,6 +41,7 @@
 6. Don't quit
  */
 
+extern ULONG EncoderQuality;
 
 enum class ProcessType
 {
@@ -69,6 +71,7 @@ private:
     int server_port;
     SOCKET server_socket;
     WebcamController webcam_controller;
+    WebcamController controller;
 
     void handleClient(SOCKET);
 
