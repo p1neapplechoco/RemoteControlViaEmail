@@ -1,31 +1,31 @@
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
 
-#ifndef SERVER_H
-
-#include <algorithm>
-#include <assert.h>
-#include <chrono>
-#include <fcntl.h>
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <winsock2.h>
+#include "WebcamController.h"
+#include <dirent.h>
 #include <functional>
 #include <gdiplus.h>
 #include <io.h>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <psapi.h>
-#include <sstream>
 #include <string>
 #include <thread>
-#include <tlhelp32.h>
-#include <vector>
+#include <unistd.h>
 #include <windows.h>
-#include <windows.h>
-#include <winsock2.h>
-#include <winsvc.h>
 #include <ws2tcpip.h>
-#include "WebcamController.h"
+#include <sys/types.h>
+#include "IpDiscovery.h"
+#include "Process.h"
+#include "Service.h"
+#include "WindowsCommands.h"
+#include "GetWinDirectory.h"
 
+#ifndef SERVER_H
 #define SERVER_H
 
 #endif //SERVER_H
@@ -41,63 +41,58 @@
  */
 
 
-enum class ProcessType
-{
-    App,
-    BackgroundProcess,
-    WindowsProcess
-};
-
-struct ServiceInfo
-{
-    std::wstring name;
-    std::wstring displayName;
-    DWORD currentState;
-};
-
-struct ProcessInfo
-{
-    DWORD pid;
-    std::wstring name;
-    ProcessType type;
-};
-
 class Server
 {
 private:
     int default_port = 45678;
-    int server_port;
-    SOCKET server_socket;
-    WebcamController webcam_controller;
+    int assigned_port{};
+    std::wstringstream wss{};
+
+    WSADATA wsa_data{};
+    SOCKET server_socket{};
+    sockaddr_in server_address{};
+    WebcamController webcam_controller{};
 
     void handleClient(SOCKET);
 
 public:
-    std::vector<char> imageData;
-
     Server();
 
     ~Server();
 
-    void StartListening();
+    // setting up
 
+    bool setupWSA();
 
-    // Dynamically
-    std::vector<ProcessInfo> ListApplications();
+    bool setupSocket();
 
-    std::vector<ServiceInfo> ListServices();
+    bool assignPort();
 
-    std::vector<char> ScreenCapture();
+    bool setupServer();
 
-    void Shutdown(UINT);
+    // commands handler
 
-    void StartWebcam();
+    void listOfCommands();
 
-    void StopWebcam();
+    void listProcesses();
 
-    std::vector<char> GetWebcamFrame();
+    void listServices();
 
-    void ViewFile();
+    void screenShot(std::vector<char> &image);
 
-    void GetFile();
+    void toggleWebcam();
+
+    void shutdown(const char *buffer);
+
+    void endProcess(const char *buffer);
+
+    void endService(const char *buffer);
+
+    void capture(vector<char> &image);
+
+    int sendSizeAndResponse(const SOCKET &client_socket) const;
+
+    void startServer();
+
+    // void StartListening();
 };

