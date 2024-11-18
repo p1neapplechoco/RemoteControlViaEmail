@@ -1,36 +1,33 @@
-//
-// Created by phida on 10/9/2024.
-//
-#include <winsock2.h>
-#include <windows.h>
-#include <winsvc.h>
-#include <psapi.h>
-#include <tlhelp32.h>
-#include <ws2tcpip.h>
-#include <vector>
-#include <string>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <gdiplus.h>
-#include "WebcamController.h"
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
-// #include <asio.hpp>
-#include <functional>
-#include <thread>
-#include <chrono>
-#include <assert.h>
-// using asio::ip::tcp;
-// using asio::ip::udp;
-
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
 
 #ifndef SERVER_H
+
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <winsock2.h>
+#include "WebcamController.h"
+#include <dirent.h>
+#include <functional>
+#include <gdiplus.h>
+#include <io.h>
+#include <iostream>
+#include <map>
+#include <psapi.h>
+#include <string>
+#include <thread>
+#include <unistd.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <sys/types.h>
+#include "discoveryResponder.h"
+#include "Process.h"
+#include "Service.h"
+#include "WindowsCommands.h"
+#include "../utils/GetWinDirectory.h"
+
+
 #define SERVER_H
 
 #endif //SERVER_H
@@ -46,35 +43,20 @@
  */
 
 
-enum class ProcessType {
-    App,
-    BackgroundProcess,
-    WindowsProcess
-};
-
-struct ServiceInfo {
-    std::wstring name;
-    std::wstring displayName;
-    DWORD currentState;
-};
-
-struct ProcessInfo {
-    DWORD pid;
-    std::wstring name;
-    ProcessType type;
-};
-
 class Server {
 private:
-    int defaultPort = 45678;
-    int assignedPort;
-    SOCKET serverSocket;
-    WebcamController controller;
+    int default_port = 45678;
+    int assigned_port{};
+    std::wstringstream wss{};
+
+    WSADATA wsa_data{};
+    SOCKET server_socket{};
+    sockaddr_in server_address{};
+    WebcamController webcam_controller{};
 
     void handleClient(SOCKET);
 
 public:
-    std::vector<char> imageData;
 
     std::vector<char> fileData;
 
@@ -82,27 +64,43 @@ public:
 
     ~Server();
 
-    void StartListening();
+    // setting up
 
+    bool setupWSA();
 
-    // Dynamically
-    std::vector<ProcessInfo> ListApplications();
+    bool setupSocket();
 
-    std::vector<ServiceInfo> ListServices();
+    bool assignPort();
 
-    std::vector<char> ScreenCapture();
+    bool setupServer();
 
-    void Shutdown();
+    // commands handler
 
-    void StartWebcam();
+    void listOfCommands();
 
-    void StopWebcam();
+    void listProcesses();
 
-    std::vector<char> GetWebcamFrame();
+    void listServices();
 
     void IndexSystem();
-
-    void OpenFile(string);
+    void screenShot(std::vector<char> &image);
 
     vector<char> GetFile(string);
+    void toggleWebcam();
+
+    void shutdown(const char *buffer);
+
+    void endProcess(const char *buffer);
+
+    void endService(const char *buffer);
+
+    void capture(vector<char> &image);
+
+    int sendSizeAndResponse(const SOCKET &client_socket) const;
+
+    void startServer();
+
+    // void StartListening();
+    void OpenFile(string);
+
 };

@@ -1,12 +1,9 @@
-//
-// Created by phida on 10/11/2024.
-//
+#pragma once
+using namespace std;
 
 #include <dshow.h>
 #include <iostream>
 #include <windows.h>
-#include <dshow.h>
-#include <iostream>
 #include <conio.h>
 #include <thread>
 #include <atomic>
@@ -16,16 +13,16 @@
 #include <gdiplus.h>
 #include <qedit.h>
 
-extern "C" { extern GUID CLSID_SampleGrabber; }
-// #include <atlbase.h>
-
-using namespace std;
-
 #ifndef WEBCAMCONTROLLER_H
 #define WEBCAMCONTROLLER_H
 
+extern "C"
+{
+extern GUID CLSID_SampleGrabber;
+}
 
-class WebcamController {
+class WebcamController
+{
 private:
     IGraphBuilder *pGraph = NULL;
     ICaptureGraphBuilder2 *pBuild = NULL;
@@ -40,11 +37,16 @@ private:
 
     std::vector<char> currentFrame;
     std::mutex frameMutex;
-    HRESULT GrabFrame(IMediaControl* pControl, IBaseFilter* pCap);
-    static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid);
+
+    HRESULT GrabFrame(IMediaControl *pControl, IBaseFilter *pCap);
+
+    static int GetEncoderClsid(const WCHAR *format, CLSID *pClsid);
 
 public:
-    bool IsWebcamRunning() const { return isRunning; }
+    bool IsWebcamRunning() const
+    {
+        return isRunning;
+    }
 
     HRESULT InitializeGraph();
 
@@ -54,9 +56,9 @@ public:
 
     void StopWebcam();
 
-    void CleanUp();
-
     std::vector<char> GetCurrentFrame();
+
+    void CleanUp();
 };
 
 #endif //WEBCAMCONTROLLER_H

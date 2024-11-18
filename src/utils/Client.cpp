@@ -25,29 +25,13 @@ Client::~Client()
 
 bool Client::setupWSA()
 {
-    return WSAStartup(MAKEWORD(2, 2), &wsaData) == 0;
+    return WSAStartup(MAKEWORD(2, 2), &wsa_data) == 0;
 }
 
 bool Client::setupSocket()
 {
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     return client_socket != INVALID_SOCKET;
-}
-
-bool Client::connectToServer()
-{
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(server_port);
-    inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr);
-
-    if (connect(client_socket, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) == SOCKET_ERROR)
-    {
-        std::cerr << "Connection failed" << std::endl;
-        closesocket(client_socket);
-        WSACleanup();
-        return false;
-    }
-    return true;
 }
 
 bool Client::setupClient()
@@ -72,6 +56,23 @@ bool Client::setupClient()
     std::cin >> server_port;
 
     return connectToServer();
+}
+
+
+bool Client::connectToServer()
+{
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(server_port);
+    inet_pton(AF_INET, server_ip.c_str(), &server_address.sin_addr);
+
+    if (connect(client_socket, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) == SOCKET_ERROR)
+    {
+        std::cerr << "Connection failed" << std::endl;
+        closesocket(client_socket);
+        WSACleanup();
+        return false;
+    }
+    return true;
 }
 
 void Client::scanIP()
@@ -103,13 +104,11 @@ std::vector<char> Client::receiveImageData() const
         {
             buffer.insert(buffer.end(), chunk, chunk + received_bytes);
             total_bytes_received += received_bytes;
-        }
-        else if (received_bytes == 0)
+        } else if (received_bytes == 0)
         {
             std::cout << "Connection closed by server" << std::endl;
             break;
-        }
-        else
+        } else
         {
             std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
             break;
@@ -190,8 +189,7 @@ void Client::startClient()
             {
                 std::cout << "Server closed the connection" << std::endl;
                 break;
-            }
-            else
+            } else
             {
                 std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
                 break;
@@ -202,7 +200,7 @@ void Client::startClient()
         {
             std::string response(received_data.begin(), received_data.end());
             std::cout << "Server response: " << std::endl
-                      << response << std::endl;
+                    << response << std::endl;
         }
 
         if (strcmp(sent_buffer, "screen capture") == 0)

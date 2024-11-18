@@ -4,6 +4,7 @@
 
 #include "WebcamController.h"
 
+
 // Remember to link with strmiids.lib
 int WebcamController::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
     UINT num = 0;
@@ -14,12 +15,12 @@ int WebcamController::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
 
     if (size == 0) return -1;
 
-    pImageCodecInfo = (Gdiplus::ImageCodecInfo*)(malloc(size));
+    pImageCodecInfo = static_cast<Gdiplus::ImageCodecInfo *>(malloc(size));
     if (pImageCodecInfo == nullptr) return -1;
 
     Gdiplus::GetImageEncoders(num, size, pImageCodecInfo);
 
-    for (UINT j = 0; j < num; ++j) {
+    for (int j = 0; j < num; ++j) {
         if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0) {
             *pClsid = pImageCodecInfo[j].Clsid;
             free(pImageCodecInfo);
@@ -32,11 +33,9 @@ int WebcamController::GetEncoderClsid(const WCHAR* format, CLSID* pClsid) {
 }
 
 HRESULT WebcamController::GrabFrame(IMediaControl* pControl, IBaseFilter* pCap) {
-    HRESULT hr;
-
     // Get the capture output pin
     IPin* pPin = nullptr;
-    hr = pBuild->FindPin(pCap, PINDIR_OUTPUT, &PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, FALSE, 0, &pPin);
+    HRESULT hr = pBuild->FindPin(pCap, PINDIR_OUTPUT, &PIN_CATEGORY_CAPTURE, &MEDIATYPE_Video, FALSE, 0, &pPin);
     if (FAILED(hr)) return hr;
 
     // Create sample grabber filter

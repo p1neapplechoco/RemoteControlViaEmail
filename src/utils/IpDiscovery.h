@@ -1,11 +1,9 @@
-#pragma once
-#ifndef NETWORKDISCOVERY_H
-
 #include <iostream>
 #include <string>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
+#ifndef NETWORKDISCOVERY_H
 #define NETWORKDISCOVERY_H
 
 class NetworkDiscovery

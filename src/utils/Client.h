@@ -16,7 +16,7 @@ private:
     int server_port = 0;
 
 public:
-    WSADATA wsaData{};
+    WSADATA wsa_data{};
     SOCKET client_socket{};
     sockaddr_in server_address{};
 
@@ -28,9 +28,9 @@ public:
 
     bool setupSocket();
 
-    bool connectToServer();
-
     bool setupClient();
+
+    bool connectToServer();
 
     static void scanIP();
 

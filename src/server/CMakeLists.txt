@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.29)
 project(server)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_EXE_LINKER_FLAGS "-static")
+#set(CMAKE_EXE_LINKER_FLAGS "-static")
 set(BUILD_SHARED_LIBS OFF)
 
 #include_directories(lib/asio/include/)
@@ -11,8 +12,12 @@ set(BUILD_SHARED_LIBS OFF)
 add_executable(server main.cpp main.h server.cpp server.h discoveryResponder.cpp discoveryResponder.h
         WebcamController.cpp
         WebcamController.h
-        ../utils/GetWinDirectory.h
-        ../utils/GetWinDirectory.cpp)
+        Service.cpp
+        Service.h
+        Process.cpp
+        Process.h
+        WindowsCommands.cpp
+        WindowsCommands.h)
 
 # Add this to link ws2_32.lib to static library
 if (MINGW)
