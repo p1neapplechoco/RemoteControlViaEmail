@@ -162,7 +162,7 @@ int main() {
             }
         }
 
-        if (strstr(sendBuffer, "get file") != NULL) {
+        if (strstr(sendBuffer, "!get file") != NULL) {
             // Receive file size
             int fileSize;
             if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0) {

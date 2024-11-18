@@ -53,11 +53,10 @@ private:
     SOCKET server_socket{};
     sockaddr_in server_address{};
     WebcamController webcam_controller{};
-
+    GetWinDirectory getWinDir{};
     void handleClient(SOCKET);
 
 public:
-
     std::vector<char> fileData;
 
     Server();
@@ -82,10 +81,12 @@ public:
 
     void listServices();
 
-    void IndexSystem();
+    void indexSystem(string);
+
     void screenShot(std::vector<char> &image);
 
-    vector<char> GetFile(string);
+    void getFile(string);
+
     void toggleWebcam();
 
     void shutdown(const char *buffer);
@@ -100,7 +101,10 @@ public:
 
     void startServer();
 
+    void showAvailableDisks();
+
+
+
     // void StartListening();
     void OpenFile(string);
-
 };

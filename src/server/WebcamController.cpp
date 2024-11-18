@@ -355,7 +355,7 @@ void WebcamController::WebcamThread() {
                             // Create bitmap from buffer
                             Gdiplus::Bitmap* bitmap = new Gdiplus::Bitmap(width, height, width * 3,
                                 PixelFormat24bppRGB, buffer);
-
+                            bitmap->RotateFlip(Gdiplus::RotateNoneFlipXY);
                             // Save to IStream as JPEG
                             IStream* istream = nullptr;
                             CreateStreamOnHGlobal(nullptr, TRUE, &istream);
