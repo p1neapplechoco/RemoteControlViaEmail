@@ -263,9 +263,9 @@ void LoginFrame::OnConnectClick(wxCommandEvent& evt) {
 
     wxString serverAddress = ipComboBox->GetValue() + ":" + wxString::Format("%d", 45678);
 
-    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
-    mainFrame->Fit();
-    mainFrame->Center();
-    mainFrame->Show();
+    // MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
+    // mainFrame->Fit();
+    // mainFrame->Center();
+    // mainFrame->Show();
     Close();
 }

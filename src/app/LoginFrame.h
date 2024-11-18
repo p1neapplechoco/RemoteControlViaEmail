@@ -20,6 +20,7 @@ private:
     void OnRefreshClick(wxCommandEvent& evt);
     void OnBackClick(wxCommandEvent& evt);
     void OnConnectClick(wxCommandEvent& evt);
+
     void UpdateIPList();
     void ShowGooglePanel();
     void ShowIPPanel();

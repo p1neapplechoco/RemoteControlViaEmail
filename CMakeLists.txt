@@ -19,7 +19,9 @@ add_executable(RemoteControlViaEmail src/main.cpp
         src/utils/GetWinDirectory.cpp
         src/utils/IpDiscovery.cpp
         src/utils/Server.cpp
-        src/utils/WebcamController.cpp)
+        src/utils/WebcamController.cpp
+        src/app/CustomBitmapButton.cpp
+        src/app/LoginFrame.cpp)
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
