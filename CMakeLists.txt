@@ -26,4 +26,4 @@ add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         "${CMAKE_SOURCE_DIR}/lib/curl/bin/libcurl-x64.dll"
         $<TARGET_FILE_DIR:RemoteControlViaEmail>)
 
-target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base curl ssl crypto ws2_32 wldap32 advapi32 crypt32)
+target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base curl ssl crypto ws2_32 wldap32 advapi32 crypt32 strmiids quartz ole32 oleaut32 uuid gdi32)
