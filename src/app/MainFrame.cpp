@@ -153,9 +153,9 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
 
     auto topRightSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto teamButton = new CustomBitmapButton(topPanel, wxID_ANY, "team");  // Team
+    auto teamButton = new CustomBitmapButton(topPanel, ID_TEAM, "team");  // Team
     teamButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
-    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "instruction");  // Help
+    auto helpButton = new CustomBitmapButton(topPanel, ID_INSTRUCTION, "instruction");  // Help
     helpButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
     auto exitButton = new CustomBitmapButton(topPanel, ID_EXIT, "exit");  // Exit
     exitButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonClick, this);
@@ -213,10 +213,12 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     this->SetMinSize(wxSize(FromDIP(800), FromDIP(600)));
 
     if(ConnectToServer(currentEmail, serverAddress, portStr)) {
-        rightPanel->AppendLog("Connect to server IP " + serverAddress + " is Successfully!! Wait for response!");
+        rightPanel->AppendLog("Connect to server IP " + serverAddress + " is Successfully!! Wait for response!\n"
+                                "------------------------------------------------------------------------------------\n");
 
     } else {
-        rightPanel->AppendLog("Connect to server IP " + serverAddress + " is Unsuccessfully!! Try again!");
+        rightPanel->AppendLog("Connect to server IP " + serverAddress + " is Unsuccessfully!! Try again!\n"
+                                "------------------------------------------------------------------------------\n");
     }
 }
 
@@ -256,14 +258,30 @@ void MainFrame::HighlightButton(wxPanel* selectedPanel) {
 
 void MainFrame::OnButtonClick(wxCommandEvent& evt) {
     int id = evt.GetId();
-    rightPanel->UpdatePanelVisibility(id);
 
     // Handle specific button actions
     switch (id) {
         case ID_EXIT:
             Close();
-        break;
-        // Add other specific actions
+            break;
+        case ID_INSTRUCTION:
+
+            break;
+        case ID_TEAM: {
+            wxFrame* imgFrame = new wxFrame(this, wxID_ANY, "Team", wxDefaultPosition, wxSize(578, 425));
+            wxImage image("./assert/background/TeamRef.png");
+
+            if (image.IsOk()) {
+                wxStaticBitmap* staticBitmap = new wxStaticBitmap(imgFrame, wxID_ANY, wxBitmap(image));
+            } else {
+                wxMessageBox("Error loading image!", "Error", wxICON_ERROR);
+            }
+            imgFrame->Show();
+            imgFrame->Center();
+        }
+            break;
+        default:
+            rightPanel->UpdatePanelVisibility(id);
     }
 
     evt.Skip();

@@ -12,7 +12,9 @@ enum {
     ID_PROCESS,
     ID_REGISTRY,
     ID_LOGOUT,
-    ID_EXIT
+    ID_EXIT,
+    ID_TEAM,
+    ID_INSTRUCTION
 };
 
 class RightPanel : public wxPanel {

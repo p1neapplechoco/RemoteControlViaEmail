@@ -14,6 +14,8 @@
 #include <wx/sizer.h>
 #include <wx/progdlg.h>
 #include <wx/bmpbuttn.h>
+#include <wx/image.h>
+#include <wx/statbmp.h>
 
 #include "../utils/EmailRetrieval.h"
 #include "../utils/IniParser.h"
