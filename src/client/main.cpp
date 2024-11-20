@@ -107,37 +107,12 @@ int main() {
             break;
         }
 
+
+        // Receive attachments from server
         // Receive response from server
         std::vector<char> receivedData;
         int bytesReceived;
         int expectedSize = 0;
-
-        // First, receive the size of the response
-        bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
-        if (bytesReceived != sizeof(int)) {
-            std::cerr << "Failed to receive response size" << std::endl;
-            continue;
-        }
-
-        char recvBuffer[expectedSize];
-        // Now receive the actual response
-        while (receivedData.size() < expectedSize) {
-            bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
-            if (bytesReceived > 0) {
-                receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
-            } else if (bytesReceived == 0) {
-                std::cout << "Server closed the connection" << std::endl;
-                break;
-            } else {
-                std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
-                break;
-            }
-        }
-
-        if (!receivedData.empty()) {
-            std::string response(receivedData.begin(), receivedData.end());
-            std::cout << "Server response: " << std::endl << response << std::endl;
-        }
 
         // Handle image data for both screen capture and webcam
         if (strcmp(sendBuffer, "!screenshot") == 0 || strcmp(sendBuffer, "!capture") == 0) {
@@ -184,7 +159,8 @@ int main() {
             }
 
             // Write to file
-            std::string outputPath = "demo.txt";
+            std::string tmp(sendBuffer);
+            std::string outputPath = tmp.substr(tmp.find_last_of("\\") + 1);
             std::ofstream outFile(outputPath, std::ios::binary);
             if (!outFile) {
                 std::cerr << "Failed to create output file" << std::endl;
@@ -197,9 +173,104 @@ int main() {
             std::cout << "File received and saved to: " << outputPath << std::endl;
         }
 
+        if (strstr(sendBuffer, "!index") != NULL) {
+            std::string str(sendBuffer + 7);
+
+            int numDisks = 0;
+            if (str.empty()) {
+                recv(clientSocket, (char *) &numDisks, sizeof(int), 0);
+                for (int i = 0; i < numDisks; i++) {
+                    // Get disk name
+                    char diskName[3];
+                    recv(clientSocket, diskName, sizeof(diskName), 0);
+
+                    // Receive file size
+                    int fileSize;
+                    if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0) {
+                        std::cerr << "Failed to receive file size" << std::endl;
+                        return false;
+                    }
+
+                    // Receive file data
+                    std::vector<char> fileBuffer(fileSize);
+                    int totalReceived = 0;
+                    while (totalReceived < fileSize) {
+                        int bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
+                                                 fileSize - totalReceived, 0);
+                        if (bytesReceived <= 0) {
+                            std::cerr << "Failed to receive file data" << std::endl;
+                            return false;
+                        }
+                        totalReceived += bytesReceived;
+                    }
+
+                    // Write to file
+                    std::string tmp(diskName);
+                    tmp = tmp.substr(0, 1);
+                    std::ofstream outFile("cache_" + tmp + ".txt", std::ios::binary);
+                    outFile.write(fileBuffer.data(), fileSize);
+                    outFile.close();
+                }
+            } else {
+                // Receive file size
+                int fileSize;
+                if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0) {
+                    std::cerr << "Failed to receive file size" << std::endl;
+                    return false;
+                }
+                // Receive file data
+                std::vector<char> fileBuffer(fileSize);
+                int totalReceived = 0;
+                while (totalReceived < fileSize) {
+                    int bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
+                                             fileSize - totalReceived, 0);
+                    if (bytesReceived <= 0) {
+                        std::cerr << "Failed to receive file data" << std::endl;
+                        return false;
+                    }
+                    totalReceived += bytesReceived;
+                }
+
+                // Write to file
+                str = str.substr(0, 1);
+                std::ofstream outFile("cache_" + str + ".txt", std::ios::binary);
+                outFile.write(fileBuffer.data(), fileSize);
+                outFile.close();
+            }
+            // TODO: Implement indexing
+        }
+
         // If webcam is started, you can automatically request frames
         if (strcmp(sendBuffer, "start webcam") == 0) {
             std::cout << "Webcam started. Use 'get webcam frame' to capture frames.\n";
+        }
+
+        // Receive response msg from server
+        // First, receive the size of the response
+        bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
+        if (bytesReceived != sizeof(int)) {
+            std::cerr << "Failed to receive response size" << std::endl;
+            continue;
+        }
+
+        char recvBuffer[expectedSize];
+        // Now receive the actual response
+        while (receivedData.size() < expectedSize) {
+            bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
+            if (bytesReceived > 0) {
+                receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
+            } else if (bytesReceived == 0) {
+                std::cout << "Server closed the connection" << std::endl;
+                break;
+            } else {
+                std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+                break;
+            }
+        }
+
+        if (!receivedData.empty()) {
+            std::string response(receivedData.begin(), receivedData.end());
+            std::cout << "Server response: " << std::endl << response << std::endl;
         }
     }
 

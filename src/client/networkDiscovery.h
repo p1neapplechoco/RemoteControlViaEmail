@@ -12,7 +12,7 @@
 class NetworkDiscovery {
 private:
     SOCKET broadcastSocket;
-    const int PORT = 12345;  // Choose an available port
+    const int PORT = 42069;  // Choose an available port
     const std::string DISCOVERY_MESSAGE = "DISCOVER_REQUEST";
 public:
     NetworkDiscovery();
