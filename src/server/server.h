@@ -97,6 +97,8 @@ public:
 
     void capture(vector<char> &image);
 
+    void openAndSendFile(string file_path);
+
     int sendSizeAndResponse(const SOCKET &client_socket) const;
 
     void startServer();

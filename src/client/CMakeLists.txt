@@ -10,9 +10,11 @@ set(BUILD_SHARED_LIBS OFF)
 #        cmake-build-debug/Sort.cpp
 #        cmake-build-debug/Sort.h)
 
-add_executable(client main.cpp
-                      networkDiscovery.cpp)
-if(MINGW)
-    target_link_libraries(client ws2_32)
-endif()
+add_executable(client
+        main.cpp
+        networkDiscovery.cpp
+        ../utils/GetWinDirectory.cpp
+)
+
+target_link_libraries(client ws2_32)
 #target_link_libraries(server)
