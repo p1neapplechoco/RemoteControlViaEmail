@@ -20,7 +20,7 @@
 #include "../utils/IpDiscovery.h"
 #include "../utils/Client.h"
 #include "CustomBitmapButton.h"
-// #include "MainFrame.h"
+#include "MainFrame.h"
 #include "LoginFrame.h"
 using namespace std;
 

@@ -173,6 +173,15 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
 
     ipPanelSizer->Add(ipSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);
 
+    auto portSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto portLabel = new wxStaticText(ipPanel, wxID_ANY, "Port:");
+    portTextCtrl = new wxTextCtrl(ipPanel, wxID_ANY, "42069");
+
+    portSizer->Add(portLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+    portSizer->Add(portTextCtrl, 1, wxALIGN_CENTER_VERTICAL);
+
+    ipPanelSizer->Add(portSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);
+
     // Navigation Buttons
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     auto backButton = new CustomBitmapButton(ipPanel, wxID_ANY, "back");
@@ -205,13 +214,26 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
     this->SetMinSize(wxSize(FromDIP(800), FromDIP(600)));
 }
 
-void LoginFrame::UpdateIPList() {
+bool LoginFrame::UpdateIPList() {
     wxProgressDialog progress("Scanning Network", "Searching for available servers...",
                             100, this, wxPD_APP_MODAL | wxPD_AUTO_HIDE);
     progress.Pulse();
 
     try {
         ipComboBox->Clear();
+
+        if (!client.setupWSA())
+        {
+            std::cerr << "Failed to setup WSA" << std::endl;
+            return false;
+        }
+
+        if (!client.setupSocket())
+        {
+            std::cerr << "Failed to setup socket" << std::endl;
+            WSACleanup();
+            return false;
+        }
 
         vector<string> ipAddresses = client.scanIP();
 
@@ -231,10 +253,12 @@ void LoginFrame::UpdateIPList() {
     }
 
     progress.Hide();
+    return true;
 }
 
 void LoginFrame::OnRefreshClick(wxCommandEvent& evt) {
-    UpdateIPList();
+    if(!UpdateIPList())
+        wxMessageBox("Setup WSA or Socket isn't finished", "Error", wxOK | wxICON_ERROR);
 }
 
 void LoginFrame::ShowGooglePanel() {
@@ -274,8 +298,17 @@ void LoginFrame::OnConnectClick(wxCommandEvent& evt) {
         return;
     }
 
-    // MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
-    // mainFrame->Fit();
-    // mainFrame->Center();
-    // mainFrame->Show();
+    if (currentEmail.IsEmpty()) {
+        wxMessageBox("Email is not set", "Error", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    wxString serverAddress = ipComboBox->GetValue();
+    wxString portStr = portTextCtrl->GetValue();
+
+    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress, portStr);
+    mainFrame->Fit();
+    mainFrame->Center();
+    mainFrame->Show();
+    Close();
 }

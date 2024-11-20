@@ -8,6 +8,8 @@ public:
 
 private:
     wxComboBox* ipComboBox;
+    wxTextCtrl* portTextCtrl;
+
     wxPanel* bottomPanel;
     wxPanel* googlePanel;
     wxPanel* ipPanel;
@@ -22,7 +24,7 @@ private:
     void OnBackClick(wxCommandEvent& evt);
     void OnConnectClick(wxCommandEvent& evt);
 
-    void UpdateIPList();
+    bool UpdateIPList();
     void ShowGooglePanel();
     void ShowIPPanel();
 

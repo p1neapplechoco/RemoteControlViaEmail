@@ -14,7 +14,7 @@ class Client
 private:
     EmailRetrieval email_retrieval;
     string server_ip = "127.0.0.1";
-    int server_port = 0;
+    int server_port = 42069;
 
 public:
     WSADATA wsaData{};
@@ -38,6 +38,10 @@ public:
     std::vector<char> receiveImageData() const;
 
     void startClient();
+
+    void setServerIP(string _server_ip) { server_ip = _server_ip; };
+
+    void setServerPort(int _server_port) { server_port = _server_port; };
 };
 
 #endif //CLIENT_H

@@ -22,6 +22,7 @@ add_executable(RemoteControlViaEmail src/main.cpp
         src/utils/WebcamController.cpp
         src/app/CustomBitmapButton.cpp
         src/app/LoginFrame.cpp
+        src/app/MainFrame.cpp
         src/app/App.h)
 
 if(EXISTS ${CMAKE_BINARY_DIR}/assert)

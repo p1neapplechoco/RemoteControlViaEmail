@@ -5,10 +5,10 @@
 
 bool App::OnInit() {
     wxInitAllImageHandlers();
-    // MainFrame* mainFrame = new MainFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize, "0", "0");
-    // mainFrame->Fit();
-    // mainFrame->Center();
-    // mainFrame->Show();
+    MainFrame* mainFrame = new MainFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize, "0", "0", "0");
+    mainFrame->Fit();
+    mainFrame->Center();
+    mainFrame->Show();
 
     LoginFrame* loginFrame = new LoginFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize);
     loginFrame->Fit();
@@ -22,10 +22,10 @@ wxIMPLEMENT_APP(App);
 
 // int main()
 // {
-//     // Client client;
-//     // client.startClient();
+//      Client client;
+//      client.startClient();
 //
-//     //Server server;
+//     Server server;
 //
 //     return 0;
 // }
