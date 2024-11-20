@@ -21,7 +21,13 @@ add_executable(RemoteControlViaEmail src/main.cpp
         src/utils/Server.cpp
         src/utils/WebcamController.cpp
         src/app/CustomBitmapButton.cpp
-        src/app/LoginFrame.cpp)
+        src/app/LoginFrame.cpp
+        src/app/App.h)
+
+if(EXISTS ${CMAKE_BINARY_DIR}/assert)
+    file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/assert)
+endif()
+file(COPY ${CMAKE_SOURCE_DIR}/assert DESTINATION ${CMAKE_BINARY_DIR})
 
 add_custom_command(TARGET RemoteControlViaEmail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

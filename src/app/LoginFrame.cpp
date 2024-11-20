@@ -38,11 +38,34 @@ GmailLoginDialog::GmailLoginDialog(wxWindow* parent)
     Center();
 }
 
-void GmailLoginDialog::OnLogin(wxCommandEvent& evt) {
-    wxString email = emailInput->GetValue();
-    wxString password = passwordInput->GetValue();
+bool GmailLoginDialog::AuthenticateUser(const wxString& email, const wxString& password) {
+    UserCredentials credentials;
+    credentials.loadCredentials();
 
-    if(email.IsEmpty() || password.IsEmpty()) {
+    credentials = UserCredentials();
+    credentials.setUsername(email.ToStdString());
+    credentials.setPassword(password.ToStdString());
+
+    try {
+        EmailRetrieval emailRetrieval(credentials);
+        emailRetrieval.setupCurl();
+
+        emailRetrieval.retrieveEmail();
+
+        emailRetrieval.cleanUpCurl();
+
+        return true;
+    }
+    catch (const std::exception& e) {
+        return false;
+    }
+}
+
+void GmailLoginDialog::OnLogin(wxCommandEvent& evt) {
+    wxString emailStr = emailInput->GetValue();
+    wxString passwordStr = passwordInput->GetValue();
+
+    if(emailStr.IsEmpty() || passwordStr.IsEmpty()) {
         wxMessageBox("Please enter both email and password!", "Error",
                     wxOK | wxICON_ERROR);
         return;
@@ -50,32 +73,24 @@ void GmailLoginDialog::OnLogin(wxCommandEvent& evt) {
 
     loginButton->Enable(false);
 
-    wxProgressDialog progress("Connecting...", "Connecting to Google Account...",
+    wxProgressDialog progress("Connecting...", "Authenticating with Google Account...",
                             100, this, wxPD_APP_MODAL | wxPD_AUTO_HIDE);
     progress.Pulse();
 
-    try {
-        UserCredentials credentials;
-        credentials.loadCredentials();
-        EmailRetrieval emailRetrieval(credentials);
-        emailRetrieval.setupCurl();
-        emailRetrieval.retrieveEmail();
+    bool authenticated = AuthenticateUser(emailStr, passwordStr);
 
-        progress.Hide();
-        wxMessageBox("Successfully logged in to Gmail!", "Success",
-                    wxOK | wxICON_INFORMATION);
-
+    if (authenticated) {
         loginSuccessful = true;
+        email = emailStr;
         EndModal(wxID_OK);
-
-    } catch (const std::exception& e) {
-        progress.Hide();
-        wxMessageBox(wxString::Format("Authentication failed: %s", e.what()),
-                    "Error", wxOK | wxICON_ERROR);
+    } else {
+        wxMessageBox("Login failed. Please check your credentials.", "Error",
+                    wxOK | wxICON_ERROR);
         loginSuccessful = false;
     }
 
     loginButton->Enable(true);
+    progress.Hide();
 }
 
 LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE)
@@ -196,19 +211,22 @@ void LoginFrame::UpdateIPList() {
     progress.Pulse();
 
     try {
-        networkDiscovery->sendBroadcast();
-        networkDiscovery->listenForResponses(2); // 2 seconds timeout
-
         ipComboBox->Clear();
-        for(const auto& ip : networkDiscovery->getDiscoveredIPs()) {
+
+        vector<string> ipAddresses = client.scanIP();
+
+        for(const auto& ip : ipAddresses) {
             ipComboBox->Append(wxString(ip));
         }
 
-        if(ipComboBox->GetCount() > 0) {
+        if(ipAddresses.empty()) {
+            wxMessageBox("No servers found on the network", "Information",
+                        wxOK | wxICON_INFORMATION);
+        } else {
             ipComboBox->SetSelection(0);
         }
-
-    } catch (const std::exception& e) {
+    }
+    catch (const exception& e) {
         wxMessageBox(wxString(e.what()), "Error", wxOK | wxICON_ERROR);
     }
 
@@ -256,16 +274,8 @@ void LoginFrame::OnConnectClick(wxCommandEvent& evt) {
         return;
     }
 
-    if (currentEmail.IsEmpty()) {
-        wxMessageBox("Email is not set", "Error", wxOK | wxICON_ERROR);
-        return;
-    }
-
-    wxString serverAddress = ipComboBox->GetValue() + ":" + wxString::Format("%d", 45678);
-
     // MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
     // mainFrame->Fit();
     // mainFrame->Center();
     // mainFrame->Show();
-    Close();
 }

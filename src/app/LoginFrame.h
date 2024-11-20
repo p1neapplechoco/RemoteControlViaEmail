@@ -12,8 +12,9 @@ private:
     wxPanel* googlePanel;
     wxPanel* ipPanel;
     wxBoxSizer* bottomSizer;
-    NetworkDiscovery* networkDiscovery = new NetworkDiscovery();
     wxString currentEmail;
+
+    Client client;
 
     void OnGoogleLogin(wxCommandEvent& evt);
     void OnNoAccountLogin(wxCommandEvent& evt);
@@ -33,7 +34,6 @@ private:
 class GmailLoginDialog : public wxDialog {
 public:
     GmailLoginDialog(wxWindow* parent);
-
     bool IsLoginSuccessful() const { return loginSuccessful; }
     wxString GetEmail() const { return emailInput->GetValue(); }
 
@@ -42,6 +42,8 @@ private:
     wxTextCtrl* passwordInput;
     wxBitmapButton* loginButton;
     bool loginSuccessful = false;
+    wxString email;
 
     void OnLogin(wxCommandEvent& evt);
+    bool AuthenticateUser(const wxString& email, const wxString& password);
 };

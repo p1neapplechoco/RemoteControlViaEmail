@@ -1,4 +1,5 @@
 #include "IpDiscovery.h"
+using namespace std;
 
 NetworkDiscovery::NetworkDiscovery()
 {
@@ -44,8 +45,10 @@ void NetworkDiscovery::sendBroadcast() const
     }
 }
 
-void NetworkDiscovery::listenForResponses(const int timeout_second = 5) const
+void NetworkDiscovery::listenForResponses(int timeout_second)
 {
+    discoveredIPs.clear();
+
     DWORD timeout = timeout_second * 1000;
     if (setsockopt(broadcast_socket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<char *>(&timeout), sizeof(timeout)) < 0)
     {
@@ -77,6 +80,9 @@ void NetworkDiscovery::listenForResponses(const int timeout_second = 5) const
         inet_ntop(AF_INET, &(sender_address.sin_addr), sender_ip, INET_ADDRSTRLEN);
 
         std::cout << "Response from " << sender_ip << ": " << buffer << "\n";
+
+        string ipStr(sender_ip);
+        discoveredIPs.push_back(ipStr);
     }
 }
 

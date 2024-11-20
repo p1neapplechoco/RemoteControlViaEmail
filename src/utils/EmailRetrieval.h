@@ -3,6 +3,8 @@
 
 #include <string>
 #include <curl/curl.h>
+#include <string>
+using namespace std;
 
 #define EMAILRETRIEVAL_H
 
@@ -21,6 +23,10 @@ public:
     std::string getPassword();
 
     std::string getCaBundlePath();
+
+    void setUsername(string _username) { username = _username; }
+
+    void setPassword(string _password) { password = _password; }
 };
 
 class EmailRetrieval
@@ -37,7 +43,6 @@ public:
     ~EmailRetrieval();
 
     explicit EmailRetrieval(const UserCredentials &user);
-
 
     void setupCurl();
 

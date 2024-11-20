@@ -74,11 +74,12 @@ bool Client::setupClient()
     return connectToServer();
 }
 
-void Client::scanIP()
+vector<string> Client::scanIP()
 {
-    const NetworkDiscovery network_discovery;
+    NetworkDiscovery network_discovery;
     network_discovery.sendBroadcast();
     network_discovery.listenForResponses(5);
+    return network_discovery.getDiscoveredIPs();
 }
 
 std::vector<char> Client::receiveImageData() const
