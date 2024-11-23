@@ -7,7 +7,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 #set(CMAKE_EXE_LINKER_FLAGS "-static")
 set(BUILD_SHARED_LIBS OFF)
 
-#add_subdirectory(lib/wxWidgets-3.2.6)
+add_subdirectory(lib/wxWidgets-3.2.6)
 
 include_directories(${CMAKE_SOURCE_DIR}/lib/curl/include ${CMAKE_SOURCE_DIR}/lib/openssl/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openssl/lib)
@@ -24,19 +24,16 @@ add_executable(
         src/utils/Service.cpp
         src/utils/Process.cpp
         src/utils/WindowsCommands.cpp
-
-        #        src/utils/EmailRetrieval.h
-        #        src/utils/IniParser.h
-        #        src/utils/Client.h
-        #        src/utils/GetWinDirectory.h
-        #        src/utils/IpDiscovery.h
-        #        src/utils/Server.h
-        #        src/utils/WebcamController.h
-        #        src/utils/Service.h
-        #        src/utils/Process.h
-        #        src/utils/WindowsCommands.h
-        #        src/utils/
+#        src/app/CustomBitmapButton.cpp
+#        src/app/LoginFrame.cpp
+#        src/app/MainFrame.cpp
+#        src/app/LogPanel.cpp
 )
+
+if(EXISTS ${CMAKE_BINARY_DIR}/assert)
+    file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/assert)
+endif()
+file(COPY ${CMAKE_SOURCE_DIR}/assert DESTINATION ${CMAKE_BINARY_DIR})
 
 add_custom_command(
         TARGET RemoteControlViaEmail POST_BUILD
@@ -45,10 +42,5 @@ add_custom_command(
         $<TARGET_FILE_DIR:RemoteControlViaEmail>
 )
 
-target_link_libraries(
-        RemoteControlViaEmail
-        
-        curl ssl
-        crypto wldap32 advapi32 crypt32 ws2_32 strmiids wsock32 amstrmid
-        gdiplus
-)
+target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base curl ssl crypto wldap32 advapi32
+        crypt32 ws2_32 strmiids wsock32 amstrmid gdiplus quartz ole32 oleaut32 uuid gdi32)

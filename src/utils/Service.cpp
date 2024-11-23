@@ -1,5 +1,5 @@
 #include "Service.h"
-
+ULONG EncoderQuality = 100L;
 // Function to convert const char* to const wchar_t*
 
 bool Service::endService(const char *serviceName)
@@ -11,7 +11,11 @@ bool Service::endService(const char *serviceName)
         return false;
     }
 
-    const auto hService = OpenService(hSCManager, serviceName, SERVICE_STOP | SERVICE_QUERY_STATUS);
+    int length = MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, NULL, 0);
+    std::wstring wServiceName(length, 0);
+    MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, &wServiceName[0], length);
+
+    const auto hService = OpenServiceW(hSCManager, wServiceName.c_str(), SERVICE_STOP | SERVICE_QUERY_STATUS);
     if (hService == nullptr)
     {
         std::cerr << "Failed to open service: " << serviceName << ". Error: " << GetLastError() << std::endl;
