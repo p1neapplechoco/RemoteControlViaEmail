@@ -75,11 +75,12 @@ bool Client::connectToServer()
     return true;
 }
 
-void Client::scanIP()
+vector<string> Client::scanIP()
 {
-    const NetworkDiscovery network_discovery;
+    NetworkDiscovery network_discovery;
     network_discovery.sendBroadcast();
     network_discovery.listenForResponses(5);
+    return network_discovery.getDiscoveredIPs();
 }
 
 std::vector<char> Client::receiveImageData() const
@@ -162,6 +163,9 @@ void Client::startClient()
 
         send(client_socket, sent_buffer, sizeof(sent_buffer), 0);
 
+        for(auto x : sent_buffer)
+            cout << x;
+
         if (strcmp(sent_buffer, "exit") == 0)
         {
             break;
@@ -215,3 +219,78 @@ void Client::startClient()
     closesocket(client_socket);
     WSACleanup();
 }
+
+bool Client::handleCommand(const std::string& command) {
+    if (!setupWSA())
+    {
+        std::cerr << "Failed to setup WSA" << std::endl;
+        return false;
+    }
+    if (!setupSocket())
+    {
+        std::cerr << "Failed to setup socket" << std::endl;
+        WSACleanup();
+        return false;
+    }
+
+    if(!connectToServer())
+        return false;
+
+    char sent_buffer[1024] = {};
+    strncpy(sent_buffer, command.c_str(), sizeof(sent_buffer) - 1);
+
+    // Send command to server
+    send(client_socket, sent_buffer, sizeof(sent_buffer), 0);
+
+    if (command == "exit") {
+        return false;
+    }
+
+    // Receive text response
+    std::vector<char> received_data;
+    int expected_size = 0;
+
+    int received_bytes = recv(client_socket, reinterpret_cast<char*>(&expected_size), sizeof(int), 0);
+    if (received_bytes != sizeof(int)) {
+        std::cerr << "Failed to receive response size" << std::endl;
+        closesocket(client_socket);
+        WSACleanup();
+        return false;
+    }
+
+    while (received_data.size() < expected_size) {
+        char received_buffer[1024];
+        received_bytes = recv(client_socket, received_buffer, sizeof(received_buffer), 0);
+        if (received_bytes > 0) {
+            received_data.insert(received_data.end(), received_buffer, received_buffer + received_bytes);
+        } else if (received_bytes == 0) {
+            std::cout << "Server closed the connection" << std::endl;
+            break;
+        } else {
+            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
+            break;
+        }
+    }
+
+    if (!received_data.empty()) {
+        std::string response(received_data.begin(), received_data.end());
+        std::cout << "Server response:\n" << response << std::endl;
+    }
+
+    // Handle image data for screenshot and webcam capture commands
+    if (command == "screenshot" || command == "capture") {
+        std::vector<char> image_data = receiveImageData();
+        if (!image_data.empty()) {
+            std::string filename = (command == "screenshot") ? "screenshot.jpg" : "webcam.jpg";
+            std::ofstream outFile(filename, std::ios::binary);
+            outFile.write(image_data.data(), image_data.size());
+            outFile.close();
+            std::cout << "Image saved as " << filename << std::endl;
+        }
+    }
+
+    closesocket(client_socket);
+    WSACleanup();
+    return true;
+}
+

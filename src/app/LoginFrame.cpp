@@ -84,9 +84,9 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
 
     auto portSizer = new wxBoxSizer(wxHORIZONTAL);
     auto portLabel = new wxStaticText(ipPanel, wxID_ANY, "Port:");
-    portTextCtrl = new wxTextCtrl(ipPanel, wxID_ANY, "42069");
+    portTextCtrl = new wxTextCtrl(ipPanel, wxID_ANY, "");    // 42069
 
-    portSizer->Add(portLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+    portSizer->Add(portLabel, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
     portSizer->Add(portTextCtrl, 1, wxALIGN_CENTER_VERTICAL);
 
     ipPanelSizer->Add(portSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);

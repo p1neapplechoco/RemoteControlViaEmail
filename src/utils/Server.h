@@ -5,7 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <winsock2.h>
-#include "WebcamController.h"
+#include <windows.h>
 #include <dirent.h>
 #include <functional>
 #include <gdiplus.h>
@@ -16,19 +16,18 @@
 #include <string>
 #include <thread>
 #include <unistd.h>
-#include <windows.h>
 #include <ws2tcpip.h>
 #include <sys/types.h>
+
 #include "IpDiscovery.h"
 #include "Process.h"
 #include "Service.h"
 #include "WindowsCommands.h"
 #include "GetWinDirectory.h"
+#include "WebcamController.h"
 
 #ifndef SERVER_H
 #define SERVER_H
-
-#endif //SERVER_H
 
 // Design structure
 /*
@@ -39,7 +38,6 @@
 5. Send the response back to the client
 6. Don't quit
  */
-
 
 class Server
 {
@@ -96,3 +94,5 @@ public:
 
     // void StartListening();
 };
+
+#endif //SERVER_H

@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+using namespace std;
 
 #ifndef NETWORKDISCOVERY_H
 #define NETWORKDISCOVERY_H
@@ -13,6 +15,7 @@ private:
     const int PORT = 12345;
     const std::string DISCOVERY_MESSAGE = "DISCOVER_REQUEST";
     const std::string RESPOND_MESSAGE = "DISCOVER_RESPONSE";
+    vector<string> discoveredIPs;
 
 public:
     NetworkDiscovery();
@@ -23,7 +26,9 @@ public:
 
     void sendBroadcast() const;
 
-    void listenForResponses(int) const;
+    void listenForResponses(int);
+
+    vector<string> getDiscoveredIPs() const { return discoveredIPs; }
 };
 
 class DiscoveryResponder

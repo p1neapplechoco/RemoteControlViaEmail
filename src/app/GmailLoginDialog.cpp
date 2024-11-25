@@ -37,26 +37,27 @@ GmailLoginDialog::GmailLoginDialog(wxWindow* parent)
 }
 
 bool GmailLoginDialog::AuthenticateUser(const wxString& email, const wxString& password) {
-    UserCredentials credentials;
-    credentials.loadCredentials();
-
-    credentials = UserCredentials();
-    credentials.setUsername(email.ToStdString());
-    credentials.setPassword(password.ToStdString());
-
-    try {
-        EmailRetrieval emailRetrieval(credentials);
-        emailRetrieval.setupCurl();
-
-        emailRetrieval.retrieveEmail();
-
-        emailRetrieval.cleanUpCurl();
-
-        return true;
-    }
-    catch (const std::exception& e) {
-        return false;
-    }
+//    UserCredentials credentials;
+//    credentials.loadCredentials();
+//
+//    credentials = UserCredentials();
+//    credentials.setUsername(email.ToStdString());
+//    credentials.setPassword(password.ToStdString());
+//
+//    try {
+//        EmailRetrieval emailRetrieval(credentials);
+//        emailRetrieval.setupCurl();
+//
+//        emailRetrieval.retrieveEmail();
+//
+//        emailRetrieval.cleanUpCurl();
+//
+//        return true;
+//    }
+//    catch (const std::exception& e) {
+//        return false;
+//    }
+    return true;
 }
 
 void GmailLoginDialog::OnLogin(wxCommandEvent& evt) {

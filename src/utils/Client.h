@@ -5,6 +5,7 @@
 #include <vector>
 #include <winsock2.h>
 #include "EmailRetrieval.h"
+using namespace std;
 
 #define CLIENT_H
 
@@ -12,7 +13,7 @@ class Client
 {
 private:
     EmailRetrieval email_retrieval;
-    std::string server_ip = "127.0.0.1";
+    string server_ip = "127.0.0.1";
     int server_port = 0;
 
 public:
@@ -24,6 +25,9 @@ public:
 
     ~Client();
 
+    void setServerPort(const long &port) { server_port = port; }
+    void setServerIP(const string &serverAddress) { server_ip = serverAddress; }
+
     bool setupWSA();
 
     bool setupSocket();
@@ -32,11 +36,13 @@ public:
 
     bool connectToServer();
 
-    static void scanIP();
+    static vector<string> scanIP();
 
     std::vector<char> receiveImageData() const;
 
     void startClient();
+
+    bool handleCommand(const std::string& command);
 };
 
 #endif //CLIENT_H

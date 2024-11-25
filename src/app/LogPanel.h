@@ -19,14 +19,19 @@ enum {
 
 class LogPanel : public wxPanel {
 public:
-    LogPanel(wxWindow* parent, const wxString &IP_Address);
+    LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString &IP_Port);
+    wxPanel* SCREENSHOTPanel;
 
+    void CreateSCREENSHOT();
     void UpdatePanelVisibility(int currentSelectedPanel);
     void AppendLog(const wxString& message);
 
 private:
+    int ID_SelectPanel;
     wxTextCtrl* logTextCtrl{};
+    Client client;
 
+    bool ConnectToServer(const wxString &IP_Address, const wxString &IP_Port);
     void OnCancelClick(wxCommandEvent& event);
     void OnSendClick(wxCommandEvent& event);
 };

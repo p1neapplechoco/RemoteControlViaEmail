@@ -24,10 +24,12 @@ add_executable(
         src/utils/Service.cpp
         src/utils/Process.cpp
         src/utils/WindowsCommands.cpp
-#        src/app/CustomBitmapButton.cpp
-#        src/app/LoginFrame.cpp
-#        src/app/MainFrame.cpp
-#        src/app/LogPanel.cpp
+        src/app/CustomBitmapButton.cpp
+        src/app/GmailLoginDialog.cpp
+        src/app/LoginFrame.cpp
+        src/app/MainFrame.cpp
+        src/app/LogPanel.cpp
+        src/app/App.h
 )
 
 if(EXISTS ${CMAKE_BINARY_DIR}/assert)
@@ -42,5 +44,6 @@ add_custom_command(
         $<TARGET_FILE_DIR:RemoteControlViaEmail>
 )
 
-target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base curl ssl crypto wldap32 advapi32
-        crypt32 ws2_32 strmiids wsock32 amstrmid gdiplus quartz ole32 oleaut32 uuid gdi32)
+target_link_libraries(RemoteControlViaEmail wx::net wx::core wx::base curl ssl crypto
+        ws2_32 wldap32 advapi32 crypt32 strmiids quartz ole32 oleaut32 uuid gdi32
+        wsock32 amstrmid gdiplus)

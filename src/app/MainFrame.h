@@ -3,9 +3,12 @@
 #include "LogPanel.h"
 using namespace std;
 
+class LogPanel;
+
 class MainFrame : public wxFrame {
 public:
-    MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail, const wxString &IP_Address);
+    MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
+        const wxString &IP_Address, const wxString &port);
 
 private:
     LogPanel* rightPanel;
