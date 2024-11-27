@@ -58,7 +58,6 @@ bool Client::setupClient()
     return connectToServer();
 }
 
-
 bool Client::connectToServer()
 {
     server_address.sin_family = AF_INET;
@@ -163,9 +162,6 @@ void Client::startClient()
 
         send(client_socket, sent_buffer, sizeof(sent_buffer), 0);
 
-        for(auto x : sent_buffer)
-            cout << x;
-
         if (strcmp(sent_buffer, "exit") == 0)
         {
             break;
@@ -220,22 +216,7 @@ void Client::startClient()
     WSACleanup();
 }
 
-bool Client::handleCommand(const std::string& command) {
-    if (!setupWSA())
-    {
-        std::cerr << "Failed to setup WSA" << std::endl;
-        return false;
-    }
-    if (!setupSocket())
-    {
-        std::cerr << "Failed to setup socket" << std::endl;
-        WSACleanup();
-        return false;
-    }
-
-    if(!connectToServer())
-        return false;
-
+bool Client::handleCommand(const string& command, string& reponseClient) {
     char sent_buffer[1024] = {};
     strncpy(sent_buffer, command.c_str(), sizeof(sent_buffer) - 1);
 
@@ -243,6 +224,8 @@ bool Client::handleCommand(const std::string& command) {
     send(client_socket, sent_buffer, sizeof(sent_buffer), 0);
 
     if (command == "exit") {
+        closesocket(client_socket);
+        WSACleanup();
         return false;
     }
 
@@ -272,25 +255,34 @@ bool Client::handleCommand(const std::string& command) {
         }
     }
 
+
     if (!received_data.empty()) {
         std::string response(received_data.begin(), received_data.end());
         std::cout << "Server response:\n" << response << std::endl;
+        reponseClient = response + '\n';
     }
 
     // Handle image data for screenshot and webcam capture commands
-    if (command == "screenshot" || command == "capture") {
+    // if (command == "!screenshot" || command == "!capture") {
+    //     std::vector<char> image_data = receiveImageData();
+    //     if (!image_data.empty()) {
+    //         std::string filename = (command == "!screenshot") ? "screenshot.jpg" : "webcam.jpg";
+    //         std::ofstream outFile(filename, std::ios::binary);
+    //         outFile.write(image_data.data(), image_data.size());
+    //         outFile.close();
+    //         std::cout << "Image saved as " << filename << std::endl;
+    //     }
+    // }
+
+    if (command == "!screenshot")
+    {
         std::vector<char> image_data = receiveImageData();
-        if (!image_data.empty()) {
-            std::string filename = (command == "screenshot") ? "screenshot.jpg" : "webcam.jpg";
-            std::ofstream outFile(filename, std::ios::binary);
-            outFile.write(image_data.data(), image_data.size());
-            outFile.close();
-            std::cout << "Image saved as " << filename << std::endl;
-        }
+        std::ofstream outFile("screenshot.jpg", std::ios::binary);
+        outFile.write(image_data.data(), image_data.size());
+        outFile.close();
+        std::cout << "Screenshot saved as screenshot.jpg" << std::endl;
+        reponseClient += "Screenshot saved as screenshot.jpg\n";
     }
 
-    closesocket(client_socket);
-    WSACleanup();
     return true;
 }
-

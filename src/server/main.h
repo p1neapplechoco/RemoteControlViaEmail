@@ -12,6 +12,7 @@
 #include <string>
 #include <algorithm>
 #include "server.h"
+#include "client.h"
 
 #pragma once
 #pragma comment(lib, "ws2_32.lib")

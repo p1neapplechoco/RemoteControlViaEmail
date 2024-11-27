@@ -42,7 +42,7 @@ public:
 
     void startClient();
 
-    bool handleCommand(const std::string& command);
+    bool handleCommand(const string& command, string& reponseClient);
 };
 
 #endif //CLIENT_H

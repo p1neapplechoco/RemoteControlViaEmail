@@ -24,8 +24,8 @@ wxIMPLEMENT_APP(App);
 
 // int main()
 // {
-//     Client client;
-//     client.startClient();
+//     // Client client;
+//     // client.startClient();
 //
 //     // Server server;
 //     // server.startServer();

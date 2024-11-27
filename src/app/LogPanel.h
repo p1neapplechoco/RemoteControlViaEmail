@@ -21,6 +21,7 @@ class LogPanel : public wxPanel {
 public:
     LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString &IP_Port);
     wxPanel* SCREENSHOTPanel;
+    bool isConnect = true;
 
     void CreateSCREENSHOT();
     void UpdatePanelVisibility(int currentSelectedPanel);

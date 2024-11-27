@@ -209,6 +209,17 @@ int Server::sendSizeAndResponse(const SOCKET &client_socket) const
 
 void Server::handleClient(const SOCKET client_socket)
 {
+    auto trimRight = [](char* str) {
+        if (!str)
+            return;
+
+        int len = strlen(str);
+        while (len > 0 && (str[len - 1] == ' ' || str[len - 1] == '\n' ||
+               str[len - 1] == '\r' || str[len - 1] == '\t')) {
+            str[--len] = '\0';
+               }
+    };
+
     while (true)
     {
         wss = wstringstream(std::wstring());
@@ -223,6 +234,7 @@ void Server::handleClient(const SOCKET client_socket)
             closesocket(client_socket);
             return;
         }
+        trimRight(buffer);
         std::cout << "Received: " << buffer << std::endl;
 
         std::string response;
@@ -242,7 +254,7 @@ void Server::handleClient(const SOCKET client_socket)
         else if (strcmp(buffer, "!webcam") == 0)
             toggleWebcam();
 
-        else if (strcmp(buffer, "!shutdown ") == 0)
+        else if (strcmp(buffer, "!shutdown") == 0)
             shutdown(buffer);
 
         else if (strstr(buffer, "!endp ") != nullptr)

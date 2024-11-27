@@ -44,11 +44,12 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString 
     client.setServerPort(port);
     client.setServerIP(IP_Address.ToStdString());
 
-    // if(ConnectToServer(IP_Address, IP_Port)) {
-    //     AppendLog("Connect to server IP " + IP_Address + " is Successfully!! Wait for response!\n");
-    // } else {
-    //     AppendLog("Connect to server IP " + IP_Address + " is Unsuccessfully!! Wait for response!\n");
-    // }
+    if(ConnectToServer(IP_Address, IP_Port)) {
+        AppendLog("Connect to server IP " + IP_Address + " is Successfully!! Wait for response!\n");
+    } else {
+        AppendLog("Connect to server IP " + IP_Address + " is Unsuccessfully!! Try again!\n");
+        isConnect = false;
+    }
 }
 
 void LogPanel::CreateSCREENSHOT() {
@@ -66,8 +67,6 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
         SCREENSHOTPanel->Show(false);
     }
 
-    wxString myString = wxString::Format(wxT("Selected Panel ID: %d"), selectedPanel);
-    wxMessageBox(myString, wxT("Selected Panel"), wxOK | wxCANCEL);
     ID_SelectPanel = selectedPanel;
 
     switch (selectedPanel) {
@@ -105,13 +104,65 @@ void LogPanel::OnCancelClick(wxCommandEvent& event) {
 }
 
 void LogPanel::OnSendClick(wxCommandEvent& event) {
-    switch (ID_SelectPanel) {
-        case ID_TOGGLE_WEBCAM: {
-            AppendLog("Sending command Toggle Webcam\n");
-            client.handleCommand("webcam");
-        }
+    if(!isConnect) {
+        AppendLog("Failed to send command! Disconnect to server!\n");
+        return;
     }
 
+    string response = "";
+    switch (ID_SelectPanel) {
+        case ID_LIST_PROCESSES: {
+            AppendLog("Sending command List Processes\n");
+            if(!client.handleCommand("!list p", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog("List of processes:\n" + response + '\n');
+        }   break;
+        case ID_LIST_SERVICES: {
+            AppendLog("Sending command List Services\n");
+            if(!client.handleCommand("!list s", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog("List of services:\n" + response + '\n');
+        }   break;
+        case ID_SCREENSHOT: {
+            AppendLog("Sending command Screenshot\n");
+            AppendLog("Screenshot saved as screenshot.jpg\n");
+            if(!client.handleCommand("!screenshot", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog(response + '\n');
+        }   break;
+        case ID_TOGGLE_WEBCAM: {
+            AppendLog("Sending command Toggle Webcam\n");
+            if(!client.handleCommand("!webcam", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog(response + '\n');
+        }   break;
+        case ID_CAPTURE_WEBCAM: {
+            AppendLog("Sending command Capture Webcam\n");
+            if(!client.handleCommand("!capture", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog(response + '\n');
+        }   break;
+        case ID_SHUTDOWN: {
+            AppendLog("Sending command Shutdown\n");
+            if(!client.handleCommand("!shutdown", response)) {
+                AppendLog("Failed to send command! Disconnect to server!\n");
+                isConnect = false;
+                return;
+            } else AppendLog(response + '\n');
+        }   break;
+        default:
+            break;
+    }
 }
 
 void LogPanel::AppendLog(const wxString& message) {
