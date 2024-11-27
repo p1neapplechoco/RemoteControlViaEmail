@@ -117,7 +117,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog("List of processes:\n" + response + '\n');
+            } else AppendLog("List of processes:\n" + response);
         }   break;
         case ID_LIST_SERVICES: {
             AppendLog("Sending command List Services\n");
@@ -125,16 +125,15 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog("List of services:\n" + response + '\n');
+            } else AppendLog("List of services:\n" + response);
         }   break;
         case ID_SCREENSHOT: {
             AppendLog("Sending command Screenshot\n");
-            AppendLog("Screenshot saved as screenshot.jpg\n");
             if(!client.handleCommand("!screenshot", response)) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog(response + '\n');
+            } else AppendLog(response);
         }   break;
         case ID_TOGGLE_WEBCAM: {
             AppendLog("Sending command Toggle Webcam\n");
@@ -142,7 +141,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog(response + '\n');
+            } else AppendLog(response);
         }   break;
         case ID_CAPTURE_WEBCAM: {
             AppendLog("Sending command Capture Webcam\n");
@@ -150,7 +149,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog(response + '\n');
+            } else AppendLog(response);
         }   break;
         case ID_SHUTDOWN: {
             AppendLog("Sending command Shutdown\n");
@@ -158,7 +157,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
                 AppendLog("Failed to send command! Disconnect to server!\n");
                 isConnect = false;
                 return;
-            } else AppendLog(response + '\n');
+            } else AppendLog(response);
         }   break;
         default:
             break;

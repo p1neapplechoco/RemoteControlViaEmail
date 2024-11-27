@@ -263,25 +263,16 @@ bool Client::handleCommand(const string& command, string& reponseClient) {
     }
 
     // Handle image data for screenshot and webcam capture commands
-    // if (command == "!screenshot" || command == "!capture") {
-    //     std::vector<char> image_data = receiveImageData();
-    //     if (!image_data.empty()) {
-    //         std::string filename = (command == "!screenshot") ? "screenshot.jpg" : "webcam.jpg";
-    //         std::ofstream outFile(filename, std::ios::binary);
-    //         outFile.write(image_data.data(), image_data.size());
-    //         outFile.close();
-    //         std::cout << "Image saved as " << filename << std::endl;
-    //     }
-    // }
-
-    if (command == "!screenshot")
-    {
+    if (command == "!screenshot" || command == "!capture") {
         std::vector<char> image_data = receiveImageData();
-        std::ofstream outFile("screenshot.jpg", std::ios::binary);
-        outFile.write(image_data.data(), image_data.size());
-        outFile.close();
-        std::cout << "Screenshot saved as screenshot.jpg" << std::endl;
-        reponseClient += "Screenshot saved as screenshot.jpg\n";
+        if (!image_data.empty()) {
+            std::string filename = (command == "!screenshot") ? "screenshot.jpg" : "webcam.jpg";
+            std::ofstream outFile(filename, std::ios::binary);
+            outFile.write(image_data.data(), image_data.size());
+            outFile.close();
+            std::cout << "Image saved as " << filename << std::endl;
+            reponseClient += "Image saved as " + filename + '\n';
+        }
     }
 
     return true;
