@@ -84,10 +84,7 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
 
     auto portSizer = new wxBoxSizer(wxHORIZONTAL);
     auto portLabel = new wxStaticText(ipPanel, wxID_ANY, "Port:");
-    portTextCtrl = new wxTextCtrl(ipPanel, wxID_ANY, "");    // 42069
-
     portSizer->Add(portLabel, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
-    portSizer->Add(portTextCtrl, 1, wxALIGN_CENTER_VERTICAL);
 
     ipPanelSizer->Add(portSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);
 
@@ -130,18 +127,8 @@ bool LoginFrame::UpdateIPList() {
 
     try {
         ipComboBox->Clear();
-
-        if (!client.setupWSA())
-        {
-            std::cerr << "Failed to setup WSA" << std::endl;
-            return false;
-        }
-
-        if (!client.setupSocket())
-        {
-            std::cerr << "Failed to setup socket" << std::endl;
-            WSACleanup();
-            return false;
+        if(!client.setupClient()) {
+            std::cerr << "ERROR" << std::endl;
         }
 
         vector<string> ipAddresses = client.scanIP();
@@ -213,9 +200,8 @@ void LoginFrame::OnConnectClick(wxCommandEvent& evt) {
     }
 
     wxString serverAddress = ipComboBox->GetValue();
-    wxString portStr = portTextCtrl->GetValue();
 
-    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress, portStr);
+    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
     mainFrame->Fit();
     mainFrame->Center();
     mainFrame->Show();

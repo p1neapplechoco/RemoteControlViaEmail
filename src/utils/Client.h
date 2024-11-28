@@ -13,34 +13,26 @@ class Client
 {
 private:
     EmailRetrieval email_retrieval;
-    string server_ip = "127.0.0.1";
-    int server_port = 0;
+    const int PORT = 42069;
 
 public:
-    WSADATA wsa_data{};
-    SOCKET client_socket{};
-    sockaddr_in server_address{};
+    WSADATA wsaData{};
+    SOCKET clientSocket{};
+    sockaddr_in serverAddr;
 
     Client();
 
     ~Client();
 
-    void setServerPort(const long &port) { server_port = port; }
-    void setServerIP(const string &serverAddress) { server_ip = serverAddress; }
-
-    bool setupWSA();
-
-    bool setupSocket();
-
     bool setupClient();
 
-    bool connectToServer();
+    bool connectToServer(string serverIP);
 
     static vector<string> scanIP();
 
-    std::vector<char> receiveImageData() const;
+    std::vector<char> receiveImageData();
 
-    void startClient();
+    //void startClient();
 
     bool handleCommand(const string& command, string& reponseClient);
 };

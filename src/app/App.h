@@ -20,6 +20,7 @@
 #include "../utils/EmailRetrieval.h"
 #include "../utils/IniParser.h"
 #include "../utils/IpDiscovery.h"
+#include "../utils/networkDiscovery.h"
 #include "../utils/Client.h"
 #include "CustomBitmapButton.h"
 #include "MainFrame.h"

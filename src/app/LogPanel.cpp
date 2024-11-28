@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 
-LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString &IP_Port) : wxPanel(parent, wxID_ANY) {
+LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(parent, wxID_ANY) {
     SetBackgroundColour(wxColor(255, 255, 255));
 
     const auto margin = FromDIP(10);
@@ -46,16 +46,17 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString 
     Bind(wxEVT_TIMER, &LogPanel::OnTimer, this);
 
     // Process
-    long port;
-    IP_Port.ToLong(&port);
-    client.setServerPort(port);
-    client.setServerIP(IP_Address.ToStdString());
-
-    if(ConnectToServer(IP_Address, IP_Port)) {
+    if(client.connectToServer(IP_Address.ToStdString())) {
         AppendLog("Connect to server IP " + IP_Address + " is Successfully!! Wait for response!\n");
     } else {
         AppendLog("Connect to server IP " + IP_Address + " is Unsuccessfully!! Try again!\n");
         isConnect = false;
+    }
+}
+
+LogPanel::~LogPanel() {
+    if (loadingTimer) {
+        delete loadingTimer;
     }
 }
 
@@ -142,21 +143,6 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
     Layout();
 }
 
-bool LogPanel::ConnectToServer(const wxString &IP_Address, const wxString &IP_Port) {
-    if (!client.setupWSA())
-    {
-        std::cerr << "Failed to setup WSA" << std::endl;
-        return false;
-    }
-    if (!client.setupSocket())
-    {
-        std::cerr << "Failed to setup socket" << std::endl;
-        WSACleanup();
-        return false;
-    }
-    return client.connectToServer();
-}
-
 void LogPanel::OnClearClick(wxCommandEvent& event) {
     logTextCtrl->Clear();
 }
@@ -241,42 +227,42 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
         switch (ID_SelectPanel) {
             case ID_LIST_PROCESSES: {
                 if(!client.handleCommand("!list p", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog("List of processes:\n" + response);
             }   break;
             case ID_LIST_SERVICES: {
                 if(!client.handleCommand("!list s", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog("List of services:\n" + response);
             }   break;
             case ID_SCREENSHOT: {
                 if(!client.handleCommand("!screenshot", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog(response);
             }   break;
             case ID_TOGGLE_WEBCAM: {
                 if(!client.handleCommand("!webcam", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog(response);
             }   break;
             case ID_CAPTURE_WEBCAM: {
                 if(!client.handleCommand("!capture", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog(response);
             }   break;
             case ID_SHUTDOWN: {
                 if(!client.handleCommand("!shutdown", response)) {
-                    AppendLog("Failed to send command! Disconnect to server!");
+                    AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
                 } else AppendLog(response);

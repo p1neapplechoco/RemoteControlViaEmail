@@ -8,7 +8,7 @@ class LogPanel;
 class MainFrame : public wxFrame {
 public:
     MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
-        const wxString &IP_Address, const wxString &port);
+        const wxString &IP_Address);
 
     void EnableSideButtons(bool enable);
 

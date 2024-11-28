@@ -19,20 +19,19 @@ enum {
 
 class LogPanel : public wxPanel {
 public:
-    LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString &IP_Port);
+    LogPanel(wxWindow* parent, const wxString &IP_Address);
 
-    ~LogPanel() {
-        if (loadingTimer) {
-            delete loadingTimer;
-        }
-    }
+    ~LogPanel();
 
     wxPanel* SCREENSHOTPanel;
     bool isConnect = true;
 
     void CreateSCREENSHOT();
+
     void UpdatePanelVisibility(int currentSelectedPanel);
+
     void AppendLog(const wxString& message);
+
     void EnableButtons(bool enable);
 
 private:
@@ -47,10 +46,11 @@ private:
     int loadingDots;
 
     void OnTimer(wxTimerEvent& event);
+
     void StartLoading(const wxString& command);
 
-    bool ConnectToServer(const wxString &IP_Address, const wxString &IP_Port);
     void OnClearClick(wxCommandEvent& event);
+
     void OnSendClick(wxCommandEvent& event);
 };
 

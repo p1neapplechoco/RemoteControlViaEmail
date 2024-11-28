@@ -4,7 +4,7 @@ project(RemoteControlViaEmail)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-#set(CMAKE_EXE_LINKER_FLAGS "-static")
+# set(CMAKE_EXE_LINKER_FLAGS "-static")
 set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(lib/wxWidgets-3.2.6)
@@ -24,6 +24,7 @@ add_executable(
         src/utils/Service.cpp
         src/utils/Process.cpp
         src/utils/WindowsCommands.cpp
+        src/utils/networkDiscovery.cpp
         src/app/CustomBitmapButton.cpp
         src/app/GmailLoginDialog.cpp
         src/app/LoginFrame.cpp

@@ -8,8 +8,6 @@ public:
 
 private:
     wxComboBox* ipComboBox;
-    wxTextCtrl* portTextCtrl;
-
     wxPanel* bottomPanel;
     wxPanel* googlePanel;
     wxPanel* ipPanel;

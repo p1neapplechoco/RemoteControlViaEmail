@@ -18,7 +18,7 @@ vector<ButtonInfo> buttons = {
 };
 
 MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
-                     const wxString &IP_Address, const wxString &port) : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
+                     const wxString &IP_Address) : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
 
     const auto margin = FromDIP(10);
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -92,7 +92,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     contentSizer->Add(leftPanel, 0, wxEXPAND | wxALL, margin);
 
     // Right panel với form
-    rightPanel = new LogPanel(this, IP_Address, port);
+    rightPanel = new LogPanel(this, IP_Address);
     contentSizer->Add(rightPanel, 1, wxEXPAND | wxALL, margin);
 
     mainSizer->Add(contentSizer, 1, wxEXPAND);
