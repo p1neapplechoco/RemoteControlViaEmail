@@ -127,7 +127,9 @@ bool openThatShit(const std::string& file_path)
         outFile.write(fileBuffer.data(), fileSize);
         outFile.close();
 
-        std::cout << "File received and saved to: " << outputPath << std::endl;
+        char working_directory[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, working_directory);
+        ShellExecuteA(nullptr, "open", "notepad.exe", outputPath.c_str(), working_directory, SW_SHOWNORMAL);
     }
 
 
