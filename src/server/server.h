@@ -25,7 +25,11 @@
 #include "Process.h"
 #include "Service.h"
 #include "WindowsCommands.h"
+
 #include "../utils/GetWinDirectory.h"
+
+#define LISTEN_TIMEOUT_SECONDS 100; // Adjust timeout as needed
+#define CONNECTION_TIMEOUT_SECONDS 100;
 
 
 #define SERVER_H
@@ -45,7 +49,7 @@
 
 class Server {
 private:
-    int default_port = 45678;
+    int default_port = 42069;
     int assigned_port{};
     std::wstringstream wss{};
 
@@ -57,7 +61,7 @@ private:
     void handleClient(SOCKET);
 
 public:
-    std::vector<char> fileData;
+
 
     Server();
 
@@ -73,40 +77,43 @@ public:
 
     bool setupServer();
 
+    void startServer();
+
     // commands handler
 
+    // [COMMANDS]
     void listOfCommands();
 
+    int sendSizeAndResponse(const SOCKET &client_socket) const;
+
+    // [Application/ Services Commands]
     void listProcesses();
 
     void listServices();
-
-    void indexSystem(string);
-
-    void screenShot(std::vector<char> &image);
-
-    void getFile(string);
-
-    void toggleWebcam();
-
-    void shutdown(const char *buffer);
 
     void endProcess(const char *buffer);
 
     void endService(const char *buffer);
 
+    // [Webcam/ Screenshot Commands]
+    void screenShot(std::vector<char> &image);
+
+    void toggleWebcam();
+
     void capture(vector<char> &image);
 
-    void openAndSendFile(string file_path);
+    // [Windows Explorer Commands]
+    void IndexSystem(string, SOCKET);
 
-    int sendSizeAndResponse(const SOCKET &client_socket) const;
+    void GetAndSendFile(string, SOCKET);
 
-    void startServer();
+    void SendImage(vector<char> &image, SOCKET);
 
-    void showAvailableDisks();
+    void ShowAvailableDisks();
 
+    void Shutdown(const char *buffer);
 
-
+    // void openAndSendFile(string file_path);
     // void StartListening();
-    void OpenFile(string);
+    // void OpenFile(string);
 };

