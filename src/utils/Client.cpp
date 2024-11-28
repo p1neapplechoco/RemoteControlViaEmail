@@ -255,7 +255,6 @@ bool Client::handleCommand(const string& command, string& reponseClient) {
         }
     }
 
-
     if (!received_data.empty()) {
         std::string response(received_data.begin(), received_data.end());
         std::cout << "Server response:\n" << response << std::endl;
@@ -266,10 +265,13 @@ bool Client::handleCommand(const string& command, string& reponseClient) {
     if (command == "!screenshot" || command == "!capture") {
         std::vector<char> image_data = receiveImageData();
         if (!image_data.empty()) {
-            std::string filename = (command == "!screenshot") ? "screenshot.jpg" : "webcam.jpg";
-            std::ofstream outFile(filename, std::ios::binary);
+            std::string filename = (command == "!screenshot") ? "screenshot.png" : "webcam.png";
+            std::remove(filename.c_str());
+
+            std::ofstream outFile("./assert/capture/" + filename, std::ios::binary);
             outFile.write(image_data.data(), image_data.size());
             outFile.close();
+
             std::cout << "Image saved as " << filename << std::endl;
             reponseClient += "Image saved as " + filename + '\n';
         }

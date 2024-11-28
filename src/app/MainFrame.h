@@ -10,10 +10,13 @@ public:
     MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
         const wxString &IP_Address, const wxString &port);
 
+    void EnableSideButtons(bool enable);
+
 private:
     LogPanel* rightPanel;
     vector<wxPanel*> buttonPanels;
     wxPanel* currentSelectedPanel = nullptr;
+    vector<wxBitmapButton*> sideButtons;
 
     void OnButtonClick(wxCommandEvent& event);
     void HighlightButton(wxPanel* selectedPanel);

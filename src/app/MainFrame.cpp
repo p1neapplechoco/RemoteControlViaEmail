@@ -75,6 +75,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
             HighlightButton(btnPanel);
             OnButtonClick(event);
         });
+        sideButtons.push_back(btn);
 
         auto btnSizer = new wxBoxSizer(wxHORIZONTAL);
         btnSizer->Add(btn, 1, wxALL, margin / 2);
@@ -112,6 +113,12 @@ void MainFrame::HighlightButton(wxPanel* selectedPanel) {
     }
 
     currentSelectedPanel = selectedPanel;
+}
+
+void MainFrame::EnableSideButtons(bool enable) {
+    for (auto btn : sideButtons) {
+        btn->Enable(enable);
+    }
 }
 
 void MainFrame::OnButtonClick(wxCommandEvent& evt) {

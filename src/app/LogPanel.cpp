@@ -1,5 +1,7 @@
 #include "LogPanel.h"
 
+#include <unistd.h>
+
 LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString &IP_Port) : wxPanel(parent, wxID_ANY) {
     SetBackgroundColour(wxColor(255, 255, 255));
 
@@ -22,9 +24,9 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString 
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     buttonSizer->AddStretchSpacer();
 
-    auto cancelButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "cancel");
-    cancelButton->Bind(wxEVT_BUTTON, &LogPanel::OnCancelClick, this);
-    auto sendButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "send");
+    cancelButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "clear");
+    cancelButton->Bind(wxEVT_BUTTON, &LogPanel::OnClearClick, this);
+    sendButton = new CustomBitmapButton(bottomPanel, wxID_ANY, "send");
     sendButton->Bind(wxEVT_BUTTON, &LogPanel::OnSendClick, this);
 
     buttonSizer->Add(cancelButton, 0, wxRIGHT, margin);
@@ -37,6 +39,11 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString 
     SetSizer(mainSizer);
 
     CreateSCREENSHOT();
+
+    // Set timer
+    loadingTimer = new wxTimer(this);
+    loadingDots = 0;
+    Bind(wxEVT_TIMER, &LogPanel::OnTimer, this);
 
     // Process
     long port;
@@ -54,9 +61,60 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const wxString 
 
 void LogPanel::CreateSCREENSHOT() {
     auto SCREENSHOTSizer = new wxBoxSizer(wxVERTICAL);
+    auto headerSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto timeLabel = new wxStaticText(SCREENSHOTPanel, wxID_ANY, "SCREENSHOT");
-    SCREENSHOTSizer->Add(timeLabel, 0, wxBOTTOM, 5);
+    wxFont titleFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+    auto label = new wxStaticText(SCREENSHOTPanel, wxID_ANY, "SCREENSHOT");
+    label->SetFont(titleFont);
+
+    auto openButton = new wxButton(SCREENSHOTPanel, wxID_ANY, "Open Image");
+    auto closeButton = new wxButton(SCREENSHOTPanel, wxID_ANY, "x");
+    closeButton->SetMinSize(wxSize(30, -1));
+
+    headerSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL);
+    headerSizer->AddStretchSpacer();
+    headerSizer->Add(openButton, 0, wxALIGN_CENTER_VERTICAL);
+    headerSizer->Add(closeButton, 0, wxALIGN_CENTER_VERTICAL);
+
+    SCREENSHOTSizer->Add(headerSizer, 0, wxEXPAND | wxBOTTOM, 5);
+
+    openButton->Bind(wxEVT_BUTTON, [this](wxCommandEvent& event) {
+        wxImage image ("./assert/capture/screenshot.png");
+        if (image.IsOk()) {
+            double scaleFactor = 0.5; // Adjust this value to control scaling (0.5 = 50%, 0.75 = 75%, etc.)
+            int scaledWidth = image.GetWidth() * scaleFactor;
+            int scaledHeight = image.GetHeight() * scaleFactor;
+            image.Rescale(scaledWidth, scaledHeight);
+
+            wxWindow* mainFrame = GetParent();
+            wxFrame* imageFrame;
+
+            if (auto frame = dynamic_cast<MainFrame*>(mainFrame)) {
+                imageFrame = new wxFrame(frame, wxID_ANY, "Screenshot Viewer",
+                                       wxDefaultPosition, wxSize(scaledWidth + 10, scaledHeight + 10),
+                                       wxDEFAULT_FRAME_STYLE | wxFRAME_FLOAT_ON_PARENT);
+            }
+            // Create a panel inside the frame
+            wxPanel* imagePanel = new wxPanel(imageFrame, wxID_ANY);
+            imagePanel->SetBackgroundColour(*wxWHITE);
+
+            // Create sizer for the panel
+            wxBoxSizer* imageSizer = new wxBoxSizer(wxVERTICAL);
+
+            // Create and add the static bitmap
+            wxStaticBitmap* staticBitmap = new wxStaticBitmap(imagePanel, wxID_ANY, wxBitmap(image));
+            imageSizer->Add(staticBitmap, 1, wxEXPAND | wxALL, 5);
+
+            imagePanel->SetSizer(imageSizer);
+
+            // Fit the frame to the image size
+            imageFrame->SetClientSize(image.GetWidth() + 10, image.GetHeight() + 10);
+            imageFrame->Center();
+            imageFrame->Show();
+        } else {
+            wxMessageBox("Image file not found!", "Error", wxICON_ERROR);
+        }
+    });
 
     SCREENSHOTPanel->SetSizer(SCREENSHOTSizer);
     SCREENSHOTPanel->Hide();
@@ -99,8 +157,8 @@ bool LogPanel::ConnectToServer(const wxString &IP_Address, const wxString &IP_Po
     return client.connectToServer();
 }
 
-void LogPanel::OnCancelClick(wxCommandEvent& event) {
-    AppendLog("Operation cancelled\n");
+void LogPanel::OnClearClick(wxCommandEvent& event) {
+    logTextCtrl->Clear();
 }
 
 void LogPanel::OnSendClick(wxCommandEvent& event) {
@@ -109,61 +167,123 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
         return;
     }
 
-    string response = "";
     switch (ID_SelectPanel) {
-        case ID_LIST_PROCESSES: {
-            AppendLog("Sending command List Processes\n");
-            if(!client.handleCommand("!list p", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog("List of processes:\n" + response);
-        }   break;
-        case ID_LIST_SERVICES: {
-            AppendLog("Sending command List Services\n");
-            if(!client.handleCommand("!list s", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog("List of services:\n" + response);
-        }   break;
-        case ID_SCREENSHOT: {
-            AppendLog("Sending command Screenshot\n");
-            if(!client.handleCommand("!screenshot", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog(response);
-        }   break;
-        case ID_TOGGLE_WEBCAM: {
-            AppendLog("Sending command Toggle Webcam\n");
-            if(!client.handleCommand("!webcam", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog(response);
-        }   break;
-        case ID_CAPTURE_WEBCAM: {
-            AppendLog("Sending command Capture Webcam\n");
-            if(!client.handleCommand("!capture", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog(response);
-        }   break;
-        case ID_SHUTDOWN: {
-            AppendLog("Sending command Shutdown\n");
-            if(!client.handleCommand("!shutdown", response)) {
-                AppendLog("Failed to send command! Disconnect to server!\n");
-                isConnect = false;
-                return;
-            } else AppendLog(response);
-        }   break;
+        case ID_LIST_PROCESSES:
+            StartLoading("Sending command List Processes");
+        break;
+        case ID_LIST_SERVICES:
+            StartLoading("Sending command List Services");
+        break;
+        case ID_SCREENSHOT:
+            StartLoading("Sending command Screenshot");
+        break;
+        case ID_TOGGLE_WEBCAM:
+            StartLoading("Sending command Toggle Webcam");
+        break;
+        case ID_CAPTURE_WEBCAM:
+            StartLoading("Sending command Capture Webcam");
+        break;
+        case ID_SHUTDOWN:
+            StartLoading("Sending command Shutdown");
+        break;
         default:
             break;
     }
 }
 
 void LogPanel::AppendLog(const wxString& message) {
-    logTextCtrl->AppendText(wxDateTime::Now().FormatTime() + ": " + message);
+    logTextCtrl->AppendText(wxDateTime::Now().FormatTime() + ": " + message + '\n');
+    if (message.Contains("Sending command")) {
+        logTextCtrl->AppendText("Loading");
+
+        for (int i = 0; i < 3; i++) {
+            sleep(1);
+            logTextCtrl->AppendText(".");
+        }
+        logTextCtrl->AppendText("\n");
+    }
 }
+
+void LogPanel::EnableButtons(bool enable) {
+    sendButton->Enable(enable);
+    cancelButton->Enable(enable);
+}
+
+void LogPanel::StartLoading(const wxString& command) {
+    loadingDots = 0;
+    logTextCtrl->AppendText(wxDateTime::Now().FormatTime() + ": " + command);
+    logTextCtrl->AppendText("\nLoading");
+    loadingTimer->Start(1000); // Timer fires every 1 second
+
+    EnableButtons(false);
+    wxWindow* mainFrame = GetParent();
+    if (auto frame = dynamic_cast<MainFrame*>(mainFrame)) {
+        frame->EnableSideButtons(false);
+    }
+}
+
+void LogPanel::OnTimer(wxTimerEvent& event) {
+    loadingDots++;
+    logTextCtrl->AppendText(".");
+
+    if (loadingDots >= 3) {
+        loadingTimer->Stop();
+        logTextCtrl->AppendText("\n\n");
+
+        EnableButtons(true);
+        wxWindow* mainFrame = GetParent();
+        if (auto frame = dynamic_cast<MainFrame*>(mainFrame)) {
+            frame->EnableSideButtons(true);
+        }
+
+        // Thực hiện command tương ứng
+        string response = "";
+        switch (ID_SelectPanel) {
+            case ID_LIST_PROCESSES: {
+                if(!client.handleCommand("!list p", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog("List of processes:\n" + response);
+            }   break;
+            case ID_LIST_SERVICES: {
+                if(!client.handleCommand("!list s", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog("List of services:\n" + response);
+            }   break;
+            case ID_SCREENSHOT: {
+                if(!client.handleCommand("!screenshot", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog(response);
+            }   break;
+            case ID_TOGGLE_WEBCAM: {
+                if(!client.handleCommand("!webcam", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog(response);
+            }   break;
+            case ID_CAPTURE_WEBCAM: {
+                if(!client.handleCommand("!capture", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog(response);
+            }   break;
+            case ID_SHUTDOWN: {
+                if(!client.handleCommand("!shutdown", response)) {
+                    AppendLog("Failed to send command! Disconnect to server!");
+                    isConnect = false;
+                    return;
+                } else AppendLog(response);
+            }   break;
+            default:
+                break;
+        }
+    }
+}
+
