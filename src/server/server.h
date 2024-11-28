@@ -113,6 +113,7 @@ public:
 
     void Shutdown(const char *buffer);
 
+    // void openAndSendFile(string file_path);
     // void StartListening();
     // void OpenFile(string);
 };

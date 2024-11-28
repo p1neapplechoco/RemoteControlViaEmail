@@ -176,10 +176,10 @@ void Server::capture(vector<char> &image) {
     wss << L"Capture completed.\n";
 }
 
-void Server::openAndSendFile(string file_path)
-{
-        openFile(file_path);
-}
+// void Server::openAndSendFile(string file_path)
+// {
+//     openFile(file_path);
+// }
 
 
 int Server::sendSizeAndResponse(const SOCKET &client_socket) const {
