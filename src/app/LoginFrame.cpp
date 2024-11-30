@@ -82,12 +82,6 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
 
     ipPanelSizer->Add(ipSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);
 
-    auto portSizer = new wxBoxSizer(wxHORIZONTAL);
-    auto portLabel = new wxStaticText(ipPanel, wxID_ANY, "Port:");
-    portSizer->Add(portLabel, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
-
-    ipPanelSizer->Add(portSizer, 0, wxEXPAND | wxLEFT | wxRIGHT, margin * 20);
-
     // Navigation Buttons
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     auto backButton = new CustomBitmapButton(ipPanel, wxID_ANY, "back");

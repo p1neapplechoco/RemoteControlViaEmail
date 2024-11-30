@@ -23,10 +23,35 @@ public:
 
     ~LogPanel();
 
+    wxPanel* LIST_PPanel;
+    wxPanel* LIST_SPanel;
     wxPanel* SCREENSHOTPanel;
+    wxPanel* WEBCAMPanel;
+    wxPanel* CAPTUREPanel;
+    wxPanel* END_PPanel;
+    wxPanel* END_SPanel;
+    wxPanel* SHUTDOWNPanel;
+
+    wxTextCtrl* m_processIdText;
+    wxTextCtrl* m_serviceIdText;
+
     bool isConnect = true;
 
     void CreateSCREENSHOT();
+
+    void CreateWEBCAM();
+
+    void CreateCAPTURE();
+
+    void CreateLIST_P();
+
+    void CreateLIST_S();
+
+    void CreateEND_P();
+
+    void CreateEND_S();
+
+    void CreateSHUTDOWN();
 
     void UpdatePanelVisibility(int currentSelectedPanel);
 

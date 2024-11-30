@@ -24,4 +24,6 @@ private:
     void OnMouseUp(wxMouseEvent& event);
 };
 
+
+
 #endif //CUSTOMBITMAPBUTTON_H

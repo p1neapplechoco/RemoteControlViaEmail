@@ -202,7 +202,7 @@ void Client::startClient()
 }
 */
 
-bool Client::handleCommand(const string& command, string& reponseClient) {
+bool Client::handleCommand(const string &command, string &reponseClient, string &filePath) {
     char sendBuffer[1024] = {};
     //strncpy(sendBuffer, command.c_str(), sizeof(sendBuffer) - 1);
     if (command.length() < sizeof(sendBuffer)) {
@@ -236,15 +236,15 @@ bool Client::handleCommand(const string& command, string& reponseClient) {
         std::vector<char> imageData = receiveImageData();
         if (!imageData.empty()) {
             std::string filename;
-            if (strcmp(sendBuffer, "screen capture") == 0) {
-                filename = "screenshot.jpg";
+            if (strcmp(sendBuffer, "screenshot") == 0) {
+                filename = filePath = "screenshot.jpg";
             } else {
                 // Create filename with timestamp for webcam frames
                 auto now = std::chrono::system_clock::now();
                 auto now_c = std::chrono::system_clock::to_time_t(now);
                 char timestamp[20];
                 strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", localtime(&now_c));
-                filename = "webcam_" + std::string(timestamp) + ".jpg";
+                filename = filePath = "webcam_" + std::string(timestamp) + ".jpg";
             }
 
             std::ofstream outFile(filename, std::ios::binary);

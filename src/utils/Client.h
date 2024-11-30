@@ -34,7 +34,7 @@ public:
 
     //void startClient();
 
-    bool handleCommand(const string& command, string& reponseClient);
+    bool handleCommand(const string &command, string &reponseClient, string &filePath);
 };
 
 #endif //CLIENT_H
