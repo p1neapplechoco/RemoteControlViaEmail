@@ -17,6 +17,8 @@ enum {
     ID_INSTRUCTION
 };
 
+class ProcessManager;
+
 class LogPanel : public wxPanel {
 public:
     LogPanel(wxWindow* parent, const wxString &IP_Address);
@@ -59,9 +61,13 @@ public:
 
     void EnableButtons(bool enable);
 
+    bool EndProcess(const wxString& pidStr);
+
 private:
     int ID_SelectPanel;
     wxTextCtrl* logTextCtrl{};
+    ProcessManager* processManager;
+
     Client client;
 
     wxBitmapButton* sendButton;

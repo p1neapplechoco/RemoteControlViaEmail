@@ -101,6 +101,10 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     this->SetMinSize(wxSize(FromDIP(800), FromDIP(600)));
 }
 
+void MainFrame::UpdateStatusBar(const wxString& text) {
+    SetStatusText(text);
+}
+
 void MainFrame::HighlightButton(wxPanel* selectedPanel) {
     for (auto panel : buttonPanels) {
         panel->SetBackgroundColour(wxColor(240, 240, 240)); // Màu mặc định

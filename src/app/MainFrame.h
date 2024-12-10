@@ -11,6 +11,7 @@ public:
         const wxString &IP_Address);
 
     void EnableSideButtons(bool enable);
+    void UpdateStatusBar(const wxString& text);
 
 private:
     LogPanel* rightPanel;

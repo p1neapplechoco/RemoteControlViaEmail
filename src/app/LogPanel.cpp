@@ -1,5 +1,4 @@
 #include "LogPanel.h"
-
 #include <unistd.h>
 
 LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(parent, wxID_ANY) {
@@ -7,6 +6,10 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
 
     const auto margin = FromDIP(10);
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
+
+    processManager = new ProcessManager(this);
+    mainSizer->Add(processManager, 1, wxEXPAND | wxALL, margin);
+    processManager->Hide();
 
     logTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString,
         wxDefaultPosition, wxDefaultSize,
@@ -278,7 +281,9 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
 }
 
 void LogPanel::OnClearClick(wxCommandEvent& event) {
-    logTextCtrl->Clear();
+    processManager->Hide();
+    logTextCtrl->Show();
+    Layout();
 }
 
 void LogPanel::OnSendClick(wxCommandEvent& event) {
@@ -286,6 +291,9 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
         AppendLog("Failed to send command! Disconnect to server!\n");
         return;
     }
+
+    processManager->Hide();
+    logTextCtrl->Show();
 
     switch (ID_SelectPanel) {
         case ID_LIST_PROCESSES:
@@ -315,6 +323,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
         default:
             break;
     }
+    Layout();
 }
 
 void LogPanel::AppendLog(const wxString& message) {
@@ -408,14 +417,31 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
-                } else AppendLog("List of processes:\n" + response);
+                } else {
+                    // Save reponse into log.txt
+                    wxFile file("log.txt", wxFile::write);
+                    if (file.IsOpened()) {
+                        file.Write(response);
+                        file.Close();
+                    }
+
+                    AppendLog("Server response (List of processes):\n" + response);
+
+                    logTextCtrl->Hide();
+                    processManager->Show();
+                    processManager->LoadProcessesFromLog("log.txt");
+                    Layout();
+                }
             }   break;
             case ID_LIST_SERVICES: {
                 if(!client.handleCommand("!list s", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
-                } else AppendLog("List of services:\n" + response);
+                } else {
+                    AppendLog("List of services:\n" + response);
+                    Layout();
+                }
             }   break;
             case ID_SCREENSHOT: {
                 if(!client.handleCommand("!screenshot", response, filepath)) {
@@ -442,7 +468,6 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                 } else {
                     AppendLog(response);
                     OpenPicture(filepath);
-                    cout << filepath << endl;
                 }
             }   break;
             case ID_END_PROCESS: {
@@ -462,7 +487,7 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                 } else AppendLog(response);
             }   break;
             case ID_SHUTDOWN: {
-                if(!client.handleCommand("!shutdown 2", response, filepath)) {
+                if(!client.handleCommand("!shutdown", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
                     return;
@@ -471,6 +496,17 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
             default:
                 break;
         }
+    }
+}
+
+bool LogPanel::EndProcess(const wxString& pidStr) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!endp " + pidStr.ToStdString(), response, filepath)) {
+        AppendLog("Failed to end process ID " + pidStr.ToStdString() + "! Try again!");
+        return false;
+    } else {
+        AppendLog(response);
+        return true;
     }
 }
 

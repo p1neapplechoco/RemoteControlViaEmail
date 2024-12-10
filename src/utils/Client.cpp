@@ -392,7 +392,7 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
     if (!receivedData.empty()) {
         std::string response(receivedData.begin(), receivedData.end());
         std::cout << "Server response: " << std::endl << response << std::endl;
-        reponseClient += "Server response: " + response + "\n";
+        reponseClient += response + "\n";
     }
     return true;
 }

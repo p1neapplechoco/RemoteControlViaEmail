@@ -11,19 +11,7 @@ bool App::OnInit() {
     loginFrame->Fit();
     loginFrame->Center();
     loginFrame->Show();
-
     return true;
 }
 
 wxIMPLEMENT_APP(App);
-
-// int main()
-// {
-//     // Client client;
-//     // client.startClient();
-//
-//     // Server server;
-//     // server.startServer();
-//
-//     return 0;
-// }
