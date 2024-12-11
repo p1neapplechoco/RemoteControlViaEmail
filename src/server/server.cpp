@@ -153,6 +153,25 @@ void Server::endProcess(const char *buffer) {
         wss << "Invalid ID" << std::endl;
 }
 
+void Server::startService(const char *buffer)
+{
+    char serviceName[256] = {0};
+    const char *start = buffer + 8;
+
+    size_t len = 0;
+    while (start[len] != '\0' && start[len] != '\n' && start[len] != ' ' && start[len] != '\r' && len < sizeof(serviceName) - 1)
+    {
+        serviceName[len] = start[len];
+        len++;
+    }
+    serviceName[len] = '\0';
+
+    wss << L"Trying to start service: " << serviceName << std::endl;
+    if (!Service::startService(serviceName)) {
+        wss << L"Failed to start the service." << std::endl;
+    }
+}
+
 void Server::endService(const char *buffer) {
     char serviceName[256] = {0};
     const char *start = buffer + 6;
@@ -223,6 +242,9 @@ void Server::handleClient(const SOCKET client_socket) {
 
         else if (strstr(buffer, "!endp ") != nullptr)
             endProcess(buffer);
+
+        else if (strstr(buffer, "!starts ") != nullptr)
+            startService(buffer);
 
         else if (strstr(buffer, "!ends ") != nullptr)
             endService(buffer);

@@ -2,6 +2,52 @@
 ULONG EncoderQuality = 100L;
 // Function to convert const char* to const wchar_t*
 
+bool Service::startService(const char *serviceName)
+{
+    const auto hSCManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (hSCManager == nullptr)
+    {
+        std::cerr << "Failed to open service control manager. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    const int length = MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, NULL, 0);
+    std::wstring wServiceName(length, 0);
+    MultiByteToWideChar(CP_UTF8, 0, serviceName, -1, &wServiceName[0], length);
+
+    const auto hService = OpenServiceW(hSCManager, wServiceName.c_str(), SERVICE_START | SERVICE_QUERY_STATUS);
+    if (hService == nullptr)
+    {
+        std::cerr << "Failed to open service: " << serviceName << ". Error: " << GetLastError() << std::endl;
+        CloseServiceHandle(hSCManager);
+        return false;
+    }
+
+    if (StartService(hService, 0, nullptr))
+    {
+        std::cout << "Service " << serviceName << " starting...\n";
+
+        // Wait until the service is started
+        SERVICE_STATUS status;
+        while (QueryServiceStatus(hService, &status))
+        {
+            if (status.dwCurrentState == SERVICE_RUNNING)
+            {
+                std::cout << "Service " << serviceName << " started successfully." << std::endl;
+                break;
+            }
+            Sleep(1000);
+        }
+    } else
+    {
+        std::cerr << "StartService failed. Error: " << GetLastError() << std::endl;
+    }
+
+    CloseServiceHandle(hService);
+    CloseServiceHandle(hSCManager);
+    return true;
+}
+
 bool Service::endService(const char *serviceName)
 {
     const auto hSCManager = OpenSCManager(nullptr, nullptr, SC_MANAGER_CONNECT);
