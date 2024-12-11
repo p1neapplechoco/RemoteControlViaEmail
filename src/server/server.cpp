@@ -111,8 +111,8 @@ void Server::listServices() {
     wss << std::wstring(100, L'-') << L"\n";
 
     for (const auto &service: services) {
-        wss << std::left << std::setw(40) << service.name
-                << std::setw(50) << service.displayName
+        wss << std::left << std::setw(39) << service.name << L"."
+                << std::setw(49) << service.displayName << L"."
                 << getStateString(service.currentState) << L"\n";
     }
     wss << L"\nTotal services: " << services.size() << L"\n";
@@ -218,7 +218,7 @@ void Server::handleClient(const SOCKET client_socket) {
         } else if (strcmp(buffer, "!webcam") == 0)
             toggleWebcam();
 
-        else if (strcmp(buffer, "!shutdown ") == 0)
+        else if (strcmp(buffer, "!shutdown") == 0)
             Shutdown(buffer);
 
         else if (strstr(buffer, "!endp ") != nullptr)
