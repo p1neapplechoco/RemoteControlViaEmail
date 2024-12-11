@@ -93,6 +93,8 @@ public:
 
     void endProcess(const char *buffer);
 
+    void startService(const char *buffer);
+
     void endService(const char *buffer);
 
     // [Webcam/ Screenshot Commands]

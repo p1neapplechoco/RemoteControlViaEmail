@@ -16,6 +16,8 @@ struct ServiceInfo {
 
 class Service {
 public:
+    static bool startService(const char *serviceName);
+
     static bool endService(const char *serviceName);
     static std::vector<ServiceInfo> listServices();
 
