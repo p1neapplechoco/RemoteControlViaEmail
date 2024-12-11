@@ -1,4 +1,6 @@
 #include "ProcessManager.h"
+#include <algorithm>
+#include <cctype>
 
 enum {
     ID_EndTask = 1,
@@ -62,7 +64,7 @@ void ProcessManager::AddProcessToPage(wxListCtrl* page, const wxString& pid, con
     page->SetItem(item, 1, name);
 }
 
-void ProcessManager::LoadProcessesFromLog(const wxString& filename) {
+void ProcessManager::LoadProcessesFromFile(const wxString& filename) {
     // Xóa tất cả dữ liệu cũ
     appsPage->DeleteAllItems();
     backgroundPage->DeleteAllItems();
@@ -80,6 +82,7 @@ void ProcessManager::LoadProcessesFromLog(const wxString& filename) {
 
     while (!input.Eof()) {
         line = text.ReadLine();
+
 
         if (line.StartsWith("Apps")) {
             currentPage = appsPage;
@@ -103,8 +106,8 @@ void ProcessManager::LoadProcessesFromLog(const wxString& filename) {
         // Xử lý dòng chứa thông tin process
         if (!line.IsEmpty() && currentPage != nullptr) {
             // Tách PID và Process Name
-            wxString pid = line.BeforeFirst(' ').Trim();
-            wxString name = line.AfterFirst(' ').Trim();
+            wxString pid = processLine(line.BeforeFirst(' ').Trim());
+            wxString name = processLine(line.AfterFirst(' ').Trim());
 
             if (!pid.IsEmpty() && !name.IsEmpty()) {
                 AddProcessToPage(currentPage, pid, name);
@@ -133,6 +136,7 @@ void ProcessManager::OnEndTask(wxCommandEvent& event) {
     }
 
     wxString pidStr = currentPage->GetItemText(itemIndex);
+
     long pid;
     if (!pidStr.ToLong(&pid)) {
         wxMessageBox("Invalid process ID", "Error", wxOK | wxICON_ERROR);
@@ -152,4 +156,38 @@ void ProcessManager::OnEndTask(wxCommandEvent& event) {
     } else {
         wxMessageBox("Failed to end process", "Error", wxOK | wxICON_ERROR);
     }
+}
+
+// Function to trim leading and trailing spaces
+wxString ProcessManager::trim(const wxString& str) {
+    size_t first = str.find_first_not_of(' ');
+    if (wxString::npos == first) {
+        return str;
+    }
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
+}
+
+// Function to remove extra spaces between words
+wxString ProcessManager::removeExtraSpaces(const wxString& str) {
+    wxString result;
+    bool inSpaces = false;
+    for (char ch : str) {
+        if (isspace(ch)) {
+            if (!inSpaces) {
+                result += ' ';
+                inSpaces = true;
+            }
+        } else {
+            result += ch;
+            inSpaces = false;
+        }
+    }
+    return result;
+}
+
+// Function to process the line by trimming and removing extra spaces
+wxString ProcessManager::processLine(const wxString& line) {
+    wxString trimmedLine = trim(line);
+    return removeExtraSpaces(trimmedLine);
 }

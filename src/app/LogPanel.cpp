@@ -1,4 +1,6 @@
 #include "LogPanel.h"
+#include "ProcessManager.h"
+#include "ServiceManager.h"
 #include <unistd.h>
 
 LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(parent, wxID_ANY) {
@@ -10,6 +12,10 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
     processManager = new ProcessManager(this);
     mainSizer->Add(processManager, 1, wxEXPAND | wxALL, margin);
     processManager->Hide();
+
+    serviceManager = new ServiceManager(this);
+    mainSizer->Add(serviceManager, 1, wxEXPAND | wxALL, margin);
+    serviceManager->Hide();
 
     logTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString,
         wxDefaultPosition, wxDefaultSize,
@@ -282,6 +288,7 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
 
 void LogPanel::OnClearClick(wxCommandEvent& event) {
     processManager->Hide();
+    serviceManager->Hide();
     logTextCtrl->Show();
     Layout();
 }
@@ -293,6 +300,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
     }
 
     processManager->Hide();
+    serviceManager->Hide();
     logTextCtrl->Show();
 
     switch (ID_SelectPanel) {
@@ -418,8 +426,8 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                     isConnect = false;
                     return;
                 } else {
-                    // Save reponse into log.txt
-                    wxFile file("log.txt", wxFile::write);
+                    // Save reponse into processes.txt
+                    wxFile file("processes.txt", wxFile::write);
                     if (file.IsOpened()) {
                         file.Write(response);
                         file.Close();
@@ -429,7 +437,7 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
 
                     logTextCtrl->Hide();
                     processManager->Show();
-                    processManager->LoadProcessesFromLog("log.txt");
+                    processManager->LoadProcessesFromFile("processes.txt");
                     Layout();
                 }
             }   break;
@@ -439,7 +447,18 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                     isConnect = false;
                     return;
                 } else {
-                    AppendLog("List of services:\n" + response);
+                    // Save reponse into services.txt
+                    wxFile file("services.txt", wxFile::write);
+                    if (file.IsOpened()) {
+                        file.Write(response);
+                        file.Close();
+                    }
+
+                    AppendLog("Server response (List of services):\n" + response);
+
+                    logTextCtrl->Hide();
+                    serviceManager->Show();
+                    serviceManager->LoadServiceFromFile("services.txt");
                     Layout();
                 }
             }   break;
@@ -502,7 +521,18 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
 bool LogPanel::EndProcess(const wxString& pidStr) {
     string response = "", filepath = "";
     if(!client.handleCommand("!endp " + pidStr.ToStdString(), response, filepath)) {
-        AppendLog("Failed to end process ID " + pidStr.ToStdString() + "! Try again!");
+        AppendLog("Failed to end process ID: " + pidStr.ToStdString() + "! Try again!");
+        return false;
+    } else {
+        AppendLog(response);
+        return true;
+    }
+}
+
+bool LogPanel::EndService(const wxString& pidStr) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!ends " + pidStr.ToStdString(), response, filepath)) {
+        AppendLog("Failed to end service name: " + pidStr.ToStdString() + "! Try again!");
         return false;
     } else {
         AppendLog(response);

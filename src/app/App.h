@@ -6,8 +6,6 @@
 #include <thread>
 #include <WinSock2.h>
 #include <WS2tcpip.h>
-#include <windows.h>
-#include <tlhelp32.h>
 
 // LIBRARIES USE WXWIDGETS
 #include <wx/wx.h>
@@ -42,7 +40,6 @@
 #include "../utils/Client.h"
 #include "CustomBitmapButton.h"
 #include "MiniExplorer.h"
-#include "ProcessManager.h"
 #include "MainFrame.h"
 #include "LoginFrame.h"
 using namespace std;

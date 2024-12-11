@@ -18,6 +18,7 @@ enum {
 };
 
 class ProcessManager;
+class ServiceManager;
 
 class LogPanel : public wxPanel {
 public:
@@ -63,10 +64,14 @@ public:
 
     bool EndProcess(const wxString& pidStr);
 
+    bool EndService(const wxString& pidStr);
+
 private:
     int ID_SelectPanel;
     wxTextCtrl* logTextCtrl{};
+
     ProcessManager* processManager;
+    ServiceManager* serviceManager;
 
     Client client;
 

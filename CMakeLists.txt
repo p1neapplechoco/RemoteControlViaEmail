@@ -32,6 +32,7 @@ add_executable(
         src/app/LogPanel.cpp
         src/app/MiniExplorer.cpp
         src/app/ProcessManager.cpp
+        src/app/ServiceManager.cpp
         src/app/App.h
 )
 
