@@ -5,7 +5,7 @@ enum {
 };
 
 wxBEGIN_EVENT_TABLE(ServiceManager, wxPanel)
-    EVT_BUTTON(ID_EndTask, ServiceManager::OnEndTask)
+    EVT_MENU(ID_EndTask, ServiceManager::OnEndTask)
 wxEND_EVENT_TABLE()
 
 ServiceManager::ServiceManager(wxWindow* parent)
@@ -28,6 +28,9 @@ ServiceManager::ServiceManager(wxWindow* parent)
     // Create context menu
     contextMenu = new wxMenu;
     contextMenu->Append(ID_EndTask, "End Task");
+
+    // Bind right-click event
+    serviceList->Bind(wxEVT_LIST_ITEM_RIGHT_CLICK, &ServiceManager::OnRightClick, this);
 }
 
 wxString processLine(const wxString& line);
