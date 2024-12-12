@@ -1,11 +1,13 @@
 #include "ServiceManager.h"
 
 enum {
-    ID_EndTask = 1
+    ID_EndTask = 1,
+    ID_StartTask
 };
 
 wxBEGIN_EVENT_TABLE(ServiceManager, wxPanel)
     EVT_MENU(ID_EndTask, ServiceManager::OnEndTask)
+    EVT_MENU(ID_StartTask, ServiceManager::OnStartTask)
 wxEND_EVENT_TABLE()
 
 ServiceManager::ServiceManager(wxWindow* parent)
@@ -14,8 +16,8 @@ ServiceManager::ServiceManager(wxWindow* parent)
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
     serviceList = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
-    serviceList->InsertColumn(0, "Service Name", wxLIST_FORMAT_LEFT, 200);
-    serviceList->InsertColumn(1, "Display Name", wxLIST_FORMAT_LEFT, 400);
+    serviceList->InsertColumn(0, "Service Name", wxLIST_FORMAT_LEFT, 150);
+    serviceList->InsertColumn(1, "Display Name", wxLIST_FORMAT_LEFT, 300);
     serviceList->InsertColumn(2, "State", wxLIST_FORMAT_LEFT, 100);
 
     mainSizer->Add(serviceList, 1, wxEXPAND | wxALL, 5);
@@ -27,7 +29,8 @@ ServiceManager::ServiceManager(wxWindow* parent)
 
     // Create context menu
     contextMenu = new wxMenu;
-    contextMenu->Append(ID_EndTask, "End Task");
+    contextMenu->Append(ID_StartTask, "Start Service");
+    contextMenu->Append(ID_EndTask, "End Service");
 
     // Bind right-click event
     serviceList->Bind(wxEVT_LIST_ITEM_RIGHT_CLICK, &ServiceManager::OnRightClick, this);
@@ -105,12 +108,38 @@ void ServiceManager::OnEndTask(wxCommandEvent& event) {
 
     wxString pidStr = currentPage->GetItemText(itemIndex);
     if(((LogPanel*)GetParent())-> EndService(pidStr)) {
-        currentPage->DeleteItem(itemIndex);
-        wxString totalServices = totalServiceText->GetLabel();
-        long total = wxAtoi(totalServices.AfterLast(' '));
-        totalServiceText->SetLabel(wxString::Format("Total services: %ld", total - 1));
+        if(!((LogPanel*)GetParent())-> ListServices()) {
+            wxMessageBox("Failed to list services", "Error", wxOK | wxICON_ERROR);
+        }
     } else {
         wxMessageBox("Failed to end service", "Error", wxOK | wxICON_ERROR);
+    }
+}
+
+void ServiceManager::OnStartTask(wxCommandEvent& event) {
+    long itemIndex = -1;
+    wxListCtrl* currentPage = serviceList;
+    if (currentPage) {
+        itemIndex = currentPage->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+    }
+
+    if (itemIndex == -1) {
+        wxMessageBox("No service selected", "Error", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    int checkbox = wxMessageBox("Are you sure you want to start this service?", "Confirm", wxYES_NO | wxICON_QUESTION);
+    if (checkbox != wxYES) {
+        return;
+    }
+
+    wxString pidStr = currentPage->GetItemText(itemIndex);
+    if(((LogPanel*)GetParent())-> StartServices(pidStr)) {
+        if(!((LogPanel*)GetParent())-> ListServices()) {
+            wxMessageBox("Failed to list services", "Error", wxOK | wxICON_ERROR);
+        }
+    } else {
+        wxMessageBox("Failed to start service", "Error", wxOK | wxICON_ERROR);
     }
 }
 

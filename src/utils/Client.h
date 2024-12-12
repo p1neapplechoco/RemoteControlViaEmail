@@ -32,7 +32,7 @@ public:
 
     std::vector<char> receiveImageData();
 
-    //void startClient();
+    // bool startClient();
 
     bool handleCommand(const string &command, string &reponseClient, string &filePath);
 };

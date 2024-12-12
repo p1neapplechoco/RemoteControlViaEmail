@@ -289,7 +289,9 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
 void LogPanel::OnClearClick(wxCommandEvent& event) {
     processManager->Hide();
     serviceManager->Hide();
-    logTextCtrl->Show();
+    if (logTextCtrl->IsShown()) {
+        logTextCtrl->Clear();
+    } else logTextCtrl->Show();
     Layout();
 }
 
@@ -420,48 +422,12 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
         // Thực hiện command tương ứng
         string response = "", filepath = "";
         switch (ID_SelectPanel) {
-            case ID_LIST_PROCESSES: {
-                if(!client.handleCommand("!list p", response, filepath)) {
-                    AppendLog("Failed to send command! Disconnected to server!");
-                    isConnect = false;
-                    return;
-                } else {
-                    // Save reponse into processes.txt
-                    wxFile file("processes.txt", wxFile::write);
-                    if (file.IsOpened()) {
-                        file.Write(response);
-                        file.Close();
-                    }
-
-                    AppendLog("Server response (List of processes):\n" + response);
-
-                    logTextCtrl->Hide();
-                    processManager->Show();
-                    processManager->LoadProcessesFromFile("processes.txt");
-                    Layout();
-                }
-            }   break;
-            case ID_LIST_SERVICES: {
-                if(!client.handleCommand("!list s", response, filepath)) {
-                    AppendLog("Failed to send command! Disconnected to server!");
-                    isConnect = false;
-                    return;
-                } else {
-                    // Save reponse into services.txt
-                    wxFile file("services.txt", wxFile::write);
-                    if (file.IsOpened()) {
-                        file.Write(response);
-                        file.Close();
-                    }
-
-                    AppendLog("Server response (List of services):\n" + response);
-
-                    logTextCtrl->Hide();
-                    serviceManager->Show();
-                    serviceManager->LoadServiceFromFile("services.txt");
-                    Layout();
-                }
-            }   break;
+            case ID_LIST_PROCESSES:
+                ListProcesses();
+                break;
+            case ID_LIST_SERVICES:
+                ListServices();
+                break;
             case ID_SCREENSHOT: {
                 if(!client.handleCommand("!screenshot", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
@@ -518,6 +484,55 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
     }
 }
 
+bool LogPanel::ListProcesses() {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!list p", response, filepath)) {
+        AppendLog("Failed to list processes! Try again!");
+        return false;
+    }
+
+    // Save reponse into processes.txt
+    wxFile file("processes.txt", wxFile::write);
+    if (file.IsOpened()) {
+        file.Write(response);
+        file.Close();
+    }
+
+    AppendLog("Server response: List of processes saved as processes.txt");
+
+    processManager->LoadProcessesFromFile("processes.txt");
+    logTextCtrl->Hide();
+    processManager->Show();
+
+    Layout();
+    return true;
+}
+
+bool LogPanel::ListServices() {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!list s", response, filepath)) {
+        AppendLog("Failed to send command! Disconnected to server!");
+        isConnect = false;
+        return false;
+    }
+
+    // Save reponse into services.txt
+    wxFile file("services.txt", wxFile::write);
+    if (file.IsOpened()) {
+        file.Write(response);
+        file.Close();
+    }
+
+    AppendLog("Server response (List of services):\n" + response);
+
+    serviceManager->LoadServiceFromFile("services.txt");
+    logTextCtrl->Hide();
+    serviceManager->Show();
+
+    Layout();
+    return true;
+}
+
 bool LogPanel::EndProcess(const wxString& pidStr) {
     string response = "", filepath = "";
     if(!client.handleCommand("!endp " + pidStr.ToStdString(), response, filepath)) {
@@ -533,6 +548,17 @@ bool LogPanel::EndService(const wxString& pidStr) {
     string response = "", filepath = "";
     if(!client.handleCommand("!ends " + pidStr.ToStdString(), response, filepath)) {
         AppendLog("Failed to end service name: " + pidStr.ToStdString() + "! Try again!");
+        return false;
+    } else {
+        AppendLog(response);
+        return true;
+    }
+}
+
+bool LogPanel::StartServices(const wxString& pidStr) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!starts " + pidStr.ToStdString(), response, filepath)) {
+        AppendLog("Failed to start service name: " + pidStr.ToStdString() + "! Try again!");
         return false;
     } else {
         AppendLog(response);

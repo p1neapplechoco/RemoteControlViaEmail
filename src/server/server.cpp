@@ -76,6 +76,7 @@ void Server::listOfCommands() {
     wss << "\t!get file <file_path>\n";
     wss << "\t!endp [process_id]\n";
     wss << "\t!ends [service_name]\n";
+    wss << "\t!starts [service_name]\n";
     wss << "\t!exit\n";
 }
 

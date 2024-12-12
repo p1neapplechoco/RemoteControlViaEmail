@@ -27,7 +27,7 @@ ProcessManager::ProcessManager(wxWindow* parent)
 
     // Create context menu
     contextMenu = new wxMenu;
-    contextMenu->Append(ID_EndTask, "End Task");
+    contextMenu->Append(ID_EndTask, "End Process");
 
     // Bind right-click event
     appsPage->Bind(wxEVT_LIST_ITEM_RIGHT_CLICK, &ProcessManager::OnRightClick, this);
@@ -149,10 +149,9 @@ void ProcessManager::OnEndTask(wxCommandEvent& event) {
     }
 
     if(((LogPanel*)GetParent())-> EndProcess(pidStr)) {
-        currentPage->DeleteItem(itemIndex);
-        wxString totalProcesses = totalProcessesText->GetLabel();
-        long total = wxAtoi(totalProcesses.AfterLast(' '));
-        totalProcessesText->SetLabel(wxString::Format("Total processes: %ld", total - 1));
+        if(!((LogPanel*)GetParent())-> ListProcesses()) {
+            wxMessageBox("Failed to list processes", "Error", wxOK | wxICON_ERROR);
+        }
     } else {
         wxMessageBox("Failed to end process", "Error", wxOK | wxICON_ERROR);
     }

@@ -62,9 +62,15 @@ public:
 
     void EnableButtons(bool enable);
 
+    bool ListProcesses();
+
+    bool ListServices();
+
     bool EndProcess(const wxString& pidStr);
 
     bool EndService(const wxString& pidStr);
+
+    bool StartServices(const wxString& pidStr);
 
 private:
     int ID_SelectPanel;

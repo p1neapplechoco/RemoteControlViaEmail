@@ -1,6 +1,4 @@
 #include <wx/wx.h>
-#include "utils/Client.h"
-#include "utils/Server.h"
 #include "app/App.h"
 
 #pragma comment(lib, "ws2_32.lib")
