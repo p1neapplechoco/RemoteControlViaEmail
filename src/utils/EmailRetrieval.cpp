@@ -128,7 +128,7 @@ std::string EmailRetrieval::parseEmailContent(const std::string &raw_mail)
     return content;
 }
 
-void EmailRetrieval::retrieveEmail()
+bool EmailRetrieval::retrieveEmail()
 {
     std::string raw_mail;
 
@@ -142,13 +142,14 @@ void EmailRetrieval::retrieveEmail()
 
     if (res != CURLE_OK)
     {
-        std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res);
+        std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << "\n";
         cleanUpCurl();
-        return;
+        return false;
     }
 
     mail_id = parseEmailID(raw_mail);
     mail_content = parseEmailContent(raw_mail);
+    return true;
 }
 
 std::string EmailRetrieval::getMailContent()

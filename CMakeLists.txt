@@ -30,7 +30,7 @@ add_executable(
         src/app/LoginFrame.cpp
         src/app/MainFrame.cpp
         src/app/LogPanel.cpp
-        src/app/MiniExplorer.cpp
+        src/app/FileExplorer.cpp
         src/app/ProcessManager.cpp
         src/app/ServiceManager.cpp
         src/app/App.h

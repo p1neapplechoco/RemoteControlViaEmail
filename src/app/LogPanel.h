@@ -9,9 +9,8 @@ enum {
     ID_SCREENSHOT,
     ID_TOGGLE_WEBCAM,
     ID_CAPTURE_WEBCAM,
-    ID_END_PROCESS,
-    ID_END_SERVICE,
-    ID_SHUTDOWN,
+    ID_FILE_EXPLORER,
+    ID_POWER,
     ID_EXIT,
     ID_TEAM,
     ID_INSTRUCTION
@@ -19,6 +18,7 @@ enum {
 
 class ProcessManager;
 class ServiceManager;
+class FileExplorer;
 
 class LogPanel : public wxPanel {
 public:
@@ -31,12 +31,8 @@ public:
     wxPanel* SCREENSHOTPanel;
     wxPanel* WEBCAMPanel;
     wxPanel* CAPTUREPanel;
-    wxPanel* END_PPanel;
-    wxPanel* END_SPanel;
-    wxPanel* SHUTDOWNPanel;
-
-    wxTextCtrl* m_processIdText;
-    wxTextCtrl* m_serviceIdText;
+    wxPanel* FILE_Panel;
+    wxPanel* POWERPanel;
 
     bool isConnect = true;
 
@@ -50,11 +46,9 @@ public:
 
     void CreateLIST_S();
 
-    void CreateEND_P();
+    void CreateFILE_EXP();
 
-    void CreateEND_S();
-
-    void CreateSHUTDOWN();
+    void CreatePOWER();
 
     void UpdatePanelVisibility(int currentSelectedPanel);
 
@@ -72,12 +66,18 @@ public:
 
     bool StartServices(const wxString& pidStr);
 
+    string scanFolder(const string& path);
+
+    bool openFileExplorer();
+
 private:
     int ID_SelectPanel;
     wxTextCtrl* logTextCtrl{};
+    wxChoice* powerChoice;
 
     ProcessManager* processManager;
     ServiceManager* serviceManager;
+    FileExplorer* fileExplorer;
 
     Client client;
 

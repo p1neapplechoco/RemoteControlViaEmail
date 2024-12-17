@@ -17,6 +17,10 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
     mainSizer->Add(serviceManager, 1, wxEXPAND | wxALL, margin);
     serviceManager->Hide();
 
+    fileExplorer = new FileExplorer(this);
+    mainSizer->Add(fileExplorer, 1, wxEXPAND | wxALL, margin);
+    fileExplorer->Hide();
+
     logTextCtrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString,
         wxDefaultPosition, wxDefaultSize,
         wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2);
@@ -42,14 +46,11 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
     LIST_SPanel = new wxPanel(bottomPanel, wxID_ANY);
     bottomSizer->Add(LIST_SPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
 
-    END_PPanel = new wxPanel(bottomPanel, wxID_ANY);
-    bottomSizer->Add(END_PPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+    FILE_Panel = new wxPanel(bottomPanel, wxID_ANY);
+    bottomSizer->Add(FILE_Panel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
 
-    END_SPanel = new wxPanel(bottomPanel, wxID_ANY);
-    bottomSizer->Add(END_SPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
-
-    SHUTDOWNPanel = new wxPanel(bottomPanel, wxID_ANY);
-    bottomSizer->Add(SHUTDOWNPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
+    POWERPanel = new wxPanel(bottomPanel, wxID_ANY);
+    bottomSizer->Add(POWERPanel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, margin);
 
     auto buttonSizer = new wxBoxSizer(wxHORIZONTAL);
     buttonSizer->AddStretchSpacer();
@@ -73,9 +74,8 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
     CreateSCREENSHOT();
     CreateWEBCAM();
     CreateCAPTURE();
-    CreateEND_P();
-    CreateEND_S();
-    CreateSHUTDOWN();
+    CreateFILE_EXP();
+    CreatePOWER();
 
     // Set timer
     loadingTimer = new wxTimer(this);
@@ -162,63 +162,38 @@ void LogPanel::CreateLIST_S() {
     LIST_SPanel->Hide();
 }
 
-void LogPanel::CreateEND_P() {
-    auto ENP_PSizer = new wxBoxSizer(wxVERTICAL);
+void LogPanel::CreateFILE_EXP() {
+    auto mainSizer = new wxBoxSizer(wxVERTICAL);
 
     wxFont titleFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
-    auto label = new wxStaticText(END_PPanel, wxID_ANY, "END PROCESS");
+    auto label = new wxStaticText(FILE_Panel, wxID_ANY, "FILE EXPLORER");
     label->SetFont(titleFont);
 
-    auto idSizer = new wxBoxSizer(wxHORIZONTAL);
+    mainSizer->Add(label, 0, wxEXPAND | wxBOTTOM, 5);
 
-    auto idLabel = new wxStaticText(END_PPanel, wxID_ANY, "ID: ");
-
-    m_processIdText = new wxTextCtrl(END_PPanel, wxID_ANY, "");
-
-    idSizer->Add(idLabel, 0, wxALIGN_CENTER_VERTICAL);
-    idSizer->Add(m_processIdText, 1, wxEXPAND | wxLEFT, 5);
-
-    ENP_PSizer->Add(label, 0, wxEXPAND | wxBOTTOM, 5);
-    ENP_PSizer->Add(idSizer, 0, wxEXPAND | wxTOP, 5);
-
-    END_PPanel->SetSizer(ENP_PSizer);
-    END_PPanel->Hide();
+    FILE_Panel->SetSizer(mainSizer);
+    FILE_Panel->Hide();
 }
 
-void LogPanel::CreateEND_S() {
-    auto ENP_SSizer = new wxBoxSizer(wxVERTICAL);
+void LogPanel::CreatePOWER() {
+    auto POWERSizer = new wxBoxSizer(wxHORIZONTAL);
 
     wxFont titleFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
-    auto label = new wxStaticText(END_SPanel, wxID_ANY, "END SERVICE");
+    auto label = new wxStaticText(POWERPanel, wxID_ANY, "POWER");
     label->SetFont(titleFont);
 
-    auto idSizer = new wxBoxSizer(wxHORIZONTAL);
+    POWERSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 
-    auto idLabel = new wxStaticText(END_SPanel, wxID_ANY, "ID: ");
+    wxArrayString choices;
+    choices.Add("Shutdown");
+    choices.Add("Sleep");
+    choices.Add("Restart");
 
-    m_serviceIdText = new wxTextCtrl(END_SPanel, wxID_ANY, "");
+    powerChoice = new wxChoice(POWERPanel, wxID_ANY, wxDefaultPosition, wxDefaultSize, choices);
+    POWERSizer->Add(powerChoice, 0, wxALIGN_CENTER_VERTICAL, 5);
 
-    idSizer->Add(idLabel, 0, wxALIGN_CENTER_VERTICAL);
-    idSizer->Add(m_serviceIdText, 1, wxEXPAND | wxLEFT, 5);
-
-    ENP_SSizer->Add(label, 0, wxEXPAND | wxBOTTOM, 5);
-    ENP_SSizer->Add(idSizer, 0, wxEXPAND | wxTOP, 5);
-
-    END_SPanel->SetSizer(ENP_SSizer);
-    END_SPanel->Hide();
-}
-
-void LogPanel::CreateSHUTDOWN() {
-    auto CAPTURESizer = new wxBoxSizer(wxVERTICAL);
-
-    wxFont titleFont(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
-    auto label = new wxStaticText(SHUTDOWNPanel, wxID_ANY, "SHUTDOWN");
-    label->SetFont(titleFont);
-
-    CAPTURESizer->Add(label, 0, wxEXPAND | wxBOTTOM, 5);
-
-    SHUTDOWNPanel->SetSizer(CAPTURESizer);
-    SHUTDOWNPanel->Hide();
+    POWERPanel->SetSizer(POWERSizer);
+    POWERPanel->Hide();
 }
 
 void LogPanel::UpdatePanelVisibility(int selectedPanel) {
@@ -242,18 +217,12 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
         LIST_SPanel->Show(false);
     }
 
-    if (END_PPanel) {
-        END_PPanel->Show(false);
-        m_processIdText->Clear();
+    if (FILE_Panel) {
+        FILE_Panel->Show(false);
     }
 
-    if (END_SPanel) {
-        END_SPanel->Show(false);
-        m_serviceIdText->Clear();
-    }
-
-    if (SHUTDOWNPanel) {
-        SHUTDOWNPanel->Show(false);
+    if (POWERPanel) {
+        POWERPanel->Show(false);
     }
 
     ID_SelectPanel = selectedPanel;
@@ -273,14 +242,11 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
         case ID_CAPTURE_WEBCAM:
             CAPTUREPanel->Show(true);
             break;
-        case ID_END_PROCESS:
-            END_PPanel->Show(true);
+        case ID_FILE_EXPLORER:
+            FILE_Panel->Show(true);
             break;
-        case ID_END_SERVICE:
-            END_SPanel->Show(true);
-            break;
-        case ID_SHUTDOWN:
-            SHUTDOWNPanel->Show(true);
+        case ID_POWER:
+            POWERPanel->Show(true);
             break;
     }
     Layout();
@@ -289,6 +255,8 @@ void LogPanel::UpdatePanelVisibility(int selectedPanel) {
 void LogPanel::OnClearClick(wxCommandEvent& event) {
     processManager->Hide();
     serviceManager->Hide();
+    fileExplorer->Hide();
+
     if (logTextCtrl->IsShown()) {
         logTextCtrl->Clear();
     } else logTextCtrl->Show();
@@ -303,6 +271,7 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
 
     processManager->Hide();
     serviceManager->Hide();
+    fileExplorer->Hide();
     logTextCtrl->Show();
 
     switch (ID_SelectPanel) {
@@ -321,14 +290,11 @@ void LogPanel::OnSendClick(wxCommandEvent& event) {
         case ID_CAPTURE_WEBCAM:
             StartLoading("Sending command Capture Webcam");
         break;
-        case ID_END_PROCESS:
-            StartLoading("Sending command End Process");
+        case ID_FILE_EXPLORER:
+            StartLoading("Sending command File Explorer");
         break;
-        case ID_END_SERVICE:
-            StartLoading("Sending command End Service");
-        break;
-        case ID_SHUTDOWN:
-            StartLoading("Sending command Shutdown");
+        case ID_POWER:
+            StartLoading("Sending command Power");
         break;
         default:
             break;
@@ -368,10 +334,9 @@ void LogPanel::StartLoading(const wxString& command) {
 }
 
 void LogPanel::OnTimer(wxTimerEvent& event) {
-    auto OpenPicture = [this](const string &filePath){
+    auto OpenPicture = [this](const string &filePath, double scaleFactor){
         wxImage image (filePath);
         if (image.IsOk()) {
-            double scaleFactor = 0.5; // Adjust this value to control scaling (0.5 = 50%, 0.75 = 75%, etc.)
             int scaledWidth = image.GetWidth() * scaleFactor;
             int scaledHeight = image.GetHeight() * scaleFactor;
             image.Rescale(scaledWidth, scaledHeight);
@@ -380,7 +345,7 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
             wxFrame* imageFrame;
 
             if (auto frame = dynamic_cast<MainFrame*>(mainFrame)) {
-                imageFrame = new wxFrame(frame, wxID_ANY, "Screenshot Viewer",
+                imageFrame = new wxFrame(frame, wxID_ANY, "Picture Viewer",
                                        wxDefaultPosition, wxSize(scaledWidth + 10, scaledHeight + 10),
                                        wxDEFAULT_FRAME_STYLE | wxFRAME_FLOAT_ON_PARENT);
             }
@@ -432,56 +397,68 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                 if(!client.handleCommand("!screenshot", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
-                    return;
                 } else {
                     AppendLog(response);
-                    OpenPicture(filepath);
+                    OpenPicture(filepath, 0.5);
                 }
             }   break;
             case ID_TOGGLE_WEBCAM: {
                 if(!client.handleCommand("!webcam", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
-                    return;
                 } else AppendLog(response);
             }   break;
             case ID_CAPTURE_WEBCAM: {
                 if(!client.handleCommand("!capture", response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
-                    return;
                 } else {
                     AppendLog(response);
-                    OpenPicture(filepath);
+                    OpenPicture(filepath, 1.5);
                 }
             }   break;
-            case ID_END_PROCESS: {
-                string ProcessId = m_processIdText->GetValue().ToStdString();
-                if(!client.handleCommand("!endp " + ProcessId, response, filepath)) {
+            case ID_FILE_EXPLORER:
+                openFileExplorer();
+                break;
+            case ID_POWER: {
+                string opt;
+                if (powerChoice->GetStringSelection() == "Shutdown") {
+                    opt = "0";
+                } else if (powerChoice->GetStringSelection() == "Sleep") {
+                    opt = "1";
+                } else if (powerChoice->GetStringSelection() == "Restart") {
+                    opt = "2";
+                }
+
+                if(!client.handleCommand("!shutdown " + opt, response, filepath)) {
                     AppendLog("Failed to send command! Disconnected to server!");
                     isConnect = false;
-                    return;
-                } else AppendLog(response);
-            }   break;
-            case ID_END_SERVICE: {
-                string ProcessId = m_serviceIdText->GetValue().ToStdString();
-                if(!client.handleCommand("!ends " + ProcessId, response, filepath)) {
-                    AppendLog("Failed to send command! Disconnected to server!");
-                    isConnect = false;
-                    return;
-                } else AppendLog(response);
-            }   break;
-            case ID_SHUTDOWN: {
-                if(!client.handleCommand("!shutdown", response, filepath)) {
-                    AppendLog("Failed to send command! Disconnected to server!");
-                    isConnect = false;
-                    return;
                 } else AppendLog(response);
             }   break;
             default:
                 break;
         }
     }
+}
+
+string LogPanel::scanFolder(const string& path) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!scan " + path, response, filepath)) {
+        AppendLog("Failed to send command! Disconnected to server!");
+        isConnect = false;
+        return "";
+    } return filepath;
+}
+
+bool LogPanel::openFileExplorer() {
+    AppendLog("Server response: File Explorer opened\n");
+
+    fileExplorer->Reset();
+    logTextCtrl->Hide();
+    fileExplorer->Show();
+
+    Layout();
+    return true;
 }
 
 bool LogPanel::ListProcesses() {
@@ -491,7 +468,7 @@ bool LogPanel::ListProcesses() {
         return false;
     }
 
-    // Save reponse into processes.txt
+    // Save response into processes.txt
     wxFile file("processes.txt", wxFile::write);
     if (file.IsOpened()) {
         file.Write(response);
@@ -516,14 +493,14 @@ bool LogPanel::ListServices() {
         return false;
     }
 
-    // Save reponse into services.txt
+    // Save response into services.txt
     wxFile file("services.txt", wxFile::write);
     if (file.IsOpened()) {
         file.Write(response);
         file.Close();
     }
 
-    AppendLog("Server response (List of services):\n" + response);
+    AppendLog("Server response: List of services saved as services.txt\n");
 
     serviceManager->LoadServiceFromFile("services.txt");
     logTextCtrl->Hide();

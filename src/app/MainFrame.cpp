@@ -12,9 +12,8 @@ vector<ButtonInfo> buttons = {
     {"screenshot", ID_SCREENSHOT},
     {"toggleWebcam", ID_TOGGLE_WEBCAM},
     {"captureWebcam", ID_CAPTURE_WEBCAM},
-    {"endProcess", ID_END_PROCESS},
-    {"endService", ID_END_SERVICE},
-    {"shutdown", ID_SHUTDOWN}
+    {"fileExplorer", ID_FILE_EXPLORER},
+    {"power", ID_POWER}
 };
 
 MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
@@ -128,8 +127,13 @@ void MainFrame::EnableSideButtons(bool enable) {
 void MainFrame::OnButtonClick(wxCommandEvent& evt) {
     int id = evt.GetId();
     switch (id) {
-        case ID_EXIT:
+        case ID_EXIT: {
+            LoginFrame* loginFrame = new LoginFrame("Remote Control Via Desktop", wxDefaultPosition, wxDefaultSize);
+            loginFrame->Fit();
+            loginFrame->Center();
+            loginFrame->Show();
             Close();
+        }
             break;
         case ID_INSTRUCTION:
 

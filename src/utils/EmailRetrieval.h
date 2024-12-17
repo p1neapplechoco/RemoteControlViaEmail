@@ -21,6 +21,9 @@ public:
     std::string getPassword();
 
     std::string getCaBundlePath();
+
+    void setUsername(const std::string& user) { username = user; }
+    void setPassword(const std::string& pass) { password = pass; }
 };
 
 class EmailRetrieval
@@ -38,12 +41,11 @@ public:
 
     explicit EmailRetrieval(const UserCredentials &user);
 
-
     void setupCurl();
 
     void cleanUpCurl() const;
 
-    void retrieveEmail();
+    bool retrieveEmail();
 
     static std::string parseEmailContent(const std::string &raw_mail);
 

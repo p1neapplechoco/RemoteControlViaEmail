@@ -83,7 +83,6 @@ void ProcessManager::LoadProcessesFromFile(const wxString& filename) {
     while (!input.Eof()) {
         line = text.ReadLine();
 
-
         if (line.StartsWith("Apps")) {
             currentPage = appsPage;
             continue;

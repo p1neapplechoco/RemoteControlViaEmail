@@ -22,10 +22,11 @@
 // LIBRARIES FOR MINI EXPLORER
 #include <wx/treectrl.h>
 #include <wx/listctrl.h>
+#include <wx/filename.h>
+#include <wx/imaglist.h>
 #include <wx/dir.h>
 #include <wx/filedlg.h>
 #include <wx/msgdlg.h>
-#include <wx/filename.h>
 #include <wx/filefn.h>
 #include <wx/artprov.h>
 #include <wx/menu.h>
@@ -39,7 +40,7 @@
 #include "../utils/networkDiscovery.h"
 #include "../utils/Client.h"
 #include "CustomBitmapButton.h"
-#include "MiniExplorer.h"
+#include "FileExplorer.h"
 #include "MainFrame.h"
 #include "LoginFrame.h"
 using namespace std;
