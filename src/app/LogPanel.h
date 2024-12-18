@@ -66,7 +66,9 @@ public:
 
     bool StartServices(const wxString& pidStr);
 
-    string scanFolder(const string& path);
+    string scanDrive(const string& path);
+
+    bool GetAndSendFile(const string& path);
 
     bool openFileExplorer();
 

@@ -441,19 +441,45 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
     }
 }
 
-string LogPanel::scanFolder(const string& path) {
+string LogPanel::scanDrive(const string& path) {
     string response = "", filepath = "";
-    if(!client.handleCommand("!scan " + path, response, filepath)) {
-        AppendLog("Failed to send command! Disconnected to server!");
-        isConnect = false;
+    if(!client.handleCommand("!index " + path, response, filepath)) {
+        AppendLog("Failed to index " + path + "! Try again!");
         return "";
-    } return filepath;
+    }
+
+    AppendLog(response);
+    return filepath;
+}
+
+bool LogPanel::GetAndSendFile(const string& path) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!get file " + path, response, filepath)) {
+        AppendLog("Failed to get file " + path + "! Try again!");
+        return false;
+    }
+
+    AppendLog(response);
+    return true;
 }
 
 bool LogPanel::openFileExplorer() {
-    AppendLog("Server response: File Explorer opened\n");
+    string response = "", filepath = "";
+    if(!client.handleCommand("!list disks", response, filepath)) {
+        AppendLog("Failed to list disks! Try again!");
+        return false;
+    }
 
-    fileExplorer->Reset();
+    // Save response into disks.txt
+    wxFile file("disks.txt", wxFile::write);
+    if (file.IsOpened()) {
+        file.Write(response);
+        file.Close();
+    }
+
+    AppendLog("Server response: File Explorer opened");
+
+    fileExplorer->LoadDisksFromFile("disks.txt");
     logTextCtrl->Hide();
     fileExplorer->Show();
 

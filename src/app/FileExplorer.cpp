@@ -18,12 +18,9 @@ FileExplorer::FileExplorer(wxWindow* parent) : wxPanel(parent, wxID_ANY)
 
     // Bind events
     m_listCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &FileExplorer::OnItemActivated, this);
-    m_listCtrl->Bind(wxEVT_CONTEXT_MENU, &FileExplorer::OnContextMenu, this);
 
-    DragAcceptFiles(true);
-    Bind(wxEVT_DROP_FILES, &FileExplorer::OnDragDrop, this);
-
-    m_currentPath = "";
+    m_folder.clear();
+    PopulateList();
 }
 
 void FileExplorer::InitializeIcons()
@@ -43,21 +40,21 @@ void FileExplorer::InitializeIcons()
 }
 
 void FileExplorer::PopulateList() {
-    string filePath = ((LogPanel*)GetParent())-> scanFolder(m_currentPath);
-    FOLDER folder = FOLDER::readCacheFile(filePath);
-
     m_listCtrl->DeleteAllItems();
+    if (m_folder.empty())
+        return;
 
     // Add parent directory entry (..)
-    if(!m_currentPath.empty()) {
+    if (m_folder.size() > 1) {
         long itemIndex = m_listCtrl->InsertItem(0, "..", ICON_UP);
         m_listCtrl->SetItem(itemIndex, 1, "Parent Directory");
     }
 
+    FOLDER folder = m_folder.back();
     // List subfolders
     for (const auto& subfolder : folder.subfolders) {
-        long itemIndex = m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), subfolder.name, (m_currentPath.empty()) ? ICON_DRIVE : ICON_FOLDER);
-        m_listCtrl->SetItem(itemIndex, 1, "Folder");
+        long itemIndex = m_listCtrl->InsertItem(m_listCtrl->GetItemCount(), subfolder.name, (m_folder.size() <= 1) ? ICON_DRIVE : ICON_FOLDER);
+        m_listCtrl->SetItem(itemIndex, 1, (m_folder.size() <= 1) ? "Drive" : "Folder");
     }
 
     // List files
@@ -67,12 +64,38 @@ void FileExplorer::PopulateList() {
     }
 }
 
-void FileExplorer::EnableMenuFunctions(bool enable) {
-    // Implement logic to enable/disable menu functions
-}
+void FileExplorer::LoadDisksFromFile(const string &filename) {
+    m_folder.clear();
 
-void FileExplorer::Reset() {
-    m_currentPath = "";
+    wxFileInputStream input(filename);
+    if (!input.IsOk()) {
+        wxMessageBox("Cannot open file!", "Error", wxICON_ERROR);
+        return;
+    }
+
+    wxTextInputStream text(input);
+    wxString line;
+
+    FOLDER newFolder;
+    newFolder.path = "";
+    newFolder.name = "Disks";
+
+    while (!input.Eof()) {
+        line = text.ReadLine();
+
+        if (line.StartsWith("Available Disks")) {
+            continue;
+        }
+
+        if (!line.IsEmpty()) {
+            FOLDER folder;
+            folder.path = line.ToStdString();
+            folder.name = line.substr(0, line.size() - 1).ToStdString();
+            newFolder.subfolders.push_back(folder);
+        }
+    }
+
+    m_folder.push_back(newFolder);
     PopulateList();
 }
 
@@ -81,96 +104,49 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
 
     if (item == "..")
     {
-        m_currentPath.pop_back();
-        while(!m_currentPath.empty() && m_currentPath.back() != '\\')
-            m_currentPath.pop_back();
+        m_folder.pop_back();
     } else {
-        m_currentPath += '\\' + item;
+        bool isSelected = false;
+        FOLDER folder = m_folder.back();
 
+        for (const auto& subfolder : folder.subfolders)
+            if (subfolder.name == item) {
+                isSelected = true;
+                if(m_folder.size() > 1) {
+                    m_folder.push_back(subfolder);
+                } else {
+                    string fileName = ((LogPanel*)GetParent())-> scanDrive(subfolder.path);
+                    m_folder.push_back(FOLDER::readCacheFile(fileName));
+                } break;
+            }
 
-    }
-
-    PopulateList();
-}
-
-void FileExplorer::OnContextMenu(wxContextMenuEvent& event)
-{
-    wxPoint point = event.GetPosition();
-    point = m_listCtrl->ScreenToClient(point);
-
-    int flags;
-    long subItem;
-    long index = m_listCtrl->HitTest(point, flags, &subItem);
-    if (index != wxNOT_FOUND)
-    {
-        menu.Append(wxID_COPY, "&Copy");
-        menu.Append(wxID_CUT, "&Move");
-        menu.Append(wxID_DELETE, "&Delete");
-
-        PopupMenu(&menu);
-    }
-}
-
-void FileExplorer::OnCopy(wxCommandEvent& event)
-{
-    long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-    if (item != -1)
-    {
-        wxString filename = m_listCtrl->GetItemText(item);
-        wxString sourcePath = m_currentPath + wxFILE_SEP_PATH + filename;
-
-        // Implement copy logic here
-    }
-}
-
-void FileExplorer::OnMove(wxCommandEvent& event)
-{
-    long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-    if (item != -1)
-    {
-        wxString filename = m_listCtrl->GetItemText(item);
-        wxString sourcePath = m_currentPath + wxFILE_SEP_PATH + filename;
-
-        // Implement move logic here
-    }
-}
-
-void FileExplorer::OnDelete(wxCommandEvent& event)
-{
-    long item = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-    if (item != -1)
-    {
-        wxString filename = m_listCtrl->GetItemText(item);
-        wxString path = m_currentPath + wxFILE_SEP_PATH + filename;
-
-        if (wxMessageBox("Are you sure you want to delete this item?",
-                        "Confirm Delete",
-                        wxYES_NO | wxICON_QUESTION) == wxYES)
-        {
-            if (wxDirExists(path))
-                wxRmdir(path);
-            else
-                wxRemoveFile(path);
-
-            PopulateList();
+        // List files
+        if (!isSelected) {
+            for (const auto& file : folder.files)
+                if (file.name == item) {
+                    if (item.EndsWith(".txt")) {
+                        if (wxMessageBox("Are you sure you want to get this item?", "Confirm Get",
+                                        wxYES_NO | wxICON_QUESTION) == wxYES)
+                        {
+                            if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
+                                wxMessageBox("File has been got to the client!", "Success", wxICON_INFORMATION);
+                            else
+                                wxMessageBox("Failed to get file!", "Error", wxICON_ERROR);
+                        }
+                    } else if (item.EndsWith(".exe")) {
+                        if (wxMessageBox("Are you sure you want to open this item?", "Confirm Open",
+                                        wxYES_NO | wxICON_QUESTION) == wxYES)
+                        {
+                            if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
+                                wxMessageBox("File has been opened in the server!", "Success", wxICON_INFORMATION);
+                            else
+                                wxMessageBox("Failed to open file!", "Error", wxICON_ERROR);
+                        }
+                    }
+                    break;
+                }
         }
     }
-}
-
-void FileExplorer::OnDragDrop(wxDropFilesEvent& event)
-{
-    wxString* files = event.GetFiles();
-    int count = event.GetNumberOfFiles();
-
-    for (int i = 0; i < count; i++)
-    {
-        wxString filename = wxFileName(files[i]).GetFullName();
-        wxString destPath = m_currentPath + wxFILE_SEP_PATH + filename;
-
-        // Implement file copy logic here
-        wxCopyFile(files[i], destPath);
-    }
-
     PopulateList();
 }
 

@@ -228,6 +228,7 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
                 // Write to file
                 std::string tmp(diskName);
                 tmp = tmp.substr(0, 1);
+                filePath = "cache_" + tmp + ".txt";
                 std::ofstream outFile("cache_" + tmp + ".txt", std::ios::binary);
                 outFile.write(fileBuffer.data(), fileSize);
                 outFile.close();

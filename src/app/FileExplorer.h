@@ -10,13 +10,13 @@ public:
     FileExplorer(wxWindow* parent);
     ~FileExplorer();
 
-    void Reset();
+    void LoadDisksFromFile(const string &filename);
 
 private:
     wxMenu menu;
     wxListCtrl* m_listCtrl;
     wxImageList* m_imageList;
-    string m_currentPath;
+    vector<FOLDER> m_folder;
 
     // Image indexes trong ImageList
     enum {
@@ -28,11 +28,5 @@ private:
 
     void InitializeIcons();
     void PopulateList();
-    void EnableMenuFunctions(bool enable);
     void OnItemActivated(wxListEvent& event);
-    void OnContextMenu(wxContextMenuEvent& event);
-    void OnCopy(wxCommandEvent& event);
-    void OnMove(wxCommandEvent& event);
-    void OnDelete(wxCommandEvent& event);
-    void OnDragDrop(wxDropFilesEvent& event);
 };
