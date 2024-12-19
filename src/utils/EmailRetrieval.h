@@ -53,7 +53,7 @@ public:
 
     void retrieveEmail();
 
-    void respond(const char* to, const char* content);
+    void respond(const char* to, const char* content, const char* attachment_path=nullptr);
 
     static std::string parseEmailContent(const std::string &raw_mail);
 

@@ -218,18 +218,16 @@ std::string EmailRetrieval::getMailSender()
     return mail_sender;
 }
 
-void EmailRetrieval::respond(const char *to, const char *content) {
+void EmailRetrieval::respond(const char *to, const char *content, const char *attachment_path) {
     const char *from = user_credentials.getUsername().c_str();
     const std::string ca_bundle_path = user_credentials.getCaBundlePath();
 
-    // Use a separate curl handle for sending
     CURL *curl_send = curl_easy_init();
     if (!curl_send) {
         std::cerr << "Failed to initialize CURL for sending." << std::endl;
         return;
     }
 
-    // Set URL and use TLS for SMTP
     curl_easy_setopt(curl_send, CURLOPT_URL, "smtp://smtp.gmail.com:587");
     curl_easy_setopt(curl_send, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
 
@@ -237,40 +235,57 @@ void EmailRetrieval::respond(const char *to, const char *content) {
     curl_easy_setopt(curl_send, CURLOPT_PASSWORD, user_credentials.getPassword().c_str());
     curl_easy_setopt(curl_send, CURLOPT_CAINFO, ca_bundle_path.c_str());
 
-
     struct curl_slist *recipients = nullptr;
     recipients = curl_slist_append(recipients, to);
 
     curl_easy_setopt(curl_send, CURLOPT_MAIL_FROM, from);
     curl_easy_setopt(curl_send, CURLOPT_MAIL_RCPT, recipients);
 
-    const char *payload_text[] = {
-        "To: ", to, "\r\n",
-        "From: ", from, "\r\n",
-        "Subject: Response from EmailRetrieval\r\n",
-        "\r\n",
-        content, "\r\n",
-        NULL
-    };
+    curl_mime* mime = curl_mime_init(curl_send);
 
-    struct upload_status upload_ctx = {0, payload_text};
+    curl_mimepart* part = curl_mime_addpart(mime);
+    curl_mime_data(part, content, CURL_ZERO_TERMINATED);
+    curl_mime_type(part, "text/plain");
 
-    // Set the payload read function
-    curl_easy_setopt(curl_send, CURLOPT_READFUNCTION, payload_source);
-    curl_easy_setopt(curl_send, CURLOPT_READDATA, &upload_ctx);
-    curl_easy_setopt(curl_send, CURLOPT_UPLOAD, 1L);
+    if (attachment_path) {
 
-    // Enable verbose mode for detailed logging
-    // curl_easy_setopt(curl_send, CURLOPT_VERBOSE, 1L);
+        part = curl_mime_addpart(mime);
+        curl_mime_filedata(part, attachment_path);
 
+        std::string file_extension = attachment_path;
+        file_extension = file_extension.substr(file_extension.find_last_of('.') + 1);
+        if (file_extension == "png") {
+            curl_mime_type(part, "image/png");
+        } else if (file_extension == "jpg" || file_extension == "jpeg") {
+            curl_mime_type(part, "image/jpeg");
+        } else if (file_extension == "pdf") {
+            curl_mime_type(part, "application/pdf");
+        } else {
+            curl_mime_type(part, "application/octet-stream");  // Default for unknown file types
+        }
+
+        curl_mime_encoder(part, "base64");  // Encode the file as base64
+        const std::string filename = std::string(attachment_path).substr(std::string(attachment_path).find_last_of('/') + 1);
+        curl_mime_filename(part, filename.c_str());  // Optional: set the filename as seen by the recipient
+    }
+
+    // Attach the MIME structure to the CURL handle
+    curl_easy_setopt(curl_send, CURLOPT_MIMEPOST, mime);
+
+    // Send the email
     CURLcode res = curl_easy_perform(curl_send);
 
     if (res != CURLE_OK) {
         std::cerr << "curl_easy_perform() for sending failed: " << curl_easy_strerror(res) << std::endl;
+    } else {
+        std::cout << "Email sent successfully with attachment!" << std::endl;
     }
 
     // Clean up the recipients list and CURL handle
     curl_slist_free_all(recipients);
     curl_easy_cleanup(curl_send);
+
+    // Free the MIME structure
+    curl_mime_free(mime);
 }
 

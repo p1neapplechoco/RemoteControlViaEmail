@@ -26,10 +26,11 @@ int main()
             prev_mail_id = emailRetrieval.getMailID();
             sender = emailRetrieval.getMailSender();
 
-            emailRetrieval.respond(sender.c_str(), "dit me may");
+            emailRetrieval.respond(sender.c_str(), "dit me may", "test.txt");
         }
         Sleep(1000);
     }
+
     for (const std::string& mail : contents_of_mails)
     {
         std::cout << mail << std::endl;
