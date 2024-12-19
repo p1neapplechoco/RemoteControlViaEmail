@@ -138,14 +138,15 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
         std::vector<char> imageData = receiveImageData();
         if (!imageData.empty()) {
             std::string filename;
-            if (strcmp(sendBuffer, "screenshot") == 0) {
-                filename = filePath = "screenshot.jpg";
+            // Create filename with timestamp for webcam frames
+            auto now = std::chrono::system_clock::now();
+            auto now_c = std::chrono::system_clock::to_time_t(now);
+            char timestamp[20];
+            strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", localtime(&now_c));
+            if (strcmp(sendBuffer, "!screenshot") == 0) {
+                filename = filePath = "screenshot_" + std::string(timestamp) + ".jpg";
             } else {
-                // Create filename with timestamp for webcam frames
-                auto now = std::chrono::system_clock::now();
-                auto now_c = std::chrono::system_clock::to_time_t(now);
-                char timestamp[20];
-                strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", localtime(&now_c));
+
                 filename = filePath = "webcam_" + std::string(timestamp) + ".jpg";
             }
 

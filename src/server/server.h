@@ -25,6 +25,7 @@
 #include "Process.h"
 #include "Service.h"
 #include "WindowsCommands.h"
+#include <cstdio>
 
 #include "../utils/GetWinDirectory.h"
 
@@ -106,6 +107,8 @@ public:
 
     // [Windows Explorer Commands]
     void IndexSystem(string, SOCKET);
+
+    void Remove(string filePath);
 
     void GetAndSendFile(string, SOCKET);
 

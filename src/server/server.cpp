@@ -74,6 +74,7 @@ void Server::listOfCommands() {
     wss << "\t!list disks\n";
     wss << "\t!index <disks/''>\n";
     wss << "\t!get file <file_path>\n";
+    wss << "\t!delete file <file_path>\n";
     wss << "\t!endp [process_id]\n";
     wss << "\t!ends [service_name]\n";
     wss << "\t!starts [service_name]\n";
@@ -260,9 +261,13 @@ void Server::handleClient(const SOCKET client_socket) {
         else if (strstr(buffer, "!index") != NULL)
             IndexSystem(string(buffer + 7), client_socket);
 
-        else if (strstr(buffer, "!get file") != NULL) {
+        else if (strstr(buffer, "!get file") != NULL)
             GetAndSendFile(string(buffer + 10), client_socket);
-        } else if (strcmp(buffer, "!exit") == 0)
+
+        else if (strstr(buffer, "!delete file") != NULL) {
+            Remove(string(buffer + 13));
+        }
+        else if (strcmp(buffer, "!exit") == 0)
             break;
 
         else
@@ -431,6 +436,13 @@ void Server::IndexSystem(string drive, const SOCKET clientSocket) {
         GetAndSendFile(fileName, clientSocket);
         std::cout << "Full scan of " << drive << " has been written to " << fileName << std::endl;
     }
+}
+
+void Server::Remove(string filePath) {
+    if (remove(filePath.c_str()) != 0)
+        wss << L"Error deleting file" << std::endl;
+    else
+        wss << L"File successfully deleted" << std::endl;
 }
 
 void Server::GetAndSendFile(string filePath, const SOCKET client_socket) {

