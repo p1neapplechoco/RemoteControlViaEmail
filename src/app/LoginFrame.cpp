@@ -4,7 +4,12 @@ using namespace std;
 
 LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE)
     : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
+    // Set icon for frame
+    wxIcon icon;
+    icon.LoadFile("assert/icon/hcmus.ico", wxBITMAP_TYPE_ICO);
+    SetIcon(icon);
 
+    // Layout
     const auto margin = FromDIP(10);
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -21,9 +26,9 @@ LoginFrame::LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &
     topLeftSizer->Add(titleText, 0, wxALIGN_CENTER_HORIZONTAL, 5);
     auto topRightSizer = new wxBoxSizer(wxHORIZONTAL);
 
-    auto teamButton = new CustomBitmapButton(topPanel, wxID_ANY, "team");
+    auto teamButton = new CustomBitmapButton(topPanel, ID_TEAM, "team");
     teamButton->Bind(wxEVT_BUTTON, &LoginFrame::OnButtonClick, this);
-    auto helpButton = new CustomBitmapButton(topPanel, wxID_ANY, "instruction");
+    auto helpButton = new CustomBitmapButton(topPanel, ID_INSTRUCTION, "instruction");
     helpButton->Bind(wxEVT_BUTTON, &LoginFrame::OnButtonClick, this);
 
     topRightSizer->Add(teamButton, 0, wxRIGHT, margin);
@@ -140,6 +145,7 @@ bool LoginFrame::UpdateIPList() {
     }
     catch (const exception& e) {
         wxMessageBox(wxString(e.what()), "Error", wxOK | wxICON_ERROR);
+        return false;
     }
 
     progress.Hide();
@@ -164,7 +170,8 @@ void LoginFrame::ShowIPPanel() {
 }
 
 void LoginFrame::OnNoAccountLogin(wxCommandEvent& evt) {
-    currentEmail = "tester@gmail.com";
+    currentEmail = "hcmuscn@gmail.com";
+    currentPassword = "tnih uhkp cmoc azhi";
     ShowIPPanel();
     UpdateIPList();
 }
@@ -176,7 +183,8 @@ void LoginFrame::OnBackClick(wxCommandEvent& evt) {
 void LoginFrame::OnGoogleLogin(wxCommandEvent& evt) {
     GmailLoginDialog dialog(this);
     if (dialog.ShowModal() == wxID_OK && dialog.IsLoginSuccessful()) {
-        currentEmail = dialog.GetEmail();
+        currentEmail = dialog.email;
+        currentPassword = dialog.password;
         ShowIPPanel();
         UpdateIPList();
     }
@@ -195,9 +203,33 @@ void LoginFrame::OnConnectClick(wxCommandEvent& evt) {
 
     wxString serverAddress = ipComboBox->GetValue();
 
-    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, serverAddress);
+    MainFrame* mainFrame = new MainFrame("Remote Control Via Email", wxDefaultPosition, wxDefaultSize, currentEmail, currentPassword, serverAddress);
     mainFrame->Fit();
     mainFrame->Center();
     mainFrame->Show();
     Close();
+}
+
+void LoginFrame::OnButtonClick(wxCommandEvent &evt) {
+    int id = evt.GetId();
+    switch (id) {
+        case ID_INSTRUCTION:
+
+            break;
+        case ID_TEAM: {
+            wxFrame* imgFrame = new wxFrame(this, wxID_ANY, "Team", wxDefaultPosition, wxSize(578, 425));
+            wxImage image("assert/background/TeamRef.png");
+
+            if (image.IsOk()) {
+                wxStaticBitmap* staticBitmap = new wxStaticBitmap(imgFrame, wxID_ANY, wxBitmap(image));
+            } else {
+                wxMessageBox("Error loading image!", "Error", wxICON_ERROR);
+            }
+            imgFrame->Show();
+            imgFrame->Center();
+        }
+            break;
+    }
+
+    evt.Skip();
 }

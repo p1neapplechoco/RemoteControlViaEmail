@@ -75,6 +75,7 @@ void GmailLoginDialog::OnLogin(wxCommandEvent& evt) {
     if (authenticated) {
         loginSuccessful = true;
         email = emailStr;
+        password = passwordStr;
         EndModal(wxID_OK);
     } else {
         wxMessageBox("Login failed. Please check your credentials.", "Error",

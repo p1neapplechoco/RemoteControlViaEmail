@@ -12,7 +12,7 @@ private:
     wxPanel* googlePanel;
     wxPanel* ipPanel;
     wxBoxSizer* bottomSizer;
-    wxString currentEmail;
+    wxString currentEmail, currentPassword;
 
     Client client;
 
@@ -26,7 +26,5 @@ private:
     void ShowGooglePanel();
     void ShowIPPanel();
 
-    void OnButtonClick(wxCommandEvent& event) {
-        wxMessageBox("Button clicked!", "Info");
-    };
+    void OnButtonClick(wxCommandEvent& event);
 };

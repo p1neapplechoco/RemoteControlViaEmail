@@ -8,14 +8,13 @@ class GmailLoginDialog : public wxDialog {
 public:
     GmailLoginDialog(wxWindow* parent);
     bool IsLoginSuccessful() const { return loginSuccessful; }
-    wxString GetEmail() const { return emailInput->GetValue(); }
+    wxString email, password;
 
 private:
     wxTextCtrl* emailInput;
     wxTextCtrl* passwordInput;
     wxBitmapButton* loginButton;
     bool loginSuccessful = false;
-    wxString email;
 
     void OnLogin(wxCommandEvent& evt);
     bool AuthenticateUser(const wxString& email, const wxString& password);

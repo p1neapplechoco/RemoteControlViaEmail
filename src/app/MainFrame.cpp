@@ -17,7 +17,11 @@ vector<ButtonInfo> buttons = {
 };
 
 MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE, const wxString &currentEmail,
-                     const wxString &IP_Address) : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
+                     const wxString &currentPassword, const wxString &IP_Address) : wxFrame(nullptr, wxID_ANY, TITLE, POS, SIZE) {
+    // Set icon for frame
+    wxIcon icon;
+    icon.LoadFile("assert/icon/hcmus.ico", wxBITMAP_TYPE_ICO);
+    SetIcon(icon);
 
     const auto margin = FromDIP(10);
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -140,7 +144,7 @@ void MainFrame::OnButtonClick(wxCommandEvent& evt) {
             break;
         case ID_TEAM: {
             wxFrame* imgFrame = new wxFrame(this, wxID_ANY, "Team", wxDefaultPosition, wxSize(578, 425));
-            wxImage image("./assert/background/TeamRef.png");
+            wxImage image("assert/background/TeamRef.png");
 
             if (image.IsOk()) {
                 wxStaticBitmap* staticBitmap = new wxStaticBitmap(imgFrame, wxID_ANY, wxBitmap(image));

@@ -54,7 +54,7 @@ FOLDER FOLDER::readCacheFile(const std::string &cacheFilePath)
         {
             FOLDER new_folder;
             new_folder.path = ptr->path + name_of;
-            new_folder.name = name_of;
+            new_folder.name = name_of.substr(0, name_of.size() - 1);
             ptr->subfolders.push_back(new_folder);
             folder_stack.emplace(&ptr->subfolders.back(), current_indent);
         } else
@@ -74,6 +74,7 @@ std::vector<std::string> GetWinDirectory::listDisks()
     char buffer[128];
     DWORD size = GetLogicalDriveStringsA(sizeof(buffer) - 1, buffer);
 
+    disks.clear();
     for (const char *drive = buffer; *drive; drive += 4)
         disks.emplace_back(drive);
     return disks;

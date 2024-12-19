@@ -116,6 +116,7 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
                     m_folder.push_back(subfolder);
                 } else {
                     string fileName = ((LogPanel*)GetParent())-> scanDrive(subfolder.path);
+                    FOLDER::readCacheFile(fileName);
                     m_folder.push_back(FOLDER::readCacheFile(fileName));
                 } break;
             }

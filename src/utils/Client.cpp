@@ -255,6 +255,7 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
 
             // Write to file
             str = str.substr(0, 1);
+            filePath = "cache_" + str + ".txt";
             std::ofstream outFile("cache_" + str + ".txt", std::ios::binary);
             outFile.write(fileBuffer.data(), fileSize);
             outFile.close();
@@ -300,7 +301,6 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
     return true;
 }
 
-/*
 bool Client::startClient() {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -551,4 +551,3 @@ bool Client::startClient() {
     WSACleanup();
     return true;
 }
-*/
