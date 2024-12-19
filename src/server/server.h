@@ -29,8 +29,8 @@
 
 #include "../utils/GetWinDirectory.h"
 
-#define LISTEN_TIMEOUT_SECONDS 100; // Adjust timeout as needed
-#define CONNECTION_TIMEOUT_SECONDS 100;
+#define LISTEN_TIMEOUT_SECONDS 15; // Adjust timeout as needed
+#define CONNECTION_TIMEOUT_SECONDS 20;
 
 
 #define SERVER_H
