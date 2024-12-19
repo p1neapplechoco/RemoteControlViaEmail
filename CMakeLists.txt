@@ -34,6 +34,8 @@ add_executable(
         src/app/ProcessManager.cpp
         src/app/ServiceManager.cpp
         src/app/App.h
+        src/utils/EmailResponder.cpp
+        src/utils/EmailResponder.h
 )
 
 if(EXISTS ${CMAKE_BINARY_DIR}/assert)
