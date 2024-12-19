@@ -31,7 +31,21 @@
 *.out
 *.app
 
+lib
 /lib
 cmake-build-debug/
 build/
 /.idea
+*.idea
+
+.idea
+cmake-build-debug
+
+/src/server/cmake-build-debug
+/src/server/.idea
+
+/src/client/cmake-build-debug
+/src/client/.idea
+src/examples/cache_C.txt
+src/examples/cache_D.txt
+/src/examples/.vscode

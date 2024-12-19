@@ -1,33 +1,41 @@
-//
-// Created by phida on 10/9/2024.
-//
-#include <winsock2.h>
-#include <windows.h>
-#include <winsvc.h>
-#include <psapi.h>
-#include <tlhelp32.h>
-#include <ws2tcpip.h>
-#include <vector>
-#include <string>
-#include <map>
-#include <algorithm>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <gdiplus.h>
-#include "WebcamController.h"
-#include <windows.h>
-#include <fcntl.h>
-#include <io.h>
-
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
 
 #ifndef SERVER_H
+
+#include <iomanip>
+#include <sstream>
+#include <vector>
+#include <winsock2.h>
+#include "WebcamController.h"
+#include <dirent.h>
+#include <functional>
+#include <gdiplus.h>
+#include <io.h>
+#include <iostream>
+#include <map>
+#include <psapi.h>
+#include <string>
+#include <thread>
+#include <unistd.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <sys/types.h>
+#include "discoveryResponder.h"
+#include "Process.h"
+#include "Service.h"
+#include "WindowsCommands.h"
+#include <cstdio>
+
+#include "../utils/GetWinDirectory.h"
+
+#define LISTEN_TIMEOUT_SECONDS 100; // Adjust timeout as needed
+#define CONNECTION_TIMEOUT_SECONDS 100;
+
+
 #define SERVER_H
 
 #endif //SERVER_H
-
 
 // Design structure
 /*
@@ -40,52 +48,76 @@
  */
 
 
-enum class ProcessType {
-    App,
-    BackgroundProcess,
-    WindowsProcess
-};
-
-struct ServiceInfo {
-    std::wstring name;
-    std::wstring displayName;
-    DWORD currentState;
-};
-
-struct ProcessInfo {
-    DWORD pid;
-    std::wstring name;
-    ProcessType type;
-};
-
 class Server {
 private:
-    int assignedPort;
-    SOCKET serverSocket;
+    int default_port = 42069;
+    int assigned_port{};
+    std::wstringstream wss{};
 
+    WSADATA wsa_data{};
+    SOCKET server_socket{};
+    sockaddr_in server_address{};
+    WebcamController webcam_controller{};
+    GetWinDirectory getWinDir{};
     void handleClient(SOCKET);
 
 public:
-    std::vector<char> imageData;
+
+
     Server();
 
     ~Server();
 
-    void StartListening();
+    // setting up
 
+    bool setupWSA();
 
-    // Dynamically
-    std::vector<ProcessInfo> ListApplications();
+    bool setupSocket();
 
-    std::vector<ServiceInfo> ListServices();
+    bool assignPort();
 
-    std::vector<char> ScreenCapture();
+    bool setupServer();
 
-    void Shutdown();
+    void startServer();
 
-    void ViewFile();
+    // commands handler
 
-    void StartWebcam();
+    // [COMMANDS]
+    void listOfCommands();
 
-    void GetFile();
+    int sendSizeAndResponse(const SOCKET &client_socket) const;
+
+    // [Application/ Services Commands]
+    void listProcesses();
+
+    void listServices();
+
+    void endProcess(const char *buffer);
+
+    void startService(const char *buffer);
+
+    void endService(const char *buffer);
+
+    // [Webcam/ Screenshot Commands]
+    void screenShot(std::vector<char> &image);
+
+    void toggleWebcam();
+
+    void capture(vector<char> &image);
+
+    // [Windows Explorer Commands]
+    void IndexSystem(string, SOCKET);
+
+    void Remove(string filePath);
+
+    void GetAndSendFile(string, SOCKET);
+
+    void SendImage(vector<char> &image, SOCKET);
+
+    void ShowAvailableDisks();
+
+    void Shutdown(const char *buffer);
+
+    // void StartListening();
+    // void OpenFile(string);
 };
