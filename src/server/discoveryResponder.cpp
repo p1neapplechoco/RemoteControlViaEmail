@@ -44,11 +44,10 @@ void DiscoveryResponder::listen() {
     std::cout << "Listening for discovery requests...\n";
 
     while (true) {
-        std::cout << "skibidi" << std::endl;
         int bytesReceived = recvfrom(serverSocket, buffer, sizeof(buffer), 0,
                                    (sockaddr*)&senderAddr, &senderAddrLen); // Waiting
 
-        std::cout << bytesReceived << std::endl;
+        std::cout << "Received the " << bytesReceived << std::endl;
         if (bytesReceived < 0) {
             throw std::runtime_error("Error receiving request");
         }
