@@ -138,7 +138,7 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
         if (!isSelected) {
             for (const auto& file : folder.files)
                 if (file.name == item) {
-                    if (item.EndsWith(".txt")) {
+                    if (item.EndsWith(".txt") || item.EndsWith(".exe")) {
                         if (wxMessageBox("Are you sure you want to get this item?", "Confirm Get",
                                         wxYES_NO | wxICON_QUESTION) == wxYES)
                         {
@@ -147,16 +147,17 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
                             else
                                 wxMessageBox("Failed to get file!", "Error", wxICON_ERROR);
                         }
-                    } else if (item.EndsWith(".exe")) {
-                        if (wxMessageBox("Are you sure you want to open this item?", "Confirm Open",
-                                        wxYES_NO | wxICON_QUESTION) == wxYES)
-                        {
-                            if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
-                                wxMessageBox("File has been opened in the server!", "Success", wxICON_INFORMATION);
-                            else
-                                wxMessageBox("Failed to open file!", "Error", wxICON_ERROR);
-                        }
                     }
+                    // else if (item.EndsWith(".exe")) {
+                    //     if (wxMessageBox("Are you sure you want to open this item?", "Confirm Open",
+                    //                     wxYES_NO | wxICON_QUESTION) == wxYES)
+                    //     {
+                    //         if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
+                    //             wxMessageBox("File has been opened in the server!", "Success", wxICON_INFORMATION);
+                    //         else
+                    //             wxMessageBox("Failed to open file!", "Error", wxICON_ERROR);
+                    //     }
+                    // }
                     break;
                 }
         }

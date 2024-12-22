@@ -170,7 +170,7 @@ void LoginFrame::ShowIPPanel() {
 }
 
 void LoginFrame::OnNoAccountLogin(wxCommandEvent& evt) {
-    currentEmail = "hcmuscn";
+    currentEmail = "hcmuscn@gmail.com";
     currentPassword = "dpof mkcn oist vzqa";
     ShowIPPanel();
     UpdateIPList();

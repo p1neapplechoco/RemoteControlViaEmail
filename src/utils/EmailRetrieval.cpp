@@ -250,9 +250,8 @@ void EmailRetrieval::respond(const char *to, const char *content, const char *at
     curl_mime_data(part, content, CURL_ZERO_TERMINATED);
     curl_mime_type(part, "text/plain");
 
-    if (attachment_path)
+    if (attachment_path != NULL && attachment_path[0] != '\0')
     {
-
         part = curl_mime_addpart(mime);
         curl_mime_filedata(part, attachment_path);
 

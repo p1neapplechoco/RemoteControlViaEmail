@@ -3,8 +3,8 @@
 #include "ServiceManager.h"
 #include <unistd.h>
 
-void runClient(Client& client, const string& serverIP, const string& email, const string& password) {
-    client.startClient(serverIP, email, password);
+void runClient(Client& client) {
+    client.startClient();
 }
 
 LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const string &email, const string &password) : wxPanel(parent, wxID_ANY) {
@@ -90,7 +90,8 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const string &e
     std::string serverIP = IP_Address.ToStdString();
     if(client.connectToServer(IP_Address.ToStdString())) {
         AppendLog("Connect to server IP " + IP_Address + " is Successfully!! Wait for response!\n");
-        std::thread clientThread(runClient, std::ref(client), serverIP, email, password);
+        client.email = email, client.password = password;
+        std::thread clientThread(runClient, std::ref(client));
         clientThread.detach();
     } else {
         AppendLog("Connect to server IP " + IP_Address + " is Unsuccessfully!! Try again!\n");
