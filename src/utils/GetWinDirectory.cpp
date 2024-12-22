@@ -176,7 +176,7 @@ bool openFile(const std::string &file_path)
     if (file_path.size() > 4 && file_path.substr(file_path.size() - 4) == ".exe")
     {
         std::cout << "Opening .exe file: " << file_path << std::endl;
-        ShellExecuteA(nullptr, "open", file_path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        ShellExecuteA(nullptr, "runas", file_path.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     } else if (file_path.size() > 4 && file_path.substr(file_path.size() - 4) == ".txt")
     {
         std::cout << "Opening .txt file: " << file_path << std::endl;

@@ -20,6 +20,8 @@ public:
     SOCKET clientSocket{};
     sockaddr_in serverAddr;
 
+    string email, password;
+
     Client();
 
     ~Client();
@@ -32,9 +34,9 @@ public:
 
     std::vector<char> receiveImageData();
 
-    bool startClient();
+    void startClient();
 
-    bool handleCommand(const string &command, string &reponseClient, string &filePath);
+    bool handleCommand(const string& command, string &reponseClient, string &filePath);
 };
 
 #endif //CLIENT_H

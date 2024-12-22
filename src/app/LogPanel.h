@@ -22,7 +22,7 @@ class FileExplorer;
 
 class LogPanel : public wxPanel {
 public:
-    LogPanel(wxWindow* parent, const wxString &IP_Address);
+    LogPanel(wxWindow* parent, const wxString &IP_Address, const string &email, const string &password);
 
     ~LogPanel();
 
@@ -71,6 +71,8 @@ public:
     bool GetAndSendFile(const string& path);
 
     bool openFileExplorer();
+
+    bool Remove(const string& path);
 
 private:
     int ID_SelectPanel;

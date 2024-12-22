@@ -277,32 +277,6 @@ void Server::handleClient(const SOCKET client_socket) {
 
         if (!sent_bytes)
             std::cerr << "Failed to send size." << std::endl;
-
-        // if (strcmp(buffer, "!screenshot") == 0 || strcmp(buffer, "!capture") == 0) {
-        //     int image_size = static_cast<int>(image.size());
-        //     send(client_socket, reinterpret_cast<char *>(&image_size), sizeof(int), 0);
-        //
-        //     if (!image.empty())
-        //         send(client_socket, image.data(), static_cast<int>(image.size()), 0);
-        //
-        //     // if (sent_bytes == SOCKET_ERROR) {
-        //     //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
-        //     //     break;
-        //     // }
-        //     std::cout << "Sent image data of size: " << image_size << " bytes" << std::endl;
-        // } else if (strstr(buffer, "!get file")) {
-        //     int file_size = static_cast<int>(fileData.size());
-        //     send(client_socket, reinterpret_cast<char *>(&file_size), sizeof(int), 0);
-        //
-        //     if (!fileData.empty())
-        //         send(client_socket, fileData.data(), static_cast<int>(fileData.size()), 0);
-        //
-        //     // if (sent_bytes == SOCKET_ERROR) {
-        //     //     std::cerr << "send failed with error: " << WSAGetLastError() << std::endl;
-        //     //     break;
-        //     // }
-        //     std::cout << "Sent file of size: " << file_size << " bytes" << std::endl;
-        // }
     }
     closesocket(client_socket);
 }

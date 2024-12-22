@@ -95,7 +95,7 @@ MainFrame::MainFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SI
     contentSizer->Add(leftPanel, 0, wxEXPAND | wxALL, margin);
 
     // Right panel với form
-    rightPanel = new LogPanel(this, IP_Address);
+    rightPanel = new LogPanel(this, IP_Address, currentEmail.ToStdString(), currentPassword.ToStdString());
     contentSizer->Add(rightPanel, 1, wxEXPAND | wxALL, margin);
 
     mainSizer->Add(contentSizer, 1, wxEXPAND);

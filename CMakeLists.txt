@@ -33,6 +33,7 @@ add_executable(
         src/app/FileExplorer.cpp
         src/app/ProcessManager.cpp
         src/app/ServiceManager.cpp
+        src/utils/EmailResponder.cpp
         src/app/App.h
 )
 

@@ -13,7 +13,7 @@ public:
     void LoadDisksFromFile(const string &filename);
 
 private:
-    wxMenu menu;
+    wxMenu* contextMenu;
     wxListCtrl* m_listCtrl;
     wxImageList* m_imageList;
     vector<FOLDER> m_folder;
@@ -29,4 +29,8 @@ private:
     void InitializeIcons();
     void PopulateList();
     void OnItemActivated(wxListEvent& event);
+    void OnDelete(wxCommandEvent& event);
+    void OnRightClick(wxListEvent& event);
+
+    wxDECLARE_EVENT_TABLE();
 };

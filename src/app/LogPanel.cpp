@@ -3,7 +3,11 @@
 #include "ServiceManager.h"
 #include <unistd.h>
 
-LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(parent, wxID_ANY) {
+void runClient(Client& client) {
+    client.startClient();
+}
+
+LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address, const string &email, const string &password) : wxPanel(parent, wxID_ANY) {
     SetBackgroundColour(wxColor(255, 255, 255));
 
     const auto margin = FromDIP(10);
@@ -83,8 +87,12 @@ LogPanel::LogPanel(wxWindow* parent, const wxString &IP_Address) : wxPanel(paren
     Bind(wxEVT_TIMER, &LogPanel::OnTimer, this);
 
     // Process
+    std::string serverIP = IP_Address.ToStdString();
     if(client.connectToServer(IP_Address.ToStdString())) {
         AppendLog("Connect to server IP " + IP_Address + " is Successfully!! Wait for response!\n");
+        client.email = email, client.password = password;
+        std::thread clientThread(runClient, std::ref(client));
+        clientThread.detach();
     } else {
         AppendLog("Connect to server IP " + IP_Address + " is Unsuccessfully!! Try again!\n");
         isConnect = false;
@@ -541,10 +549,10 @@ bool LogPanel::EndProcess(const wxString& pidStr) {
     if(!client.handleCommand("!endp " + pidStr.ToStdString(), response, filepath)) {
         AppendLog("Failed to end process ID: " + pidStr.ToStdString() + "! Try again!");
         return false;
-    } else {
-        AppendLog(response);
-        return true;
     }
+
+    AppendLog(response);
+    return true;
 }
 
 bool LogPanel::EndService(const wxString& pidStr) {
@@ -552,10 +560,10 @@ bool LogPanel::EndService(const wxString& pidStr) {
     if(!client.handleCommand("!ends " + pidStr.ToStdString(), response, filepath)) {
         AppendLog("Failed to end service name: " + pidStr.ToStdString() + "! Try again!");
         return false;
-    } else {
-        AppendLog(response);
-        return true;
     }
+
+    AppendLog(response);
+    return true;
 }
 
 bool LogPanel::StartServices(const wxString& pidStr) {
@@ -563,9 +571,21 @@ bool LogPanel::StartServices(const wxString& pidStr) {
     if(!client.handleCommand("!starts " + pidStr.ToStdString(), response, filepath)) {
         AppendLog("Failed to start service name: " + pidStr.ToStdString() + "! Try again!");
         return false;
+    }
+
+    AppendLog(response);
+    return true;
+}
+
+bool LogPanel::Remove(const string& path) {
+    string response = "", filepath = "";
+    if(!client.handleCommand("!delete file " + path, response, filepath) || strstr(response.c_str(), "Error") != nullptr) {
+        AppendLog("Failed to delete file " + path + "! Try again!");
+        return false;
     } else {
         AppendLog(response);
         return true;
     }
+
 }
 

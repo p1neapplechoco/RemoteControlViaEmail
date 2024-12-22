@@ -2,6 +2,14 @@
 #include <wx/artprov.h>
 #include <wx/volume.h>
 
+enum {
+    ID_DELETE = 1,
+};
+
+wxBEGIN_EVENT_TABLE(FileExplorer, wxPanel)
+    EVT_MENU(ID_DELETE, FileExplorer::OnDelete)
+wxEND_EVENT_TABLE()
+
 FileExplorer::FileExplorer(wxWindow* parent) : wxPanel(parent, wxID_ANY)
 {
     wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -16,8 +24,13 @@ FileExplorer::FileExplorer(wxWindow* parent) : wxPanel(parent, wxID_ANY)
     mainSizer->Add(m_listCtrl, 1, wxEXPAND | wxALL, 5);
     SetSizerAndFit(mainSizer);
 
+    // Menu
+    contextMenu = new wxMenu;
+    contextMenu->Append(ID_DELETE, "Delete");
+
     // Bind events
     m_listCtrl->Bind(wxEVT_LIST_ITEM_ACTIVATED, &FileExplorer::OnItemActivated, this);
+    m_listCtrl->Bind(wxEVT_LIST_ITEM_RIGHT_CLICK, &FileExplorer::OnRightClick, this);
 
     m_folder.clear();
     PopulateList();
@@ -125,7 +138,7 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
         if (!isSelected) {
             for (const auto& file : folder.files)
                 if (file.name == item) {
-                    if (item.EndsWith(".txt")) {
+                    if (item.EndsWith(".txt") || item.EndsWith(".exe")) {
                         if (wxMessageBox("Are you sure you want to get this item?", "Confirm Get",
                                         wxYES_NO | wxICON_QUESTION) == wxYES)
                         {
@@ -134,21 +147,56 @@ void FileExplorer::OnItemActivated(wxListEvent& event) {
                             else
                                 wxMessageBox("Failed to get file!", "Error", wxICON_ERROR);
                         }
-                    } else if (item.EndsWith(".exe")) {
-                        if (wxMessageBox("Are you sure you want to open this item?", "Confirm Open",
-                                        wxYES_NO | wxICON_QUESTION) == wxYES)
-                        {
-                            if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
-                                wxMessageBox("File has been opened in the server!", "Success", wxICON_INFORMATION);
-                            else
-                                wxMessageBox("Failed to open file!", "Error", wxICON_ERROR);
-                        }
                     }
+                    // else if (item.EndsWith(".exe")) {
+                    //     if (wxMessageBox("Are you sure you want to open this item?", "Confirm Open",
+                    //                     wxYES_NO | wxICON_QUESTION) == wxYES)
+                    //     {
+                    //         if (((LogPanel*)GetParent())->GetAndSendFile(file.path))
+                    //             wxMessageBox("File has been opened in the server!", "Success", wxICON_INFORMATION);
+                    //         else
+                    //             wxMessageBox("Failed to open file!", "Error", wxICON_ERROR);
+                    //     }
+                    // }
                     break;
                 }
         }
     }
     PopulateList();
+}
+
+void FileExplorer::OnRightClick(wxListEvent& event) {
+    PopupMenu(contextMenu, event.GetPoint());
+}
+
+void FileExplorer::OnDelete(wxCommandEvent& event)
+{
+    long itemIndex = m_listCtrl->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+    if (itemIndex != -1) {
+        wxString filename = m_listCtrl->GetItemText(itemIndex);
+        FOLDER& folder = m_folder.back();
+
+        auto it = std::find_if(folder.files.begin(), folder.files.end(), [&](const auto& file) {
+            return file.name == filename;
+        });
+
+        if (it != folder.files.end()) {
+            string path = it->path;
+
+            if (wxMessageBox("Are you sure you want to delete this item?",
+                            "Confirm Delete",
+                            wxYES_NO | wxICON_QUESTION) == wxYES)
+            {
+                if (((LogPanel*)GetParent())->Remove(path)) {
+                    wxMessageBox("Item has been deleted!", "Success", wxICON_INFORMATION);
+                    folder.files.erase(it); // Remove the file from the list
+                } else {
+                    wxMessageBox("Failed to delete item!", "Error", wxICON_ERROR);
+                }
+                PopulateList();
+            }
+        }
+    }
 }
 
 FileExplorer::~FileExplorer()
