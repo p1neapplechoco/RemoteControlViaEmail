@@ -4,14 +4,18 @@
 #ifndef CUSTOMBITMAPBUTTON_H
 #define CUSTOMBITMAPBUTTON_H
 
-class CustomBitmapButton : public wxBitmapButton {
+class CustomBitmapButton final : public wxBitmapButton
+{
 public:
-    CustomBitmapButton(wxWindow *parent, wxWindowID id, const wxString &nameImage, const wxPoint &pos, const wxSize &size);
+    CustomBitmapButton(wxWindow* parent, wxWindowID id, const wxString& nameImage, const wxPoint& pos,
+                       const wxSize& size);
 
-    CustomBitmapButton(wxWindow *parent, wxWindowID id, const wxString &nameImage)
-        : CustomBitmapButton(parent, id, nameImage, wxDefaultPosition, wxDefaultSize) {}
+    CustomBitmapButton(wxWindow* parent, const wxWindowID id, const wxString& nameImage)
+        : CustomBitmapButton(parent, id, nameImage, wxDefaultPosition, wxDefaultSize)
+    {
+    }
 
-    ~CustomBitmapButton();
+    ~CustomBitmapButton() override;
 
 private:
     wxBitmap m_normalBitmap;
@@ -23,7 +27,6 @@ private:
     void OnMouseDown(wxMouseEvent& event);
     void OnMouseUp(wxMouseEvent& event);
 };
-
 
 
 #endif //CUSTOMBITMAPBUTTON_H

@@ -301,7 +301,7 @@ void Client::startClient() {
     credentials.setUsername(email);
     credentials.setPassword(password);
 
-    email_retrieval = EmailRetrieval(credentials);
+    email_retrieval = EMAIL(credentials);
     email_retrieval.setupCurl();
 
     while (true) {

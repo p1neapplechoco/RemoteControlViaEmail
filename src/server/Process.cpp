@@ -4,22 +4,22 @@ std::wstring getStateString(const DWORD state)
 {
     switch (state)
     {
-        case SERVICE_STOPPED:
-            return L"Stopped";
-        case SERVICE_START_PENDING:
-            return L"Start Pending";
-        case SERVICE_STOP_PENDING:
-            return L"Stop Pending";
-        case SERVICE_RUNNING:
-            return L"Running";
-        case SERVICE_CONTINUE_PENDING:
-            return L"Continue Pending";
-        case SERVICE_PAUSE_PENDING:
-            return L"Pause Pending";
-        case SERVICE_PAUSED:
-            return L"Paused";
-        default:
-            return L"Unknown";
+    case SERVICE_STOPPED:
+        return L"Stopped";
+    case SERVICE_START_PENDING:
+        return L"Start Pending";
+    case SERVICE_STOP_PENDING:
+        return L"Stop Pending";
+    case SERVICE_RUNNING:
+        return L"Running";
+    case SERVICE_CONTINUE_PENDING:
+        return L"Continue Pending";
+    case SERVICE_PAUSE_PENDING:
+        return L"Pause Pending";
+    case SERVICE_PAUSED:
+        return L"Paused";
+    default:
+        return L"Unknown";
     }
 }
 
@@ -91,7 +91,8 @@ std::vector<ProcessInfo> Process::listProcesses()
             }
             CloseHandle(hProcess);
         }
-    } while (Process32NextW(hSnapshot, &pe32));
+    }
+    while (Process32NextW(hSnapshot, &pe32));
 
     CloseHandle(hSnapshot);
     return processes;

@@ -29,7 +29,7 @@ bool Server::assignPort()
     server_address.sin_addr.s_addr = INADDR_ANY;
     server_address.sin_port = 0;
 
-    if (bind(server_socket, reinterpret_cast<sockaddr *>(&server_address), sizeof(server_address)) == SOCKET_ERROR)
+    if (bind(server_socket, reinterpret_cast<sockaddr*>(&server_address), sizeof(server_address)) == SOCKET_ERROR)
     {
         std::cerr << "Bind failed" << std::endl;
         closesocket(server_socket);
@@ -39,7 +39,7 @@ bool Server::assignPort()
 
     int len_address = sizeof(server_address);
 
-    if (getsockname(server_socket, reinterpret_cast<sockaddr *>(&server_address), &len_address) == SOCKET_ERROR)
+    if (getsockname(server_socket, reinterpret_cast<sockaddr*>(&server_address), &len_address) == SOCKET_ERROR)
     {
         cerr << "Failed to get socket name" << endl;
         closesocket(server_socket);
@@ -86,14 +86,14 @@ void Server::listOfCommands()
 void Server::listProcesses()
 {
     std::vector<ProcessInfo> processes = Process::listProcesses();
-    std::map<ProcessType, std::vector<ProcessInfo> > groupedProcesses;
+    std::map<ProcessType, std::vector<ProcessInfo>> groupedProcesses;
 
-    for (const auto &process: processes)
+    for (const auto& process : processes)
     {
         groupedProcesses[process.type].push_back(process);
     }
 
-    const wchar_t *typeNames[] = {L"Apps", L"Background processes", L"Windows processes"};
+    const wchar_t* typeNames[] = {L"Apps", L"Background processes", L"Windows processes"};
 
     for (int i = 0; i < 3; ++i)
     {
@@ -101,7 +101,7 @@ void Server::listProcesses()
         wss << typeNames[i] << L" (" << groupedProcesses[type].size() << L")\n";
         wss << std::wstring(50, L'-') << L"\n";
 
-        for (const auto &process: groupedProcesses[type])
+        for (const auto& process : groupedProcesses[type])
         {
             wss << std::left << std::setw(10) << process.pid << process.name << L"\n";
         }
@@ -115,20 +115,20 @@ void Server::listServices()
     std::vector<ServiceInfo> services = Service::listServices();
 
     wss << std::left << std::setw(40) << L"Service Name"
-            << std::setw(50) << L"Display Name"
-            << L"State\n";
+        << std::setw(50) << L"Display Name"
+        << L"State\n";
     wss << std::wstring(100, L'-') << L"\n";
 
-    for (const auto &service: services)
+    for (const auto& service : services)
     {
         wss << std::left << std::setw(40) << service.name
-                << std::setw(50) << service.displayName
-                << getStateString(service.currentState) << L"\n";
+            << std::setw(50) << service.displayName
+            << getStateString(service.currentState) << L"\n";
     }
     wss << L"\nTotal services: " << services.size() << L"\n";
 }
 
-void Server::screenShot(std::vector<char> &image)
+void Server::screenShot(std::vector<char>& image)
 {
     image = WindowsCommands::screenShot();
     wss << L"Screen capture completed.\n";
@@ -140,25 +140,26 @@ void Server::toggleWebcam()
     {
         webcam_controller.StopWebcam();
         wss << L"Webcam stopped.\n"; // TODO: Multithreading
-    } else
+    }
+    else
     {
         webcam_controller.StartWebcam();
         wss << L"Webcam started.\n";
     }
 }
 
-void Server::shutdown(const char *buffer)
+void Server::shutdown(const char* buffer)
 {
-    char *endPtr;
+    char* endPtr;
     const UINT nSDType = strtol(buffer + 9, &endPtr, 10);
 
     WindowsCommands::shutdown(nSDType);
     wss << L"Shutdown completed.\n";
 }
 
-void Server::endProcess(const char *buffer)
+void Server::endProcess(const char* buffer)
 {
-    char *endPtr;
+    char* endPtr;
     const int app_id = strtol(buffer + 4, &endPtr, 10);
     if (*endPtr == '\0' || *endPtr == ' ')
     {
@@ -166,17 +167,19 @@ void Server::endProcess(const char *buffer)
         wss << "Trying to close " << app_id << std::endl;
         if (!Process::endProcess(app_id))
             wss << "No such app with such ID" << std::endl;
-    } else
+    }
+    else
         wss << "Invalid ID" << std::endl;
 }
 
-void Server::endService(const char *buffer)
+void Server::endService(const char* buffer)
 {
     char serviceName[256] = {0};
-    const char *start = buffer + 5;
+    const char* start = buffer + 5;
 
     size_t len = 0;
-    while (start[len] != '\0' && start[len] != '\n' && start[len] != ' ' && start[len] != '\r' && len < sizeof(serviceName) - 1)
+    while (start[len] != '\0' && start[len] != '\n' && start[len] != ' ' && start[len] != '\r' && len < sizeof(
+        serviceName) - 1)
     {
         serviceName[len] = start[len];
         len++;
@@ -190,34 +193,36 @@ void Server::endService(const char *buffer)
     }
 }
 
-void Server::capture(vector<char> &image)
+void Server::capture(vector<char>& image)
 {
     image = webcam_controller.GetCurrentFrame();
     wss << L"Capture completed.\n";
 }
 
-int Server::sendSizeAndResponse(const SOCKET &client_socket) const
+int Server::sendSizeAndResponse(const SOCKET& client_socket) const
 {
     std::wstring wstr = wss.str();
     const std::string str(wstr.begin(), wstr.end());
 
     int responseSize = static_cast<int>(str.length());
-    send(client_socket, reinterpret_cast<char *>(&responseSize), sizeof(int), 0);
+    send(client_socket, reinterpret_cast<char*>(&responseSize), sizeof(int), 0);
 
     return send(client_socket, str.c_str(), static_cast<int>(str.length()), 0);
 }
 
 void Server::handleClient(const SOCKET client_socket)
 {
-    auto trimRight = [](char* str) {
+    auto trimRight = [](char* str)
+    {
         if (!str)
             return;
 
         int len = strlen(str);
         while (len > 0 && (str[len - 1] == ' ' || str[len - 1] == '\n' ||
-               str[len - 1] == '\r' || str[len - 1] == '\t')) {
+            str[len - 1] == '\r' || str[len - 1] == '\t'))
+        {
             str[--len] = '\0';
-               }
+        }
     };
 
     while (true)
@@ -280,7 +285,7 @@ void Server::handleClient(const SOCKET client_socket)
         if (strcmp(buffer, "!screenshot") == 0 || strcmp(buffer, "!capture") == 0)
         {
             int image_size = static_cast<int>(image.size());
-            send(client_socket, reinterpret_cast<char *>(&image_size), sizeof(int), 0);
+            send(client_socket, reinterpret_cast<char*>(&image_size), sizeof(int), 0);
 
             if (!image.empty())
                 send(client_socket, image.data(), static_cast<int>(image.size()), 0);

@@ -34,23 +34,24 @@
 #include <wx/wfstream.h>
 #include <wx/txtstrm.h>
 
-#include "../utils/EmailRetrieval.h"
+#include "../utils/Email.h"
 #include "../utils/IniParser.h"
 #include "../utils/IpDiscovery.h"
-#include "../utils/networkDiscovery.h"
+#include "../utils/NetworkDiscovery.h"
 #include "../utils/Client.h"
 #include "CustomBitmapButton.h"
 #include "FileExplorer.h"
 #include "MainFrame.h"
 #include "LoginFrame.h"
+
 using namespace std;
 
 #ifndef APP_H
 #define APP_H
 
-class App : public wxApp {
+class App final : public wxApp {
 public:
-    bool OnInit();
+    bool OnInit() override;
 };
 
 #endif //APP_H

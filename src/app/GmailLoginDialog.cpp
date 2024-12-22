@@ -44,7 +44,7 @@ bool GmailLoginDialog::AuthenticateUser(const wxString& email, const wxString& p
     credentials.setUsername(email.ToStdString());
     credentials.setPassword(password.ToStdString());
 
-    EmailRetrieval emailRetrieval(credentials);
+    EMAIL emailRetrieval(credentials);
     emailRetrieval.setupCurl();
 
     bool authenticated = emailRetrieval.retrieveEmail();

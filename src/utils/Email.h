@@ -1,5 +1,5 @@
 #pragma once
-#ifndef EMAILRETRIEVAL_H
+#ifndef EMAIL_H
 
 #include <string>
 #include <curl/curl.h>
@@ -9,7 +9,7 @@
 #include <string>
 #include "IniParser.h"
 
-#define EMAILRETRIEVAL_H
+#define EMAIL_H
 
 class UserCredentials
 {
@@ -31,7 +31,7 @@ public:
     void setPassword(const std::string& pass) { password = pass; }
 };
 
-class EmailRetrieval
+class EMAIL
 {
 private:
     CURL *curl = nullptr;
@@ -42,11 +42,11 @@ private:
     std::string mail_id;
 
 public:
-    EmailRetrieval();
+    EMAIL();
 
-    ~EmailRetrieval();
+    ~EMAIL();
 
-    explicit EmailRetrieval(const UserCredentials &user);
+    explicit EMAIL(const UserCredentials &user);
 
     void setupCurl();
 
@@ -69,4 +69,4 @@ public:
     std::string getMailSender();
 };
 
-#endif //EMAILRETRIEVAL_H
+#endif // EMAIL_H

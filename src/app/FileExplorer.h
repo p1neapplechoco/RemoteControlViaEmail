@@ -5,21 +5,23 @@
 #define se second
 using namespace std;
 
-class FileExplorer : public wxPanel {
+class FileExplorer : public wxPanel
+{
 public:
     FileExplorer(wxWindow* parent);
     ~FileExplorer();
 
-    void LoadDisksFromFile(const string &filename);
+    void LoadDisksFromFile(const string& filename);
 
 private:
     wxMenu* contextMenu;
     wxListCtrl* m_listCtrl;
-    wxImageList* m_imageList;
+    wxImageList* m_imageList{};
     vector<FOLDER> m_folder;
 
     // Image indexes trong ImageList
-    enum {
+    enum
+    {
         ICON_FILE = 0,
         ICON_FOLDER,
         ICON_DRIVE,
@@ -27,7 +29,7 @@ private:
     };
 
     void InitializeIcons();
-    void PopulateList();
+    void PopulateList() const;
     void OnItemActivated(wxListEvent& event);
     void OnDelete(wxCommandEvent& event);
     void OnRightClick(wxListEvent& event);

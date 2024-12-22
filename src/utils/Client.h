@@ -4,9 +4,8 @@
 #include <string>
 #include <vector>
 #include <winsock2.h>
-#include <wx/wx.h>
-#include <wx/file.h>
-#include "EmailRetrieval.h"
+#include "Email.h"
+
 using namespace std;
 
 #define CLIENT_H
@@ -14,7 +13,7 @@ using namespace std;
 class Client
 {
 private:
-    EmailRetrieval email_retrieval;
+    EMAIL email_retrieval;
     const int PORT = 42069;
 
 public:
@@ -38,7 +37,7 @@ public:
 
     void startClient();
 
-    bool handleCommand(const string& command, string &reponseClient, string &filePath);
+    bool handleCommand(const string &command, string &reponseClient, string &filePath);
 };
 
-#endif //CLIENT_H
+#endif // CLIENT_H

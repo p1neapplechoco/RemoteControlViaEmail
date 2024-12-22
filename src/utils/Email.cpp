@@ -1,27 +1,24 @@
-#include "EmailRetrieval.h"
+#include "Email.h"
 
-// Don't touch this function
+// Don't touch these
 static size_t WriteCallback(void *contents, const size_t size, const size_t nmemb, void *userp)
 {
     static_cast<std::string *>(userp)->append(static_cast<char *>(contents), size * nmemb);
     return size * nmemb;
 }
 
-// Struct to handle the upload status
 struct upload_status
 {
     int lines_read;
     const char **payload_text;
 };
 
-// Function to read the payload
-static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
+static size_t payload_source(void *ptr, const size_t size, size_t nmemb, void *userp)
 {
-    struct upload_status *upload_ctx = (struct upload_status *)userp;
-    const char *data;
-    size_t room = size * nmemb;
+    auto *upload_ctx = static_cast<struct upload_status*>(userp);
+    const size_t room = size * nmemb;
 
-    data = upload_ctx->payload_text[upload_ctx->lines_read];
+    const char* data = upload_ctx->payload_text[upload_ctx->lines_read];
 
     if (data)
     {
@@ -62,16 +59,16 @@ std::string UserCredentials::getCaBundlePath()
     return ca_bundle_path;
 }
 
-EmailRetrieval::EmailRetrieval() = default;
+EMAIL::EMAIL() = default;
 
-EmailRetrieval::EmailRetrieval(const UserCredentials &user)
+EMAIL::EMAIL(const UserCredentials &user)
 {
     user_credentials = user;
 };
 
-EmailRetrieval::~EmailRetrieval() = default;
+EMAIL::~EMAIL() = default;
 
-void EmailRetrieval::setupCurl()
+void EMAIL::setupCurl()
 {
     curl = curl_easy_init();
     const std::string username = user_credentials.getUsername();
@@ -81,7 +78,6 @@ void EmailRetrieval::setupCurl()
     curl_easy_setopt(curl, CURLOPT_USERNAME, username.c_str());
     curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
 
-    // Configure SSL
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
     curl_easy_setopt(curl, CURLOPT_CAINFO, ca_bundle_path.c_str());
@@ -90,14 +86,13 @@ void EmailRetrieval::setupCurl()
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // For debugging purpose
 }
 
-void EmailRetrieval::cleanUpCurl() const
+void EMAIL::cleanUpCurl() const
 {
     curl_easy_cleanup(curl);
 }
 
-std::string EmailRetrieval::parseSender(const std::string &raw_mail)
+std::string EMAIL::parseSender(const std::string &raw_mail)
 {
-    // std::cout << raw_mail << std::endl;
     std::istringstream iss(raw_mail);
     std::string line;
     std::string sender;
@@ -105,8 +100,8 @@ std::string EmailRetrieval::parseSender(const std::string &raw_mail)
     {
         if (line.find("From:") != std::string::npos)
         {
-            size_t start = line.find('<');
-            size_t end = line.find('>');
+            const size_t start = line.find('<');
+            const size_t end = line.find('>');
             if (start != std::string::npos && end != std::string::npos)
             {
                 sender = line.substr(start + 1, end - start - 1);
@@ -117,7 +112,7 @@ std::string EmailRetrieval::parseSender(const std::string &raw_mail)
     return sender;
 }
 
-std::string EmailRetrieval::parseEmailID(const std::string &raw_mail)
+std::string EMAIL::parseEmailID(const std::string &raw_mail)
 {
     std::istringstream iss(raw_mail);
     std::string line;
@@ -138,7 +133,7 @@ std::string EmailRetrieval::parseEmailID(const std::string &raw_mail)
     return messageID;
 }
 
-std::string EmailRetrieval::parseEmailContent(const std::string &raw_mail)
+std::string EMAIL::parseEmailContent(const std::string &raw_mail)
 {
     std::istringstream iss(raw_mail);
     std::string line;
@@ -176,7 +171,7 @@ std::string EmailRetrieval::parseEmailContent(const std::string &raw_mail)
     return content;
 }
 
-bool EmailRetrieval::retrieveEmail()
+bool EMAIL::retrieveEmail()
 {
     std::string raw_mail;
 
@@ -189,7 +184,7 @@ bool EmailRetrieval::retrieveEmail()
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &raw_mail);
 
-    CURLcode res = curl_easy_perform(curl);
+    const CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK)
     {
@@ -204,22 +199,22 @@ bool EmailRetrieval::retrieveEmail()
     return true;
 }
 
-std::string EmailRetrieval::getMailContent()
+std::string EMAIL::getMailContent()
 {
     return mail_content;
 }
 
-std::string EmailRetrieval::getMailID()
+std::string EMAIL::getMailID()
 {
     return mail_id;
 }
 
-std::string EmailRetrieval::getMailSender()
+std::string EMAIL::getMailSender()
 {
     return mail_sender;
 }
 
-void EmailRetrieval::respond(const char *to, const char *content, const char *attachment_path)
+void EMAIL::respond(const char *to, const char *content, const char *attachment_path)
 {
     const char *from = user_credentials.getUsername().c_str();
     const std::string ca_bundle_path = user_credentials.getCaBundlePath();
@@ -232,7 +227,7 @@ void EmailRetrieval::respond(const char *to, const char *content, const char *at
     }
 
     curl_easy_setopt(curl_send, CURLOPT_URL, "smtp://smtp.gmail.com:587");
-    curl_easy_setopt(curl_send, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
+    curl_easy_setopt(curl_send, CURLOPT_USE_SSL, static_cast<long>(CURLUSESSL_ALL));
 
     curl_easy_setopt(curl_send, CURLOPT_USERNAME, from);
     curl_easy_setopt(curl_send, CURLOPT_PASSWORD, user_credentials.getPassword().c_str());
@@ -247,10 +242,14 @@ void EmailRetrieval::respond(const char *to, const char *content, const char *at
     curl_mime *mime = curl_mime_init(curl_send);
 
     curl_mimepart *part = curl_mime_addpart(mime);
+    curl_mime_data(part, "Response from RemoteControlViaGmail", CURL_ZERO_TERMINATED);
+    curl_mime_type(part, "text/plain");
+
+    part = curl_mime_addpart(mime);
     curl_mime_data(part, content, CURL_ZERO_TERMINATED);
     curl_mime_type(part, "text/plain");
 
-    if (attachment_path != NULL && attachment_path[0] != '\0')
+    if (attachment_path != nullptr && attachment_path[0] != '\0')
     {
         part = curl_mime_addpart(mime);
         curl_mime_filedata(part, attachment_path);
@@ -271,19 +270,17 @@ void EmailRetrieval::respond(const char *to, const char *content, const char *at
         }
         else
         {
-            curl_mime_type(part, "application/octet-stream"); // Default for unknown file types
+            curl_mime_type(part, "application/octet-stream");
         }
 
-        curl_mime_encoder(part, "base64"); // Encode the file as base64
+        curl_mime_encoder(part, "base64");
         const std::string filename = std::string(attachment_path).substr(std::string(attachment_path).find_last_of('/') + 1);
-        curl_mime_filename(part, filename.c_str()); // Optional: set the filename as seen by the recipient
+        curl_mime_filename(part, filename.c_str());
     }
 
-    // Attach the MIME structure to the CURL handle
     curl_easy_setopt(curl_send, CURLOPT_MIMEPOST, mime);
 
-    // Send the email
-    CURLcode res = curl_easy_perform(curl_send);
+    const CURLcode res = curl_easy_perform(curl_send);
 
     if (res != CURLE_OK)
     {
@@ -291,13 +288,11 @@ void EmailRetrieval::respond(const char *to, const char *content, const char *at
     }
     else
     {
-        std::cout << "Email sent successfully with attachment!" << std::endl;
+        std::cout << "Email sent successfully with attachment and fixed subject!" << std::endl;
     }
 
-    // Clean up the recipients list and CURL handle
     curl_slist_free_all(recipients);
     curl_easy_cleanup(curl_send);
 
-    // Free the MIME structure
     curl_mime_free(mime);
 }

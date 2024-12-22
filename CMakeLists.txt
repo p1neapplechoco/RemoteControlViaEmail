@@ -14,7 +14,7 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/curl/lib ${CMAKE_SOURCE_DIR}/lib/openss
 
 add_executable(
         RemoteControlViaEmail src/main.cpp
-        src/utils/EmailRetrieval.cpp
+        src/utils/Email.cpp
         src/utils/IniParser.cpp
         src/utils/Client.cpp
         src/utils/GetWinDirectory.cpp
@@ -33,7 +33,6 @@ add_executable(
         src/app/FileExplorer.cpp
         src/app/ProcessManager.cpp
         src/app/ServiceManager.cpp
-        src/utils/EmailResponder.cpp
         src/app/App.h
 )
 
