@@ -103,6 +103,7 @@ LogPanel::~LogPanel() {
     if (loadingTimer) {
         delete loadingTimer;
     }
+    
 }
 
 void LogPanel::CreateSCREENSHOT() {
@@ -422,7 +423,7 @@ void LogPanel::OnTimer(wxTimerEvent& event) {
                     isConnect = false;
                 } else {
                     AppendLog(response);
-                    OpenPicture(filepath, 1.5);
+                    OpenPicture(filepath, 1);
                 }
             }   break;
             case ID_FILE_EXPLORER:

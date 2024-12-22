@@ -102,7 +102,7 @@ std::vector<char> Client::receiveImageData() {
 
 bool Client::handleCommand(const string &command, string &reponseClient, string &filePath) {
     char sendBuffer[1024] = {};
-    strcpy(sendBuffer, email_retrieval.getMailContent().c_str());
+    strcpy(sendBuffer, command.c_str());
     removeCarriageReturns(sendBuffer);
 
     // List RadminVPN devices
@@ -183,6 +183,7 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
 
         std::cout << "File received and saved to: " << outputPath << std::endl;
         reponseClient = "File received and saved to: " + outputPath + "\n";
+        filePath = outputPath;
     }
 
     if (strstr(sendBuffer, "!index") != NULL) {
