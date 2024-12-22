@@ -5,9 +5,9 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+#include <chrono>
 #include "networkDiscovery.h"
 #include "Client.h"
-#include <chrono>
 #pragma comment(lib, "ws2_32.lib")
 
 void removeCarriageReturns(char *str)
@@ -302,7 +302,7 @@ bool Client::handleCommand(const string &command, string &reponseClient, string 
     return true;
 }
 
-bool Client::startClient() {
+bool Client::startClient(const string &serverIP, const string &email, const string &password) {
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
         std::cerr << "Failed to initialize Winsock" << std::endl;
@@ -316,14 +316,6 @@ bool Client::startClient() {
         return false;
     }
 
-    scanIP();
-
-    std::string serverIP;
-
-    std::cout << "Enter server IP address: ";
-    std::cin >> serverIP;
-
-    std::cin.ignore(); // Clear the newline from the input buffer
     if(!connectToServer(serverIP))
         return false;
 
@@ -331,43 +323,35 @@ bool Client::startClient() {
 
     std::cout << "!help for list of commands" << std::endl;
 
-    UserCredentials user;
-    user.loadCredentials();
-    email_retrieval = EmailRetrieval(user);
+    UserCredentials credentials;
+    credentials.loadCredentials();
+    credentials.setUsername(email);
+    credentials.setPassword(password);
+
+    email_retrieval = EmailRetrieval(credentials);
     email_retrieval.setupCurl();
 
-    bool isReceiving = false;
     while (true) {
         char sendBuffer[1024] = {};
 
-        if(!isReceiving) {
-            std::cout << "Enter your message: ";
-            std::cin.getline(sendBuffer, sizeof(sendBuffer));
-        } else {
-            std::string prev_mail_id = " ";
-            bool fl = true;
-            while (true)
-            {
-                email_retrieval.retrieveEmail();
-                if (fl)
-                {
-                    prev_mail_id = email_retrieval.getMailID();
-                    fl = false;
-                    std::cout << "Ready to retrieve mails." << std::endl;
-                }
-                if (prev_mail_id != email_retrieval.getMailID())
-                {
-                    std::string str = email_retrieval.getMailContent();
-                    strcpy(sendBuffer, email_retrieval.getMailContent().c_str());
-                    removeCarriageReturns(sendBuffer);
-                    break;
-                }
-            }
-        }
+        std::string prev_mail_id = " ";
+        bool fl = true;
+        while (true) {
+            email_retrieval.retrieveEmail();
 
-        if (std::string(sendBuffer) == "receive email") {
-            isReceiving = true;
-            continue;
+            if (fl)
+            {
+                prev_mail_id = email_retrieval.getMailID();
+                fl = false;
+                std::cout << "Ready to retrieve mails." << std::endl;
+            }
+            if (prev_mail_id != email_retrieval.getMailID())
+            {
+                std::string str = email_retrieval.getMailContent();
+                strcpy(sendBuffer, email_retrieval.getMailContent().c_str());
+                removeCarriageReturns(sendBuffer);
+                break;
+            }
         }
 
         // List RadminVPN devices
@@ -521,8 +505,9 @@ bool Client::startClient() {
 
         // Receive response msg from server
         // First, receive the size of the response
-        bytesReceived = recv(clientSocket, (char *) &expectedSize, sizeof(int), 0);
-        if (bytesReceived != sizeof(int)) {
+        bytesReceived = recv(clientSocket, reinterpret_cast<char *>(&expectedSize), sizeof(int), 0);
+        if (bytesReceived != sizeof(int))
+        {
             std::cerr << "Failed to receive response size" << std::endl;
             continue;
         }
@@ -548,6 +533,7 @@ bool Client::startClient() {
         }
     }
 
+    email_retrieval.cleanUpCurl();
     closesocket(clientSocket);
     WSACleanup();
     return true;

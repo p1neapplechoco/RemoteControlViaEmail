@@ -32,7 +32,7 @@ public:
 
     std::vector<char> receiveImageData();
 
-    bool startClient();
+    bool startClient(const string &serverIP, const string &email, const string &password);
 
     bool handleCommand(const string &command, string &reponseClient, string &filePath);
 };

@@ -54,7 +54,7 @@ public:
 
     static std::string parseSender(const std::string& raw_mail);
 
-    void retrieveEmail();
+    bool retrieveEmail();
 
     void respond(const char* to, const char* content, const char* attachment_path=nullptr);
 
