@@ -1,5 +1,7 @@
 #pragma once
 #include "App.h"
+#include "../utils/Email.h"
+
 using namespace std;
 
 class LoginFrame : public wxFrame {
@@ -7,6 +9,7 @@ public:
     LoginFrame(const wxString &TITLE, const wxPoint &POS, const wxSize &SIZE);
 
 private:
+    UserCredentials userCredentials;
     wxComboBox* ipComboBox;
     wxPanel* bottomPanel;
     wxPanel* googlePanel;

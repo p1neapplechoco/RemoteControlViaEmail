@@ -170,8 +170,9 @@ void LoginFrame::ShowIPPanel() {
 }
 
 void LoginFrame::OnNoAccountLogin(wxCommandEvent& evt) {
-    currentEmail = "hcmuscn@gmail.com";
-    currentPassword = "dpof mkcn oist vzqa";
+    userCredentials.loadCredentials();
+    currentEmail = userCredentials.getUsername();
+    currentPassword = userCredentials.getPassword();
     ShowIPPanel();
     UpdateIPList();
 }

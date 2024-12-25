@@ -49,3 +49,5 @@ cmake-build-debug
 src/examples/cache_C.txt
 src/examples/cache_D.txt
 /src/examples/.vscode
+*.crt
+*.ini
