@@ -1,9 +1,0 @@
-C:\
-    This\
-        is.txt
-        epic.exe
-    okay\
-        ok\
-            oke.txt
-        okie\
-    dokie\
